@@ -128,7 +128,6 @@ public class VirtualClientManager implements ConnectableComponent {
 	public void initialiseClientPool() {
 		clientSocketChannel = getNonBlockingSocketChannel("localhost", 8000);
 		clientThreadExecutor = Executors.newFixedThreadPool(numberOfClients);
-		startListening();
 		for (int i = 0; i < numberOfClients; i++) {
 			int messageSendFrequencyMs = ThreadLocalRandom.current().nextInt(minSendFrequencyMs, maxSendFrequencyMs + 1);
 			RunnableClientProcess newClient = new RunnableClientProcess(clientSocketChannel, messageSendFrequencyMs);
@@ -136,7 +135,7 @@ public class VirtualClientManager implements ConnectableComponent {
 			clientThreadExecutor.execute(newClient);
 			numberOfLiveClients++;
 		}
-		
+		startListening();
 		clientThreadExecutor.shutdown();
 	}
 
@@ -152,9 +151,9 @@ public class VirtualClientManager implements ConnectableComponent {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		clientThreadExecutor.execute(new Runnable() {
+		new Thread(new Runnable() {
 		    public void run() {
-		    	ByteBuffer buffer = ByteBuffer.allocate(1);
+		    	ByteBuffer buffer = ByteBuffer.allocate(81);
 				while(!Thread.currentThread().isInterrupted()) {
 					try {
 						System.out.println(clientSocketChannel.read(buffer));
@@ -176,6 +175,6 @@ public class VirtualClientManager implements ConnectableComponent {
 					}
 				}
 		    }
-		});
+		}).start();
 	}
 }

@@ -24,7 +24,7 @@ import connectionUtils.MessageType;
  */
 public class RunnableClientProcessTests {
 	
-	private static ServerSocketChannel mockServerSocketChannel;
+	private ServerSocketChannel mockServerSocketChannel;
 	
 	/**
 	 * Creates a fake <code>ServerSocketChannel</code> so we can pass a connected <code>SocketChannel</code> to new {@link RunnableClientProcess} instances.
@@ -37,7 +37,7 @@ public class RunnableClientProcessTests {
 	}
 	
 	/**
-	 * Close the fake server channel once all tests have completed
+	 * Closes the fake server channel.
 	 * @throws IOException
 	 */
 	@After

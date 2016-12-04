@@ -147,7 +147,7 @@ public class VirtualClientManagerTests {
 			e.printStackTrace();
 		}
 
-		ByteBuffer buffer = ByteBuffer.allocate(1);
+		ByteBuffer buffer = ByteBuffer.allocate(81);
 		buffer.clear();
 		buffer.put((byte)MessageType.SERVER_RESPONSE.getValue());
 		for (int i = 0; i < 10; i++) {
