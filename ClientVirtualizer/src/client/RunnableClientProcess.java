@@ -13,10 +13,19 @@ import connectionUtils.MessageType;
  */
 public class RunnableClientProcess implements Runnable {
 	
+	/**
+	 * The socket that the {@link VirtualClientManager} has provided to send requests on.
+	 */
 	private SocketChannel clientSocket;
 	
+	/**
+	 * The frequency that this client will send requests at in milliseconds.
+	 */
 	private int sendFrequencyMs;
 	
+	/**
+	 * The total number of requests that this client has sent since t=0.
+	 */
 	private int requestsSent = 0;
 	
 	
@@ -38,17 +47,13 @@ public class RunnableClientProcess implements Runnable {
 	
 
 	/* (non-Javadoc)
-	 * Starts a new RunnableClientProcess thread that will transmit requests to the server at the specified frequency.
+	 * Called on RunnableClientProcess thread creation - transmits requests to the server at the specified frequency.
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
 		while(!Thread.currentThread().isInterrupted()) {
-			try {
-				sendRequest();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			sendRequest();
 			try {
 				Thread.sleep(sendFrequencyMs);
 			} catch (InterruptedException e) {
@@ -70,7 +75,7 @@ public class RunnableClientProcess implements Runnable {
 	 * Generates 10 random long values and sends to the server on the provided <code>SocketChannel</code>.
 	 * @throws IOException 
 	 */
-	private void sendRequest() throws IOException {
+	private void sendRequest() {
 		ByteBuffer buffer = ByteBuffer.allocate(81);
 		buffer.clear();
 		buffer.put((byte)MessageType.CLIENT_REQUEST.getValue());
@@ -80,7 +85,12 @@ public class RunnableClientProcess implements Runnable {
 		}
 		buffer.flip();
 		while(buffer.hasRemaining()) {
-		    clientSocket.write(buffer);
+			try {
+				clientSocket.write(buffer);
+			} catch (IOException e) {
+				Thread.currentThread().interrupt();
+				return;
+			}
 		}
 		requestsSent++;
 	}

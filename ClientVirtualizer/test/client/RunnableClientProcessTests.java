@@ -72,10 +72,9 @@ public class RunnableClientProcessTests {
 	 * @throws IOException 
 	 */
 	@Test(expected=IllegalArgumentException.class)
-	public void testCreateRunnableClientProcess_closedSocket() throws IOException {
+	public void testCreateRunnableClientProcess_disconnectedSocket() throws IOException {
 		SocketChannel clientSocket = SocketChannel.open();
 		new RunnableClientProcess(clientSocket, 1);
-		clientSocket.close();
 	}
 	
 	/**
@@ -124,6 +123,64 @@ public class RunnableClientProcessTests {
 		mockServerSocketChannel.accept();
 		Thread clientThread = new Thread(new RunnableClientProcess(clientSocket, 100));
 		clientThread.start();
+		clientThread.interrupt();
+
+		try {
+			Thread.sleep(250);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		assertFalse(clientThread.isAlive());
+	}
+	
+	/**
+	 * Starts a {@link RunnableClientProcess} thread and attempts to close the server socket while it is still alive.
+	 * The client should catch the <code>IOException</code> and gracefully terminate.
+	 * @throws IOException
+	 */
+/*	@Test
+	public void testRunnableClientProcess_killServer() throws IOException {
+		SocketChannel clientSocket = SocketChannel.open();
+		clientSocket.configureBlocking(false);
+		clientSocket.connect(new InetSocketAddress("localhost", 8000));
+		while (!clientSocket.finishConnect()) {}
+		mockServerSocketChannel.accept();
+		Thread clientThread = new Thread(new RunnableClientProcess(clientSocket, 100));
+		clientThread.start();
+		
+		mockServerSocketChannel.close();
+
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		assertFalse(clientThread.isAlive());
+	}*/
+	
+	/**
+	 * Attempts to leave a {@link RunnableClientProcess} instance running for 2 seconds. Termination after this
+	 * duration should execute as normal.
+	 * @throws IOException
+	 */
+	@Test
+	public void testRunnableClientProcess_runFor1Second() throws IOException {
+		SocketChannel clientSocket = SocketChannel.open();
+		clientSocket.configureBlocking(false);
+		clientSocket.connect(new InetSocketAddress("localhost", 8000));
+		while (!clientSocket.finishConnect()) {}
+		mockServerSocketChannel.accept();
+		Thread clientThread = new Thread(new RunnableClientProcess(clientSocket, 50));
+		clientThread.start();
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		clientThread.interrupt();
 
 		try {
