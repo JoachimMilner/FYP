@@ -1,5 +1,7 @@
 package server;
 
+import java.nio.channels.ServerSocketChannel;
+
 import connectionUtils.ConnectableComponent;
 
 /**
@@ -14,6 +16,10 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 	 */
 	private int threadPoolSize;
 	
+	/**
+	 * The ServerSocketChannel that this ThreadPooledServer will use to accept incoming client connections.
+	 */
+	private ServerSocketChannel serverSocketChannel;
 	
 	/**
 	 * Creates a new ThreadPooledServer instance that will create and start a pool of {@link RunnableRequestProcessor} threads
@@ -28,12 +34,13 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 	
 	
 	/* (non-Javadoc)
+	 * To be called on <code>Thread.start()</code> to create the thread pool and begin listening for incoming
+	 * connection requests. 
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		
+		serverSocketChannel = getServerSocketChannel(8000);
 	}
 
 }

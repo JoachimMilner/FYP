@@ -2,6 +2,7 @@ package connectionUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 public interface ConnectableComponent {
@@ -17,5 +18,16 @@ public interface ConnectableComponent {
 			e.printStackTrace();
 		}
 		return socketChannel;
+	}
+	
+	default ServerSocketChannel getServerSocketChannel(int acceptPort) {
+		ServerSocketChannel serverSocketChannel = null;
+		try {
+			serverSocketChannel = ServerSocketChannel.open();
+			serverSocketChannel.socket().bind(new InetSocketAddress(8000));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return serverSocketChannel;
 	}
 }
