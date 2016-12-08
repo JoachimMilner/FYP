@@ -24,7 +24,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testCreateVirtualClientManager_successful() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
 		assertNotNull(clientManager);
 	}
 	
@@ -34,16 +34,25 @@ public class VirtualClientManagerTests {
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateVirtualClientManager_lessThanOneClient() {
-		new VirtualClientManager(0, 0, 0);
+		new VirtualClientManager(0, 0, 0, 0, 0);
 	}
 	
 	/**
 	 * Tests creating an instance of the {@link VirtualClientManager} class with
-	 * less than one client passed. Should throw IllegalArgumentException
+	 * invalid sending frequency values. Should throw IllegalArgumentException
 	 */
 	@Test(expected=IllegalArgumentException.class)
-	public void testCreateVirtualClientManager_wrongFrequencyParams() {
-		new VirtualClientManager(1, 1, 0);
+	public void testCreateVirtualClientManager_illegalFrequencyParams() {
+		new VirtualClientManager(1, 1, 0, 0, 0);
+	}
+	
+	/**
+	 * Test creating an instance of the {@link VirtualClientManager} class with
+	 * invalid min/max client request values. Should throw IllegalArgumentException
+	 */
+	@Test(expected=IllegalArgumentException.class)
+	public void testVirtualClientManager_illegalClientRequestParams() {
+		new VirtualClientManager(1, 1, 1, 1, 0);
 	}
 	
 	/**
@@ -51,7 +60,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getNumberOfClients() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
 		assertEquals(1, clientManager.getNumberOfClients());
 	}
 	
@@ -61,10 +70,10 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getNumberOfLiveClients() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
 		assertEquals(0, clientManager.getNumberOfLiveClients());
 	}
-	
+
 	/**
 	 * Tests the {@link VirtualClientManager}'s <code>getNumberOfLiveClients</code> method. Should return
 	 * the number that we pass in as <code>numberOfClients</code>.
@@ -75,7 +84,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(2, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(2, 0, 0, 1, 1);
 		clientManager.initialiseClientPool();
 		assertEquals(2, clientManager.getNumberOfLiveClients());
 		mockServerSocketChannel.close();
@@ -92,7 +101,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(1, 5, 25);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 5, 25, 50, 100);
 
 		clientManager.initialiseClientPool();
 		
@@ -131,7 +140,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getTotalRequestsSentNoInitialisation() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
 		assertEquals(0, clientManager.getTotalRequestsSent());
 	}
 	
@@ -146,7 +155,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(3, 50, 150);
+		VirtualClientManager clientManager = new VirtualClientManager(3, 50, 150, 50, 100);
 		clientManager.initialiseClientPool();
 		
 		try {
@@ -165,7 +174,30 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getTotalResponsesReceived() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
 		assertEquals(0, clientManager.getTotalResponsesReceived());
 	}
+	
+	/**
+	 * Test that the total responses received is what we expect when we initialise a fixed number
+	 * of virtual clients with fixed sending frequencies and request limits.
+	 * @throws IOException
+	 */
+/*	@Test
+	public void testVirtualClientManager_getTotalResponsesReceivedAfterInitialisation() throws IOException {
+		ServerSocketChannel mockServerSocketChannel = null;
+		mockServerSocketChannel = ServerSocketChannel.open();
+		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
+		VirtualClientManager clientManager = new VirtualClientManager(2, 50, 50, 5, 5);
+		clientManager.initialiseClientPool();
+		
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		assertEquals(10, clientManager.getTotalResponsesReceived());
+		mockServerSocketChannel.close();
+	}*/
 }

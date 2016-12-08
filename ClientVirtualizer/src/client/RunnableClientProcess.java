@@ -41,13 +41,19 @@ public class RunnableClientProcess implements Runnable {
 	 * The frequency that this client will send requests at in milliseconds.
 	 */
 	private int sendFrequencyMs;
+	
+	/**
+	 * The total number of requests that this virtual client will send to the server.
+	 */
+	private int totalRequests;
 
 
 	/**
 	 * Creates a RunnableClientProcess which will connect to the supplied
 	 * <code>serverAddress</code>. When <code>run</code> is called, this object
-	 * will create a non-blocking socket to send requests on at the specified
-	 * <code>sendFrequencyMs</code>.
+	 * will create a non-blocking socket to send the supplied number of requests at the specified
+	 * <code>sendFrequencyMs</code>. When all requests have been sent, the virtual client
+	 * will close the {@link SocketChannel} and the host thread will die.
 	 * 
 	 * @param serverAddress
 	 *            the remote address that this virtual client will connect to.
@@ -57,36 +63,39 @@ public class RunnableClientProcess implements Runnable {
 	 * @param sendFrequencyMs
 	 *            the frequency at which the client will send requests in
 	 *            milliseconds.
+	 * @param totalRequests
+	 *            the number of TCP requests that will be sent before this 
+	 *            client terminates
 	 * @throws IllegalArgumentException
-	 *             if the <code>SocketChannel</code> passed in is null or has
-	 *             not been connected.
+	 *             if the <code>serverAddress</code> or <code>clientManager</code> passed in is null.
 	 */
 	public RunnableClientProcess(InetSocketAddress serverAddress, VirtualClientManager clientManager,
-			int sendFrequencyMs) {
-		if (serverAddress == null) {
+			int sendFrequencyMs, int totalRequests) {
+		if (serverAddress == null)
 			throw new IllegalArgumentException("serverAddress cannot be null.");
-		}
-
-		if (clientManager == null) {
+		if (clientManager == null) 
 			throw new IllegalArgumentException("clientManager cannot be null.");
-		}
-
+		if (totalRequests < 1)
+			throw new IllegalArgumentException("numberOfRequests must be non-zero.");
 		
 		this.serverAddress = serverAddress;
 		this.clientManager = clientManager;
 		this.sendFrequencyMs = sendFrequencyMs;
+		this.totalRequests = totalRequests;
 	}
 
 	/*
 	 * (non-Javadoc) Called on RunnableClientProcess thread creation - transmits
-	 * requests to the server at the specified frequency.
+	 * requests to the server at the specified frequency until the request limit 
+	 * is reached.
 	 * 
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
 		socketChannel = ConnectNIO.getNonBlockingSocketChannel(serverAddress);
-		while (!Thread.currentThread().isInterrupted()) {
+		int requestsSent = 0;
+		while (!Thread.currentThread().isInterrupted() && requestsSent < totalRequests) {
 			sendRequest();
 			checkForMessages();
 			try {
@@ -94,12 +103,14 @@ public class RunnableClientProcess implements Runnable {
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}
+			requestsSent++;
 		}
 		try {
 			socketChannel.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		clientManager.notifyThreadFinished();
 	}
 	
 

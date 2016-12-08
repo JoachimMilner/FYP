@@ -9,7 +9,7 @@ public class Client {
 	}
 	
 	private void launch(String[] args) {
-		VirtualClientManager clientManager = new VirtualClientManager(5, 500, 1000);
+		VirtualClientManager clientManager = new VirtualClientManager(5, 500, 2500, 1, 15);
 		clientManager.initialiseClientPool();
 	}
 }

@@ -42,12 +42,10 @@ public class RunnableRequestProcessor implements Runnable {
 	 * @param socketChannel
 	 */
 	public RunnableRequestProcessor(SocketChannel socketChannel, ThreadPooledServer threadManager) {
-		if (socketChannel == null || !socketChannel.isConnected()) {
+		if (socketChannel == null || !socketChannel.isConnected())
 			throw new IllegalArgumentException("Null or disconnected SocketChannel.");
-		}
-		if (threadManager == null) {
+		if (threadManager == null)
 			throw new IllegalArgumentException("ThreadPooledServer instance cannot be null.");
-		}
 		
 		this.socketChannel = socketChannel;
 		this.threadManager = threadManager;
@@ -118,10 +116,11 @@ public class RunnableRequestProcessor implements Runnable {
 				}
 			} catch (IOException e) {
 				//e.printStackTrace();
-				System.out.println("Client disconected.");
+				
 				break;
 			}
 		}
+		System.out.println("Client disconected.");
 	}
 	
 
