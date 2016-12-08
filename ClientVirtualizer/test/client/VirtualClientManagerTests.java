@@ -13,7 +13,7 @@ import org.junit.Test;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim
+ * @author Joachim</br>
  * <p>Tests for the {@link VirtualClientManager} class and its instance methods.</p>
  */
 public class VirtualClientManagerTests {
@@ -82,6 +82,51 @@ public class VirtualClientManagerTests {
 	}
 	
 	/**
+	 * Tests that the {@link VirtualClientManager} is able to receive server replies on its
+	 * <code>SocketChannel</code>. Sends an arbitrary response to the clientManager, then
+	 * checks that its totalResponsesReceived has incremented.
+	 * @throws IOException 
+	 */
+	@Test
+	public void testVirtualClientManager_getServerResponse() throws IOException {
+		ServerSocketChannel mockServerSocketChannel = null;
+		mockServerSocketChannel = ServerSocketChannel.open();
+		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
+		VirtualClientManager clientManager = new VirtualClientManager(1, 5, 25);
+
+		clientManager.initialiseClientPool();
+		
+		SocketChannel serverSideClientSocket = mockServerSocketChannel.accept();
+		
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		ByteBuffer buffer = ByteBuffer.allocate(81);
+		buffer.clear();
+		buffer.put((byte)MessageType.SERVER_RESPONSE.getValue());
+		for (int i = 0; i < 10; i++) {
+			long random = (long) (10000 + Math.random() * 100000);
+			buffer.putLong(random);
+		}
+		buffer.flip();
+		while(buffer.hasRemaining()) {
+		    serverSideClientSocket.write(buffer);
+		}
+		
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		assertEquals(1, clientManager.getTotalResponsesReceived());
+		mockServerSocketChannel.close();
+	}
+	
+	/**
 	 * Tests the {@link VirtualClientManager}'s <code>getTotalRequestsSent</code> method before client pool initialisation.
 	 */
 	@Test
@@ -122,50 +167,5 @@ public class VirtualClientManagerTests {
 	public void testVirtualClientManager_getTotalResponsesReceived() {
 		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
 		assertEquals(0, clientManager.getTotalResponsesReceived());
-	}
-	
-	/**
-	 * Tests that the {@link VirtualClientManager} is able to receive server replies on its
-	 * <code>SocketChannel</code>. Sends an arbitrary response to the clientManager, then
-	 * checks that its totalResponsesReceived has incremented.
-	 * @throws IOException 
-	 */
-	@Test
-	public void testVirtualClientManager_getServerResponse() throws IOException {
-		ServerSocketChannel mockServerSocketChannel = null;
-		mockServerSocketChannel = ServerSocketChannel.open();
-		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0);
-
-		clientManager.initialiseClientPool();
-		
-		SocketChannel clientSocket = mockServerSocketChannel.accept();
-		
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		ByteBuffer buffer = ByteBuffer.allocate(81);
-		buffer.clear();
-		buffer.put((byte)MessageType.SERVER_RESPONSE.getValue());
-		for (int i = 0; i < 10; i++) {
-			long random = (long) (10000 + Math.random() * 100000);
-			buffer.putLong(random);
-		}
-		buffer.flip();
-		while(buffer.hasRemaining()) {
-		    clientSocket.write(buffer);
-		}
-		
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		assertEquals(1, clientManager.getTotalResponsesReceived());
-		mockServerSocketChannel.close();
 	}
 }

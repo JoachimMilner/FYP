@@ -19,7 +19,7 @@ import org.junit.Test;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim
+ * @author Joachim</br>
  * <p>Tests for the {@link RunnableClientProcess} class and its instance methods.</p>
  */
 public class RunnableClientProcessTests {
@@ -51,46 +51,41 @@ public class RunnableClientProcessTests {
 	 */
 	@Test
 	public void testCreateRunnableClientProcess_successful() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		clientSocket.connect(new InetSocketAddress("localhost", 8000));
 		int sendFrequencyMs = (int) Math.random() * 5000;
-		RunnableClientProcess client = new RunnableClientProcess(clientSocket, sendFrequencyMs);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		RunnableClientProcess client = new RunnableClientProcess(new InetSocketAddress("localhost", 8000), clientManager, sendFrequencyMs);
 		assertNotNull(client);
-		clientSocket.close();
 	}
 	
 	/**
-	 * Tests creating an instance of the {@link RunnableClientProcess} class with a null {@link SocketChannel} passed in.
+	 * Tests creating an instance of the {@link RunnableClientProcess} class with a null {@link InetSocketAddress} passed in.
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateRunnableClientProcess_nullSocket() {
-		new RunnableClientProcess(null, 1);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		new RunnableClientProcess(null, clientManager, 1);
 	}
 	
 	/**
-	 * Tests creating an instance of the {@link RunnableClientProcess} class with a disconnected {@link SocketChannel} passed in.
-	 * @throws IOException 
+	 * Tests creating an instance of the {@link RunnableClientProcess} class with a null {@link VirtualClientManager} passed in.
 	 */
 	@Test(expected=IllegalArgumentException.class)
-	public void testCreateRunnableClientProcess_disconnectedSocket() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		new RunnableClientProcess(clientSocket, 1);
+	public void testCreateRunnableClientProcess_nullClientManager() {
+		new RunnableClientProcess(new InetSocketAddress("localhost", 8000), null, 1);
 	}
 	
 	/**
 	 * Tests the {@link RunnableClientProcess}'s <code>getRequestsSent</code> method.
 	 * @throws IOException 
 	 */
-	@Test
+/*	@Test
 	public void testRunnableClientProcess_getRequestsSent() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		clientSocket.connect(new InetSocketAddress("localhost", 8000));
 		int sendFrequencyMs = (int) Math.random() * 5000;
-		RunnableClientProcess client = new RunnableClientProcess(clientSocket, sendFrequencyMs);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		RunnableClientProcess client = new RunnableClientProcess(new InetSocketAddress("localhost", 8000), clientManager, sendFrequencyMs);
 		int clientRequestsSent = client.getRequestsSent();
 		assertEquals(0, clientRequestsSent);
-		clientSocket.close();
-	}
+	}*/
 	
 	/**
 	 * Test that the {@link RunnableClientProcess}'s <code>SocketChannel.connect</code> is accepted by the mock <code>ServerSocketChannel</code>.
@@ -98,14 +93,14 @@ public class RunnableClientProcessTests {
 	 */
 	@Test
 	public void testRunnableClientProcess_connectSocket() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		clientSocket.connect(new InetSocketAddress("localhost", 8000));
-		SocketChannel acceptedClientSocket = mockServerSocketChannel.accept();
 		int sendFrequencyMs = (int) Math.random() * 5000;
-		new RunnableClientProcess(clientSocket, sendFrequencyMs);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		Thread clientThread = new Thread(new RunnableClientProcess(new InetSocketAddress("localhost", 8000), clientManager, sendFrequencyMs));
+		clientThread.start();
 		
+		SocketChannel acceptedClientSocket = mockServerSocketChannel.accept();
 		assertNotNull(acceptedClientSocket);
-		clientSocket.close();
+		clientThread.interrupt();
 		acceptedClientSocket.close();
 	}
 	
@@ -116,13 +111,10 @@ public class RunnableClientProcessTests {
 	 */
 	@Test
 	public void testRunnableClientProcess_terminate() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		clientSocket.configureBlocking(false);
-		clientSocket.connect(new InetSocketAddress("localhost", 8000));
-		while (!clientSocket.finishConnect()) {}
-		mockServerSocketChannel.accept();
-		Thread clientThread = new Thread(new RunnableClientProcess(clientSocket, 100));
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		Thread clientThread = new Thread(new RunnableClientProcess(new InetSocketAddress("localhost", 8000), clientManager, 100));
 		clientThread.start();
+		mockServerSocketChannel.accept();
 		clientThread.interrupt();
 
 		try {
@@ -167,14 +159,10 @@ public class RunnableClientProcessTests {
 	 */
 	@Test
 	public void testRunnableClientProcess_runFor1Second() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		clientSocket.configureBlocking(false);
-		clientSocket.connect(new InetSocketAddress("localhost", 8000));
-		while (!clientSocket.finishConnect()) {}
-		mockServerSocketChannel.accept();
-		Thread clientThread = new Thread(new RunnableClientProcess(clientSocket, 50));
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		Thread clientThread = new Thread(new RunnableClientProcess(new InetSocketAddress("localhost", 8000), clientManager, 50));
 		clientThread.start();
-		
+		mockServerSocketChannel.accept();
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -199,13 +187,10 @@ public class RunnableClientProcessTests {
 	 */
 	@Test
 	public void testRunnableClientProcess_run() throws IOException {
-		SocketChannel clientSocket = SocketChannel.open();
-		clientSocket.configureBlocking(false);
-		clientSocket.connect(new InetSocketAddress("localhost", 8000));
-		while (!clientSocket.finishConnect()) {}
-		SocketChannel acceptedClientSocket = mockServerSocketChannel.accept();
-		Thread clientThread = new Thread(new RunnableClientProcess(clientSocket, 100));
+		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1);
+		Thread clientThread = new Thread(new RunnableClientProcess(new InetSocketAddress("localhost", 8000), clientManager, 100));
 		clientThread.start();
+		SocketChannel acceptedClientSocket = mockServerSocketChannel.accept();
 		
 		ByteBuffer buffer = ByteBuffer.allocate(81);
 		int bytesRead = acceptedClientSocket.read(buffer);
@@ -230,7 +215,6 @@ public class RunnableClientProcessTests {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		clientSocket.close();
 		acceptedClientSocket.close();
 	}
 }
