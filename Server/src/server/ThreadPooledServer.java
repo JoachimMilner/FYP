@@ -92,6 +92,10 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 			}
 		}
 		System.out.println("Server shutting down...");
+		try {
+			serverSocketChannel.close();
+		} catch (IOException e) {
+		}
 		threadPoolExecutor.shutdown();
 	}
 

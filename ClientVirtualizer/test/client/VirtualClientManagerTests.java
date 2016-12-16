@@ -84,7 +84,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(2, 0, 0, 1, 1);
+		VirtualClientManager clientManager = new VirtualClientManager(2, 100, 200, 5, 10);
 		clientManager.initialiseClientPool();
 		assertEquals(2, clientManager.getNumberOfLiveClients());
 		mockServerSocketChannel.close();
