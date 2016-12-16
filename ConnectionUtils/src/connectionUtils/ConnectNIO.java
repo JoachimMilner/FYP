@@ -31,7 +31,7 @@ public class ConnectNIO {
 		ServerSocketChannel serverSocketChannel = null;
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
-			serverSocketChannel.socket().bind(new InetSocketAddress(8000));
+			serverSocketChannel.socket().bind(new InetSocketAddress(acceptPort));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
