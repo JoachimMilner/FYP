@@ -1,5 +1,9 @@
 package server;
 
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
 public class Server {
 
 	public static void main(String[] args) {
@@ -8,17 +12,19 @@ public class Server {
 	}
 	
 	private void launch(String[] args) {
+		Configurations configs = new Configurations();
 		int threadPoolSize = 0;
-		try {
-			threadPoolSize = Integer.parseInt(args[0]);
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Thread pool size must be an integer.");
-		}
 		int connectPort = 0;
-		try {
-			connectPort = Integer.parseInt(args[1]);
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Connection port must be an integer.");
+		try
+		{
+		    XMLConfiguration config = configs.xml("serverConfig.xml");
+		    threadPoolSize = config.getInt("threadPoolSize");
+		    connectPort = config.getInt("connectPort");
+		}
+		catch (ConfigurationException cex)
+		{
+		    cex.printStackTrace();
+		    return;
 		}
 		ThreadPooledServer server = new ThreadPooledServer(threadPoolSize, connectPort);
 		new Thread(server).start();
