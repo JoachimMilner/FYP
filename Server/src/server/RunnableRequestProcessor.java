@@ -5,6 +5,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 import connectionUtils.MessageType;
 
@@ -108,6 +109,17 @@ public class RunnableRequestProcessor implements Runnable {
 						}
 						threadManager.incrementTotalResponsesSent();
 						responsesSent++;
+						break;
+					case SERVER_CPU_REQUEST:
+						// Get the local machine's CPU usage here. We will mock this for now.
+						buffer.clear();
+						buffer.put((byte) MessageType.SERVER_CPU_LOAD_NOTIFY.getValue());
+						double cpuUsage = ThreadLocalRandom.current().nextDouble(0.1, 99.9);
+						buffer.putDouble(cpuUsage);
+						buffer.flip();
+						while (buffer.hasRemaining()) {
+							socketChannel.write(buffer);
+						}
 						break;
 					default:
 						// Received a bad request

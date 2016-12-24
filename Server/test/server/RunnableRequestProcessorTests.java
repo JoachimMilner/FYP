@@ -262,6 +262,11 @@ public class RunnableRequestProcessorTests {
 		requestProcessorExceptionTester.test();
 	}*/
 	
+	/**
+	 * Test that the {@link RunnableRequestProcessor}'s <code>getResponsesSent</code> method functions correctly
+	 * after starting a new instance thread.
+	 * @throws IOException
+	 */
 	@Test
 	public void testRunnableRequestProcessor_getResponsesSent() throws IOException {
 		createAcceptedSocketChannel();
@@ -270,6 +275,10 @@ public class RunnableRequestProcessorTests {
 		assertEquals(0, requestProcessor.getResponsesSent());
 	}
 	
+	/**
+	 * Test that the {@link RunnableRequestProcessor} returns a response after sending a single client request.
+	 * @throws IOException
+	 */
 	@Test
 	public void testRunnableRequestProcessor_getResponsesSentAfterOneRequest() throws IOException {
 		createAcceptedSocketChannel();
@@ -301,6 +310,11 @@ public class RunnableRequestProcessorTests {
 	    assertEquals(1, requestProcessor.getResponsesSent());
 	}
 	
+	/**
+	 * Test that the {@link RunnableRequestProcessor} returns responses to a random number or requests.
+	 * In theory this test should always pass.
+	 * @throws IOException
+	 */
 	@Test
 	public void testRunnableRequestProcessor_getResponsesSentRandomRequests() throws IOException {
 		createAcceptedSocketChannel();
@@ -332,5 +346,41 @@ public class RunnableRequestProcessorTests {
 		    mockClientSocketChannel.read(buffer);
 		}
 	    assertEquals(iterations, requestProcessor.getResponsesSent());
+	}
+	
+	/**
+	 * Test that the {@link RunnableRequestProcessor} returns the server's CPU load when sent a 
+	 * <code>SERVER_CPU_REQUEST</code>.
+	 * @throws IOException
+	 */
+	@Test
+	public void testRunnableRequestProcessor_getServerCPULoad() throws IOException {
+		createAcceptedSocketChannel();
+		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000));
+		new Thread(requestProcessor).start();
+		
+		// Send a request for the server's CPU load
+		ByteBuffer buffer = ByteBuffer.allocate(9);
+		buffer.clear();
+		buffer.put((byte)MessageType.SERVER_CPU_REQUEST.getValue());
+		buffer.flip();
+		while(buffer.hasRemaining()) {
+			mockClientSocketChannel.write(buffer);
+		}
+		
+	    buffer.clear();
+	    Selector selector = Selector.open();
+	    mockClientSocketChannel.configureBlocking(false);
+	    mockClientSocketChannel.register(selector, SelectionKey.OP_READ);
+	    if (selector.select(1000) == 0) {
+	    	throw new SocketTimeoutException();
+	    }
+	    int bytesRead = mockClientSocketChannel.read(buffer);
+	    assertEquals(9, bytesRead);
+		buffer.flip();
+		MessageType responseMessageType = MessageType.values()[buffer.get()];
+		assertEquals(MessageType.SERVER_CPU_LOAD_NOTIFY, responseMessageType);
+		double serverLoad = buffer.getDouble();
+		assertTrue(serverLoad > 0);
 	}
 }
