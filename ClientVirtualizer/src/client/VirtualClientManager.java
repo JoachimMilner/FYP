@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
-import connectionUtils.ConnectableComponent;
+import connectionUtils.IConnectableComponent;
 
 /**
  * @author Joachim</br>
@@ -14,7 +14,7 @@ import connectionUtils.ConnectableComponent;
  *         {@link RunnableClientProcess} instances.
  *         </p>
  */
-public class VirtualClientManager implements ConnectableComponent {
+public class VirtualClientManager implements IConnectableComponent {
 
 	/**
 	 * The maximum number of virtual clients that this VirtualClientManager will

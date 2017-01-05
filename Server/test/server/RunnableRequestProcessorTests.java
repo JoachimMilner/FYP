@@ -379,7 +379,7 @@ public class RunnableRequestProcessorTests {
 	    assertEquals(9, bytesRead);
 		buffer.flip();
 		MessageType responseMessageType = MessageType.values()[buffer.get()];
-		assertEquals(MessageType.SERVER_CPU_LOAD_NOTIFY, responseMessageType);
+		assertEquals(MessageType.SERVER_CPU_NOTIFY, responseMessageType);
 		double serverLoad = buffer.getDouble();
 		assertTrue(serverLoad > 0);
 	}

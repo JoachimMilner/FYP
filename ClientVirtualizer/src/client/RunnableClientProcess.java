@@ -93,6 +93,8 @@ public class RunnableClientProcess implements Runnable {
 	 */
 	@Override
 	public void run() {
+		// TODO
+		// Get load balancer address from name service then get server details from LB.
 		socketChannel = ConnectNIO.getNonBlockingSocketChannel(serverAddress);
 		int requestsSent = 0;
 		while (!Thread.currentThread().isInterrupted() && requestsSent < totalRequests) {

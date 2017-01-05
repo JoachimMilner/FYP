@@ -20,7 +20,7 @@ public class AddressResolutionServiceTests {
 
 	/**
 	 * Test successful creation of an {@link AddressResolutionService} instance.
-	 * Shbould not be null
+	 * Should not be null
 	 */
 	@Test
 	public void testCreateAddressResolutionService() {

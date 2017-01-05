@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<configuration>
+	<servers>
+		<server>
+			192.1
+		</server>
+	</servers
+	<remoteLoadBalancers>
+		<remoteNode>
+			192.
+		</remoteNode>
+	</remoteLoadBalancers>
+	<heartbeatIntervalMs>
+	
+	</heartbeatIntervalMs>
+	<heartbeatTimeoutMs>
+	
+	</heartbeatTimeoutMs>	
+</configuration>

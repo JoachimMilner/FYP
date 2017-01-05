@@ -15,7 +15,7 @@ import connectionUtils.*;
  *         ThreadPooledServer should be instantiated and started in a thread
  *         when the application starts.
  */
-public class ThreadPooledServer implements ConnectableComponent, Runnable {
+public class ThreadPooledServer implements IConnectableComponent, Runnable {
 
 	/**
 	 * The size of the thread pool to be created for handling received client
@@ -47,6 +47,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 	 */
 	private int totalResponsesSent = 0;
 
+	
 	/**
 	 * Creates a new ThreadPooledServer instance that will create and start a
 	 * pool of {@link RunnableRequestProcessor} threads once started. This
@@ -65,6 +66,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 		this.connectPort = connectPort;
 	}
 
+	
 	/*
 	 * (non-Javadoc) To be called on <code>Thread.start()</code> to create the
 	 * thread pool and begin listening for incoming connection requests.
@@ -73,7 +75,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 	 */
 	@Override
 	public void run() {
-		System.out.println("Initialising Server Thread Pool...");
+		System.out.println("Initialising Server Thread Pool on Port " + connectPort + "...");
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(connectPort);
 		ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(threadPoolSize);
 		while (!Thread.currentThread().isInterrupted()) {
@@ -99,6 +101,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 		threadPoolExecutor.shutdown();
 	}
 
+	
 	/**
 	 * @return The total number of requests that have been received by all
 	 *         server threads.
@@ -107,6 +110,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 		return totalRequestsReceived;
 	}
 
+	
 	/**
 	 * Each {@link RunnableRequestProcessor} instance calls this method whenever
 	 * they receive a client request. Synchronized for thread safety.
@@ -115,6 +119,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 		totalRequestsReceived++;
 	}
 
+	
 	/**
 	 * @return The total number of responses that have been sent by all server
 	 *         threads.
@@ -123,6 +128,7 @@ public class ThreadPooledServer implements ConnectableComponent, Runnable {
 		return totalResponsesSent;
 	}
 
+	
 	/**
 	 * Each {@link RunnableRequestProcessor} instance calls this method whenever
 	 * they send a response to a client. Synchronized for thread safety.

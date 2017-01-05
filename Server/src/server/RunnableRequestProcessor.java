@@ -113,7 +113,7 @@ public class RunnableRequestProcessor implements Runnable {
 					case SERVER_CPU_REQUEST:
 						// Get the local machine's CPU usage here. We will mock this for now.
 						buffer.clear();
-						buffer.put((byte) MessageType.SERVER_CPU_LOAD_NOTIFY.getValue());
+						buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
 						double cpuUsage = ThreadLocalRandom.current().nextDouble(0.1, 99.9);
 						buffer.putDouble(cpuUsage);
 						buffer.flip();
