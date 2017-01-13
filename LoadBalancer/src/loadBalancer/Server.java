@@ -25,6 +25,14 @@ public class Server {
 	
 	
 	/**
+	 * Boolean value indicating whether this server is responsive. Set to
+	 * false on object instantiation and then updated by the {@link ServerManager} 
+	 * periodically.
+	 */
+	private boolean isAlive = false;
+	
+	
+	/**
 	 * The current CPU load of this remote server.
 	 */
 	private double cpuLoad = -1;
@@ -53,6 +61,14 @@ public class Server {
 
 
 	/**
+	 * @return true if this server is alive or false if it is down or unresponsive.
+	 */
+	public boolean isAlive() {
+		return isAlive;
+	}
+
+
+	/**
 	 * @return the current CPU load of the remote server that this object represents.
 	 */
 	public double getCPULoad() {
@@ -61,12 +77,18 @@ public class Server {
 	
 	
 	/**
-	 * Attempts to retrieve the CPU load of the remote server that this object represents.
-	 * As this method uses a blocking socket, it should always be run in a new thread from
-	 * a {@link ServerManager} instance. 
+	 * Attempts to connect to and retrieve the CPU load of the remote server that this object 
+	 * represents. As this method uses a blocking socket, it should always be run in a new thread 
+	 * from a {@link ServerManager} instance. In the case that the remote server is down or 
+	 * unresponsive and the connection fails, this method will set the <code>isAlive</code> state
+	 * of this object to false and return, otherwise sets it to true.
 	 */
-	public void updateCPULoad() {
+	public void updateServerState() {
 		SocketChannel socketChannel = ConnectNIO.getBlockingSocketChannel(address);
+		if (socketChannel == null) {
+			isAlive = false;
+			return;
+		}
 		ByteBuffer buffer = ByteBuffer.allocate(9);
 		buffer.put((byte) MessageType.SERVER_CPU_REQUEST.getValue());
 		buffer.flip();
@@ -89,6 +111,8 @@ public class Server {
 			System.out.println("Error retrieving CPU load for Server at: " + address.getHostName());
 		} else {
 			cpuLoad = buffer.getDouble();
+			isAlive = true;
+			System.out.println("Test " + address.getPort() + " " + cpuLoad);
 		}
 		try {
 			socketChannel.close();

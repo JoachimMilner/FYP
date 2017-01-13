@@ -45,9 +45,9 @@ public class ConnectNIO {
 			socketChannel.configureBlocking(true);
 			socketChannel.connect(connectAddress);
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
-		return socketChannel;
+		return socketChannel.isConnected() ? socketChannel : null;
 	}
 	
 	/**

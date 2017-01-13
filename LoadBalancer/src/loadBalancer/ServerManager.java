@@ -32,6 +32,12 @@ public class ServerManager implements Runnable {
 	}
 
 
+	/*
+	 * (non-Javadoc) To be called on <code>Thread.start()</code> to periodically
+	 * update the CPU load status for each remote server.
+	 *
+	 * @see java.lang.Runnable#run()
+	 */
 	@Override
 	public void run() {
 		
@@ -41,7 +47,7 @@ public class ServerManager implements Runnable {
 					
 					@Override
 					public void run() {
-						server.updateCPULoad();
+						server.updateServerState();
 					}
 					
 				}).start();
@@ -54,5 +60,22 @@ public class ServerManager implements Runnable {
 			}
 		}
 		
+	}
+	
+	
+	public Server getAvailableServer() {
+		Server availableServer = null;
+		boolean foundLiveServer = false;
+		for (Server server : servers) {
+			if (server.isAlive()) {
+				if (!foundLiveServer) {
+					availableServer = server;
+					foundLiveServer = true;
+				} else if (server.getCPULoad() < availableServer.getCPULoad()) {
+					availableServer = server;
+				}
+			}
+		}
+		return availableServer;
 	}
 }

@@ -1,9 +1,9 @@
 package loadBalancer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
@@ -55,6 +55,108 @@ public class ServerTests {
 	}
 	
 	/**
+	 * Test the {@link Server} object's <code>isAlive</code> method. Should return false
+	 * as soon as the object has been instantiated.
+	 */
+	@Test
+	public void testServer_isAliveAfterInstantiation() {
+		Server server = new Server(new InetSocketAddress("localhost", 8000));
+		assertFalse(server.isAlive());
+	}
+	
+	/**
+	 * Test the {@link Server} object's <code>isAlive</code> method. <code>isAlive</code> 
+	 * should return true after this </code>updateServerState</code> is called and the remote
+	 * (mocked) server is responsive.
+	 * @throws IOException 
+	 */
+	@Test
+	public void testServer_isAliveTrue() throws IOException {
+		Server server = new Server(new InetSocketAddress("localhost", 8000));
+		
+		ServerSocketChannel mockServerSocketChannel = ServerSocketChannel.open();
+		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
+		mockServerSocketChannel.configureBlocking(false);
+		Selector acceptSelector = Selector.open();
+		mockServerSocketChannel.register(acceptSelector, SelectionKey.OP_ACCEPT);
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				server.updateServerState();
+			}
+			
+		}).start();
+		
+		// Check that the mocked server receives the alive request message
+		SocketChannel acceptedSocketChannel = null;
+		if (acceptSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		try {
+			acceptedSocketChannel = mockServerSocketChannel.accept();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		assertNotNull(acceptedSocketChannel);
+		ByteBuffer buffer = ByteBuffer.allocate(9);
+	    Selector readSelector = Selector.open();
+	    acceptedSocketChannel.configureBlocking(false);
+	    acceptedSocketChannel.register(readSelector, SelectionKey.OP_READ);
+	    if (readSelector.select(1000) == 0) {
+	    	throw new SocketTimeoutException();
+	    }
+	    int bytesRead = acceptedSocketChannel.read(buffer);
+	    assertEquals(1, bytesRead);
+		buffer.flip();
+		MessageType responseMessageType = MessageType.values()[buffer.get()];
+		assertEquals(MessageType.SERVER_CPU_REQUEST, responseMessageType);
+		
+		// Return a random double representing the CPU load from the mocked server and check that the Server object updates it
+		buffer.clear();
+		buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
+		double cpuUsage = ThreadLocalRandom.current().nextDouble(0.1, 99.9);
+		buffer.putDouble(cpuUsage);
+		buffer.flip();
+		while (buffer.hasRemaining()) {
+			acceptedSocketChannel.write(buffer);
+		}
+		try {
+			Thread.sleep(25);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		assertTrue(server.isAlive());
+		mockServerSocketChannel.close();
+	}
+	
+	/**
+	 * Test the {@link Server} object's <code>isAlive</code> method. <code>isAlive</code> 
+	 * should return false after this <code>updateServerState</code> is called and the remote
+	 * (mocked) server is unresponsive. We use reflection here to first set the value to true, 
+	 * this is to ensure that the test doesn't incorrectly pass because the value is false by 
+	 * default.
+	 * @throws IOException 
+	 */
+	@Test
+	public void testServer_isAliveAfterServerUnresponsive() throws IOException {
+		Server server = new Server(new InetSocketAddress("localhost", 8000));
+		try {
+			Field isAliveField = Server.class.getDeclaredField("isAlive");
+			isAliveField.setAccessible(true);
+			isAliveField.set(server, new Boolean(true));
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		assertTrue(server.isAlive());
+		
+		server.updateServerState();
+		
+		assertFalse(server.isAlive());
+	}
+	
+	/**
 	 * Test the {@link Server} object's <code>getCPULoad</code> method. Should return -1
 	 * when the object has been instantiated but the cpu load has not been updated.
 	 */
@@ -85,7 +187,7 @@ public class ServerTests {
 			
 			@Override
 			public void run() {
-				server.updateCPULoad();
+				server.updateServerState();
 			}
 			
 		}).start();
@@ -129,5 +231,6 @@ public class ServerTests {
 			e.printStackTrace();
 		}
 		assertEquals(cpuUsage, server.getCPULoad(), 0);
+		mockServerSocketChannel.close();
 	}
 }

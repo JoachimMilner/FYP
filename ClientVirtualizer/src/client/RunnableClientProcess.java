@@ -113,6 +113,15 @@ public class RunnableClientProcess implements Runnable {
 			e.printStackTrace();
 		}
 		clientManager.notifyThreadFinished();
+		// Keep client alive for a couple of seconds after sending all messages to check for replies.
+		for (int i = 0; i < 20; i++) {
+			checkForMessages();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
 	}
 	
 
