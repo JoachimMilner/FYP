@@ -1,6 +1,9 @@
-package loadBalancer;
+package commsModel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -16,9 +19,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.junit.Test;
 
 import connectionUtils.MessageType;
+import loadBalancer.ServerManager;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  * <p>Tests for the {@link Server} class and its instance methods.</p>
  */
 public class ServerTests {
@@ -47,7 +51,7 @@ public class ServerTests {
 	 */
 	@Test
 	public void testServer_getAddress() {
-		InetSocketAddress serverAddress = new InetSocketAddress("192.168.0.0", 8000);
+		InetSocketAddress serverAddress = new InetSocketAddress("localhost", 8000);
 		Server server = new Server(serverAddress);
 		assertEquals(serverAddress, server.getAddress());
 		assertEquals(serverAddress.getHostName(), server.getAddress().getHostName());
@@ -128,6 +132,8 @@ public class ServerTests {
 			e.printStackTrace();
 		}
 		assertTrue(server.isAlive());
+		acceptSelector.close();
+		readSelector.close();
 		mockServerSocketChannel.close();
 	}
 	
@@ -143,7 +149,7 @@ public class ServerTests {
 	public void testServer_isAliveAfterServerUnresponsive() throws IOException {
 		Server server = new Server(new InetSocketAddress("localhost", 8000));
 		try {
-			Field isAliveField = Server.class.getDeclaredField("isAlive");
+			Field isAliveField = Server.class.getSuperclass().getDeclaredField("isAlive");
 			isAliveField.setAccessible(true);
 			isAliveField.set(server, new Boolean(true));
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
@@ -179,7 +185,7 @@ public class ServerTests {
 		
 		ServerSocketChannel mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		mockServerSocketChannel.configureBlocking(false);
+ 		mockServerSocketChannel.configureBlocking(false);
 		Selector acceptSelector = Selector.open();
 		mockServerSocketChannel.register(acceptSelector, SelectionKey.OP_ACCEPT);
 		
@@ -231,6 +237,8 @@ public class ServerTests {
 			e.printStackTrace();
 		}
 		assertEquals(cpuUsage, server.getCPULoad(), 0);
+		acceptSelector.close();
+		readSelector.close();
 		mockServerSocketChannel.close();
 	}
 }

@@ -10,7 +10,7 @@ import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         <p>
  *         This class represents a single virtualized client process and can
  *         only be instantiated by using <code>initialiseClientPool</code> on a
@@ -107,11 +107,6 @@ public class RunnableClientProcess implements Runnable {
 			}
 			requestsSent++;
 		}
-		try {
-			socketChannel.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		clientManager.notifyThreadFinished();
 		// Keep client alive for a couple of seconds after sending all messages to check for replies.
 		for (int i = 0; i < 20; i++) {
@@ -121,6 +116,11 @@ public class RunnableClientProcess implements Runnable {
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}
+		}
+		try {
+			socketChannel.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	

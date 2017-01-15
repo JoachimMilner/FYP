@@ -19,7 +19,7 @@ import org.junit.Test;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  * <p>Tests for the {@link RunnableClientProcess} class and its instance methods.</p>
  */
 public class RunnableClientProcessTests {
@@ -150,7 +150,7 @@ public class RunnableClientProcessTests {
 		mockServerSocketChannel.accept();
 
 		try {
-			Thread.sleep(100);
+			Thread.sleep(2100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

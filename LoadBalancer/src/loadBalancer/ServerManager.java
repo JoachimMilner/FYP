@@ -2,8 +2,10 @@ package loadBalancer;
 
 import java.util.Set;
 
+import commsModel.Server;
+
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         <p>
  * 		Object for managing a set of servers. Implements the {@link Runnable}
  *         interface and when started in a new thread, will periodically update

@@ -21,7 +21,7 @@ import org.junit.Test;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  * <p>Tests for the {@link RunnableRequestProcessor} class and its instance methods.</p>
  */
 public class RunnableRequestProcessorTests {
@@ -156,6 +156,7 @@ public class RunnableRequestProcessorTests {
 			responseValues[i] = buffer.getLong();
 			assertTrue(responseValues[i] > 0);
 		}
+		selector.close();
 	}
 	
 	/**
@@ -308,6 +309,7 @@ public class RunnableRequestProcessorTests {
 	    int bytesRead = mockClientSocketChannel.read(buffer);
 	    assertEquals(81, bytesRead);
 	    assertEquals(1, requestProcessor.getResponsesSent());
+	    selector.close();
 	}
 	
 	/**
@@ -344,6 +346,7 @@ public class RunnableRequestProcessorTests {
 		    	throw new SocketTimeoutException();
 		    }
 		    mockClientSocketChannel.read(buffer);
+		    selector.close();
 		}
 	    assertEquals(iterations, requestProcessor.getResponsesSent());
 	}
@@ -382,5 +385,6 @@ public class RunnableRequestProcessorTests {
 		assertEquals(MessageType.SERVER_CPU_NOTIFY, responseMessageType);
 		double serverLoad = buffer.getDouble();
 		assertTrue(serverLoad > 0);
+		selector.close();
 	}
 }

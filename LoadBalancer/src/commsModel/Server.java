@@ -1,4 +1,4 @@
-package loadBalancer;
+package commsModel;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -7,30 +7,17 @@ import java.nio.channels.SocketChannel;
 
 import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
+import loadBalancer.ServerManager;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         <p>
  * 		Class used to represent a back-end server and provide abstractions
  *         for TCP communication.
  *         </p>
  *
  */
-public class Server {
-	
-	/**
-	 * The remote address of this server.
-	 */
-	private InetSocketAddress address;
-	
-	
-	/**
-	 * Boolean value indicating whether this server is responsive. Set to
-	 * false on object instantiation and then updated by the {@link ServerManager} 
-	 * periodically.
-	 */
-	private boolean isAlive = false;
-	
+public class Server extends AbstractRemote {
 	
 	/**
 	 * The current CPU load of this remote server.
@@ -49,22 +36,6 @@ public class Server {
 			throw new IllegalArgumentException("Server address cannot be null.");
 		
 		this.address = address;
-	}
-
-
-	/**
-	 * @return the address of the remote server that this object represents.
-	 */
-	public InetSocketAddress getAddress() {
-		return address;
-	}
-
-
-	/**
-	 * @return true if this server is alive or false if it is down or unresponsive.
-	 */
-	public boolean isAlive() {
-		return isAlive;
 	}
 
 

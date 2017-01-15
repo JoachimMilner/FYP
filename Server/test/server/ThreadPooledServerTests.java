@@ -16,7 +16,7 @@ import org.junit.Test;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  * <p>Tests for the {@link ThreadPooledServer} class and its instance methods.</p>
  */
 public class ThreadPooledServerTests {
@@ -127,6 +127,7 @@ public class ThreadPooledServerTests {
 			assertTrue(responseValues[i] > 0);
 		}
 		serverThread.interrupt();
+		selector.close();
 		mockClient.close();
 	}
 	
@@ -190,6 +191,7 @@ public class ThreadPooledServerTests {
 		assertEquals(81, bytesRead);
 		assertEquals(1, threadPooledServer.getTotalRequestsReceived());
 		serverThread.interrupt();
+		selector.close();
 		mockClient.close();
 	}
 	

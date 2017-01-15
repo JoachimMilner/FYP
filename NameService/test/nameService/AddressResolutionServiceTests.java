@@ -129,6 +129,7 @@ public class AddressResolutionServiceTests {
 		String hostAddress = charBuffer.toString();
 		assertEquals("localhost", hostAddress);
 		serviceThread.interrupt();
+		selector.close();
 		mockClient.close();
 	}
 }

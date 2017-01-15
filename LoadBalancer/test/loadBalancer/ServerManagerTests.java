@@ -20,10 +20,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.junit.Test;
 
+import commsModel.Server;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         <p>
  * 		Tests for the {@link ServerManager} class and its instance methods.
  *         </p>
@@ -35,7 +36,7 @@ public class ServerManagerTests {
 	 */
 	@Test
 	public void testServerManager_createServerManagerSuccessful() {
-		ServerManager serverManager = new ServerManager(getServerList(1));
+		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		assertNotNull(serverManager);
 	}
 
@@ -54,7 +55,7 @@ public class ServerManagerTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testServerManager_createServerManagerZeroServers() {
-		new ServerManager(getServerList(0));
+		new ServerManager(TestUtils.getServerSet(0));
 	}
 
 	/**
@@ -65,7 +66,7 @@ public class ServerManagerTests {
 	 */
 	@Test
 	public void testServerManager_testUpdateServerCPULoads() {
-		Set<Server> servers = getServerList(3);
+		Set<Server> servers = TestUtils.getServerSet(3);
 		ServerManager serverManager = new ServerManager(servers);
 		Map<Server, Double> serverLoadMap = mockServerSockets(servers);
 		Thread serverManagerThread = new Thread(serverManager);
@@ -101,7 +102,7 @@ public class ServerManagerTests {
 			cpuLoadField.set(server2, new Double(15.035));
 			cpuLoadField.set(server3, new Double(30.09));
 			
-			Field isAliveField = Server.class.getDeclaredField("isAlive");
+			Field isAliveField = Server.class.getSuperclass().getDeclaredField("isAlive");
 			isAliveField.setAccessible(true);
 			isAliveField.set(server1, true);
 			isAliveField.set(server2, true);
@@ -160,7 +161,7 @@ public class ServerManagerTests {
 			cpuLoadField.set(server2, new Double(50.43));
 			cpuLoadField.set(server3, new Double(26.34));
 			
-			Field isAliveField = Server.class.getDeclaredField("isAlive");
+			Field isAliveField = Server.class.getSuperclass().getDeclaredField("isAlive");
 			isAliveField.setAccessible(true);
 			isAliveField.set(server2, true);
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
@@ -171,25 +172,6 @@ public class ServerManagerTests {
 		assertEquals(server2, availableServer);
 	}
 	
-
-	/**
-	 * Convenience method for creating a set of {@link Server} objects to be
-	 * passed to the {@link ServerManager}'s constructor. As the network
-	 * communication in this class' tests will be run on localhost, this method
-	 * will create server objects starting with port 8000, and then incrementing
-	 * the port for each Server object created.
-	 * 
-	 * @param numberOfServers
-	 *            the size of the set of servers to be returned.
-	 * @return a HashSet containing the number of servers specified.
-	 */
-	private Set<Server> getServerList(int numberOfServers) {
-		Set<Server> servers = new HashSet<>();
-		for (int i = 0; i < numberOfServers; i++) {
-			servers.add(new Server(new InetSocketAddress("localhost", 8000 + i)));
-		}
-		return servers;
-	}
 
 	/**
 	 * Starts a thread for each {@link Server} in the set passed in that will
@@ -248,7 +230,8 @@ public class ServerManagerTests {
 						while (buffer.hasRemaining()) {
 							acceptedSocketChannel.write(buffer);
 						}
-
+						acceptSelector.close();
+						readSelector.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

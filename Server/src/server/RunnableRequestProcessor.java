@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br> Class used to processing received client requests. When a
+ * @author Joachim Class used to processing received client requests. When a
  *         request is received at the <code>ServerSocketChannel</code> in the
  *         {@link ThreadPooledServer}, it is delegated to
  *         RunnableRequestProcessor which will handle the request processing.

@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import connectionUtils.IConnectableComponent;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         <p>
  *         This class spawns and handles a specified number of
  *         {@link RunnableClientProcess} instances.
@@ -21,23 +21,27 @@ public class VirtualClientManager implements IConnectableComponent {
 	 * maintain at any time.
 	 */
 	private int maxClients;
+	
 
 	/**
 	 * The number of virtual clients that this VirtualClientManager has started.
 	 */
 	private int numberOfLiveClients = 0;
 
+	
 	/**
 	 * The minimum message sending frequency to be allocated to a client in
 	 * milliseconds.
 	 */
 	private int minSendFrequencyMs;
 
+	
 	/**
 	 * The maximum message sending frequency to be allocated to a client in
 	 * milliseconds.
 	 */
 	private int maxSendFrequencyMs;
+	
 	
 	/**
 	 * The minimum number of requests that a virtual client created by this
@@ -45,27 +49,38 @@ public class VirtualClientManager implements IConnectableComponent {
 	 */
 	private int minClientRequests;
 
+	
 	/**
 	 * The maximum number of requests that a virtual client created by this
 	 * VirtualClientManagerwill send.
 	 */
 	private int maxClientRequests;
 
+	
 	/**
 	 * The number of requests sent by all virtual clients.
 	 */
 	private int totalRequestsSent = 0;
 
+	
 	/**
 	 * The number of server responses received by all virtual clients.
 	 */
 	private int totalResponsesReceived = 0;
 
+	
+	/**
+	 * Flag used to stop this VirtualClientManager.
+	 */
+	private boolean clientMonitorThreadStopped = false;
+	
+	
 	/**
 	 * ExecutorService for starting the pool of client threads.
 	 */
 	private ExecutorService clientThreadExecutor;
 
+	
 	/**
 	 * Creates a VirtualClientManager with encapsulated functionality for
 	 * initialising and handling a collection of {@link RunnableClientProcess}
@@ -102,6 +117,7 @@ public class VirtualClientManager implements IConnectableComponent {
 		this.maxClientRequests = maxClientRequests;
 	}
 
+	
 	/**
 	 * @return the number of {@link RunnableClientProcess} instances that this
 	 *         object contains.
@@ -110,6 +126,7 @@ public class VirtualClientManager implements IConnectableComponent {
 		return maxClients;
 	}
 
+	
 	/**
 	 * @return the number of {@link RunnableClientProcess} threads that this
 	 *         object has started.
@@ -118,6 +135,7 @@ public class VirtualClientManager implements IConnectableComponent {
 		return numberOfLiveClients;
 	}
 
+	
 	/**
 	 * @return the total number of requests that have been sent by all
 	 *         {@link RunnableClientProcess} threads.
@@ -126,6 +144,7 @@ public class VirtualClientManager implements IConnectableComponent {
 		return totalRequestsSent;
 	}
 
+	
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they send a
 	 * server request. Synchronized for thread safety.
@@ -134,6 +153,7 @@ public class VirtualClientManager implements IConnectableComponent {
 		totalRequestsSent++;
 	}
 
+	
 	/**
 	 * @return the total number of responses that have been received on the
 	 *         <code>SocketChannel</code>.
@@ -143,6 +163,7 @@ public class VirtualClientManager implements IConnectableComponent {
 
 	}
 
+	
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they receive a
 	 * message from the server. Synchronized for thread safety.
@@ -151,15 +172,17 @@ public class VirtualClientManager implements IConnectableComponent {
 		totalResponsesReceived++;
 	}
 	
+	
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they have sent the total
 	 * number of messages assigned to them. Decrements the number of live clients so we can
-	 * monitor the thread pool size. Synchronized fopr thread safety.
+	 * monitor the thread pool size. Synchronized for thread safety.
 	 */
 	public synchronized void notifyThreadFinished() {
 		numberOfLiveClients--;
 	}
 
+	
 	/**
 	 * Creates a number of thread specified by <code>numberOfClients</code> and
 	 * starts them using an {@link ExecutorService}. This method can only be
@@ -186,13 +209,16 @@ public class VirtualClientManager implements IConnectableComponent {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while (true) {
+				while (!clientMonitorThreadStopped) {
 					if (numberOfLiveClients < maxClients) {
 						createNewClientThread();
 					}
 					try {
 						Thread.sleep(250);
 					} catch (InterruptedException e) {
+						if (clientMonitorThreadStopped) {
+							break;
+						}
 						startClientMonitor();
 					}
 					for (int i = 0; i < 20; i++) {
@@ -220,5 +246,13 @@ public class VirtualClientManager implements IConnectableComponent {
 				messageSendFrequencyMs, totalRequestsToSend);
 		clientThreadExecutor.execute(newClient);
 		numberOfLiveClients++;
+	}
+	
+	
+	/**
+	 * Stops the thread that is running this VirtualClientManager.
+	 */
+	public void stop() {
+		clientMonitorThreadStopped = true;
 	}
 }

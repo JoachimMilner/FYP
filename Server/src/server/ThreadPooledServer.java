@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 import connectionUtils.*;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         This class is used to initialise and manage a thread pool of
  *         {@link RunnableRequestProcessor} instances. Exactly one
  *         ThreadPooledServer should be instantiated and started in a thread

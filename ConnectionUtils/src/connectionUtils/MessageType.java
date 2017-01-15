@@ -1,7 +1,7 @@
 package connectionUtils;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         <p>
  * 		MessageType class used to handle all data sending/receiving between
  *         network nodes. Note that the MessageType enumerations are never used

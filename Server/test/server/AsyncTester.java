@@ -1,9 +1,9 @@
 package server;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  *         Class based on code from:
- *         http://stackoverflow.com/questions/2596493/junit-assert-in-thread-throws-exception/2596530</br>
+ *         http://stackoverflow.com/questions/2596493/junit-assert-in-thread-throws-exception/2596530
  *         This class allows indirect checking of exceptions that are thrown in
  *         sub-threads during unit tests.
  */

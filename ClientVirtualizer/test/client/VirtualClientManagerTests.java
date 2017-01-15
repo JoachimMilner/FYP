@@ -13,7 +13,7 @@ import org.junit.Test;
 import connectionUtils.MessageType;
 
 /**
- * @author Joachim</br>
+ * @author Joachim
  * <p>Tests for the {@link VirtualClientManager} class and its instance methods.</p>
  */
 public class VirtualClientManagerTests {
@@ -87,6 +87,7 @@ public class VirtualClientManagerTests {
 		VirtualClientManager clientManager = new VirtualClientManager(2, 100, 200, 5, 10);
 		clientManager.initialiseClientPool();
 		assertEquals(2, clientManager.getNumberOfLiveClients());
+		clientManager.stop();
 		mockServerSocketChannel.close();
 	}
 	
@@ -132,6 +133,7 @@ public class VirtualClientManagerTests {
 		}
 		
 		assertEquals(1, clientManager.getTotalResponsesReceived());
+		clientManager.stop();
 		mockServerSocketChannel.close();
 	}
 	
@@ -165,6 +167,7 @@ public class VirtualClientManagerTests {
 		}
 		
 		assertTrue(clientManager.getTotalRequestsSent() > 0);
+		clientManager.stop();
 		mockServerSocketChannel.close();
 	}
 	

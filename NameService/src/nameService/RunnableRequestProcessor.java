@@ -9,6 +9,14 @@ import java.nio.charset.CharsetEncoder;
 
 import connectionUtils.MessageType;
 
+/**
+ * @author Joachim
+ *         <p>
+ * 		Class for handling incoming requests. An instance is created by an
+ *         {@link AddressResolutionService} object for each request received.
+ *         </p>
+ *
+ */
 public class RunnableRequestProcessor implements Runnable {
 
 	/**
@@ -24,11 +32,13 @@ public class RunnableRequestProcessor implements Runnable {
 	 */
 	private AddressResolutionService addressResolutionService;
 
-	
 	/**
-	 * Creates an {@link RunnableRequestProcessor} instance that will process an incoming request.
-	 * When the <code>run</code> method is called it will listen for either a <code>HOST_ADDR_NOTIFY</code> request
-	 * from the primary load balancer or a <code>HOST_ADDR_REQUEST</code> request from a client. 
+	 * Creates an {@link RunnableRequestProcessor} instance that will process an
+	 * incoming request. When the <code>run</code> method is called it will
+	 * listen for either a <code>HOST_ADDR_NOTIFY</code> request from the
+	 * primary load balancer or a <code>HOST_ADDR_REQUEST</code> request from a
+	 * client.
+	 * 
 	 * @param socketChannel
 	 * @param addressResolutionService
 	 */
@@ -37,7 +47,7 @@ public class RunnableRequestProcessor implements Runnable {
 			throw new IllegalArgumentException("SocketChannel must be initialised and connected");
 		if (addressResolutionService == null)
 			throw new IllegalArgumentException("AddressResolutionService cannot be null.");
-		
+
 		this.socketChannel = socketChannel;
 		this.addressResolutionService = addressResolutionService;
 	}
@@ -57,7 +67,8 @@ public class RunnableRequestProcessor implements Runnable {
 				ByteBuffer buffer = ByteBuffer.allocate(81);
 				int bytesRead = socketChannel.read(buffer);
 
-				if (bytesRead == -1) { // Something went wrong, close channel and terminate
+				if (bytesRead == -1) { // Something went wrong, close channel
+										// and terminate
 					socketChannel.close();
 					break;
 				} else {
@@ -68,7 +79,7 @@ public class RunnableRequestProcessor implements Runnable {
 					case HOST_ADDR_NOTIFY:
 						String hostAddress = socketChannel.getRemoteAddress().toString();
 						addressResolutionService.setHostAddress(hostAddress);
-						
+
 						break;
 					case HOST_ADDR_REQUEST:
 						CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
@@ -80,8 +91,8 @@ public class RunnableRequestProcessor implements Runnable {
 					}
 				}
 			} catch (IOException e) {
-				//e.printStackTrace();
-				
+				// e.printStackTrace();
+
 				break;
 			}
 		}
