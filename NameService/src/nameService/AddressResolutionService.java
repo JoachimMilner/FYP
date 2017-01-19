@@ -11,7 +11,7 @@ import connectionUtils.ConnectNIO;
 /**
  * @author Joachim
  *         <p>
- * 		This class represents a mocked DNS service. When run in a new thread,
+ *         This class represents a mocked DNS service. When run in a new thread,
  *         it will act as a thread pooled server that accepts 2 kinds of
  *         request. Either an address notification from a load balancer,
  *         indicating that the remote process has become the primary server for
@@ -28,12 +28,21 @@ public class AddressResolutionService {
 	 */
 	private int acceptPort;
 
+	
 	/**
 	 * The remote address that will be updated by the active load balancer and
 	 * requested by clients.
 	 */
 	private String hostAddress;
 
+	
+	/**
+	 * The remote port that will be updated by the active load balancer and
+	 * requested by clients.
+	 */
+	private int hostPort;
+
+	
 	/**
 	 * Creates a new AddressResolutionService with the specified port to accept
 	 * connections on.
@@ -44,6 +53,7 @@ public class AddressResolutionService {
 		this.acceptPort = acceptPort;
 	}
 
+	
 	/**
 	 * @return the current remote address that is held for the load balancer.
 	 */
@@ -51,6 +61,7 @@ public class AddressResolutionService {
 		return hostAddress;
 	}
 
+	
 	/**
 	 * @param hostAddress
 	 *            - updated remote address to be set as the primary load
@@ -60,6 +71,24 @@ public class AddressResolutionService {
 		this.hostAddress = hostAddress;
 	}
 
+	
+	/**
+	 * @return the current remote port that is held for the load balancer.
+	 */
+	public int getHostPort() {
+		return hostPort;
+	}
+
+	
+	/**
+	 * @param hostPort
+	 *            - updated remote port to be set as the primary load balancer
+	 */
+	public void setHostPort(int hostPort) {
+		this.hostPort = hostPort;
+	}
+
+	
 	/**
 	 * Starts listening for incoming connection requests and delegates each to a
 	 * {@link RunnableRequestProcessor}. Expects to receive either a

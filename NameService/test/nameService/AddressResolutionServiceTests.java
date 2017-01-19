@@ -57,7 +57,7 @@ public class AddressResolutionServiceTests {
 	@Test
 	public void testAddressResolutionService_notifyHostAddress() throws IOException {
 		AddressResolutionService addressResolutionService = new AddressResolutionService(8000);
-		addressResolutionService.setHostAddress("localhost");
+		//addressResolutionService.setHostAddress("localhost");
 		Thread serviceThread = new Thread(new Runnable() {
 
 			@Override
@@ -77,8 +77,13 @@ public class AddressResolutionServiceTests {
 		while (buffer.hasRemaining()) {
 			mockServer.write(buffer);
 		}
-
-		assertEquals("localhost", addressResolutionService.getHostAddress());
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		assertEquals("127.0.0.1", addressResolutionService.getHostAddress());
+		assertEquals(mockServer.socket().getLocalPort(), addressResolutionService.getHostPort());
 		serviceThread.interrupt();
 		mockServer.close();
 	}
@@ -91,6 +96,7 @@ public class AddressResolutionServiceTests {
 	public void testAddressResolutionService_requestHostAddress() throws IOException {
 		AddressResolutionService addressResolutionService = new AddressResolutionService(8000);
 		addressResolutionService.setHostAddress("localhost");
+		addressResolutionService.setHostPort(8000);
 		Thread serviceThread = new Thread(new Runnable() {
 
 			@Override
@@ -104,7 +110,7 @@ public class AddressResolutionServiceTests {
 		SocketChannel mockClient = SocketChannel.open();
 		mockClient.connect(new InetSocketAddress("localhost", 8000));
 
-		ByteBuffer buffer = ByteBuffer.allocate(16);
+		ByteBuffer buffer = ByteBuffer.allocate(17);
 		buffer.clear();
 		buffer.put((byte) MessageType.HOST_ADDR_REQUEST.getValue());
 		buffer.flip();
@@ -123,9 +129,13 @@ public class AddressResolutionServiceTests {
 		//byte[] byteArray = new byte[bytesRead];
 		assertTrue(bytesRead != -1);
 		buffer.flip();
-		CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
+		MessageType responseMessageType = MessageType.values()[buffer.get()];
+		assertEquals(MessageType.HOST_ADDR_RESPONSE, responseMessageType);
 		
-		//buffer.get(byteArray);
+		int hostPort = buffer.getInt();
+		assertEquals(8000, hostPort);
+		
+		CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
 		String hostAddress = charBuffer.toString();
 		assertEquals("localhost", hostAddress);
 		serviceThread.interrupt();

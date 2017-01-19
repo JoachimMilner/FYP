@@ -16,4 +16,7 @@
 	<heartbeatTimeoutMs>
 	
 	</heartbeatTimeoutMs>	
+	<defaultServerTokenExpiry>
+	
+	</defaultServerTokenExpiry>
 </configuration>

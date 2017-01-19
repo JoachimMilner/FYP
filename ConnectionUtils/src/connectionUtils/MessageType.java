@@ -36,29 +36,46 @@ public enum MessageType {
 	 */
 	HOST_ADDR_REQUEST(3),
 	
+	/**
+	 * A message from the name service containing the current primary host's address. 
+	 */
+	HOST_ADDR_RESPONSE(4),
+	
 
 	////////// SERVER LOAD MESSAGES //////////
 	/**
 	 * A request to the server for its current CPU load info.
 	 */
-	SERVER_CPU_REQUEST(4),
+	SERVER_CPU_REQUEST(5),
 
 	/**
 	 * A server response containing the given node's current CPU load.
 	 */
-	SERVER_CPU_NOTIFY(5),
+	SERVER_CPU_NOTIFY(6),
 	
 	
 	////////// NODE ALIVE MESSAGES //////////
 	/**
 	 * A request to a node to determine if it is alive/responsive.
 	 */
-	ALIVE_REQUEST(6),
+	ALIVE_REQUEST(7),
 	
 	/**
 	 * Response from a node to indicate that it is alive.
 	 */
-	ALIVE_RESPONSE(7);
+	ALIVE_RESPONSE(8),
+	
+	
+	////////// CLIENT-LOAD BALANCER MESSAGES //////////
+	/**
+	 * A request to the primary load balancer for the connection details of an available server. 
+	 */
+	AVAILABLE_SERVER_REQUEST(9),
+	
+	/**
+	 * A server token message containing the address of an available server to use. 
+	 */
+	SERVER_TOKEN(10);
 	
 
 	/**

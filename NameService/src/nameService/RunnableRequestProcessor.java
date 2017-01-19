@@ -64,7 +64,7 @@ public class RunnableRequestProcessor implements Runnable {
 	public void run() {
 		while (socketChannel.isConnected()) {
 			try {
-				ByteBuffer buffer = ByteBuffer.allocate(81);
+				ByteBuffer buffer = ByteBuffer.allocate(16);
 				int bytesRead = socketChannel.read(buffer);
 
 				if (bytesRead == -1) { // Something went wrong, close channel
@@ -77,13 +77,23 @@ public class RunnableRequestProcessor implements Runnable {
 
 					switch (messageType) {
 					case HOST_ADDR_NOTIFY:
-						String hostAddress = socketChannel.getRemoteAddress().toString();
+						String hostAddress = socketChannel.socket().getInetAddress().getHostName();
+						int hostPort = socketChannel.socket().getPort();
 						addressResolutionService.setHostAddress(hostAddress);
-
+						addressResolutionService.setHostPort(hostPort);
+						System.out.println("Received host address notification message from host at: " + hostAddress + ":" + hostPort);
 						break;
 					case HOST_ADDR_REQUEST:
 						CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+						buffer.clear();
+						buffer.put((byte)MessageType.HOST_ADDR_RESPONSE.getValue());
+						buffer.putInt(addressResolutionService.getHostPort());
+						buffer.flip();
+						while(buffer.hasRemaining()) {
+							socketChannel.write(buffer);
+						}
 						socketChannel.write(encoder.encode(CharBuffer.wrap(addressResolutionService.getHostAddress())));
+						System.out.println("Received host address request from client.");
 						break;
 					default:
 						// Received a bad request

@@ -19,8 +19,15 @@ import commsModel.Server;
  *
  */
 public class ActiveLoadBalancer extends AbstractLoadBalancer {
-	
 
+	/**
+	 * Creates a new ActiveLoadBalancer object that acts as the primary load balancer process in the system.
+	 * The <code>run</code> method prompts this object to start listening to requests and 
+	 * @param acceptPort
+	 * @param remoteLoadBalancers
+	 * @param servers
+	 * @param nameServiceAddress
+	 */
 	public ActiveLoadBalancer(int acceptPort, Set<RemoteLoadBalancer> remoteLoadBalancers, Set<Server> servers,
 			InetSocketAddress nameServiceAddress) {
 		if (remoteLoadBalancers == null || remoteLoadBalancers.isEmpty())
@@ -29,10 +36,16 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			throw new IllegalArgumentException("Servers set cannot be null or empty.");
 		if (nameServiceAddress == null)
 			throw new IllegalArgumentException("Name service address cannot be null.");
+		
+		this.acceptPort = acceptPort;
+		this.remoteLoadBalancers = remoteLoadBalancers;
+		this.servers = servers;
+		this.nameServiceAddress = nameServiceAddress;
 	}
-	
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
