@@ -7,6 +7,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
 
@@ -14,6 +19,7 @@ import org.junit.Test;
 
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
+import connectionUtils.MessageType;
 import testUtils.TestUtils;
 
 /**
@@ -163,13 +169,25 @@ public class ActiveLoadBalancerTests {
 	@Test
 	public void testActiveLoadBalancer_socketCreation() throws IOException {
 		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8001));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8004));
 		Thread activeLoadBalancerThread = new Thread(activeLoadBalancer);
+		ServerSocketChannel nameServiceSocketChannel = getMockNameServiceSocketChannel();
 		activeLoadBalancerThread.start();
+		
+		Selector acceptSelector = Selector.open();
+		nameServiceSocketChannel.configureBlocking(false);
+		nameServiceSocketChannel.register(acceptSelector, SelectionKey.OP_ACCEPT);
+		if (acceptSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		nameServiceSocketChannel.accept();
+		
 		SocketChannel mockClient = SocketChannel.open();
 		mockClient.connect(new InetSocketAddress("localhost", 8000));
 		assertTrue(mockClient.isConnected());
 		activeLoadBalancerThread.interrupt();
+		acceptSelector.close();
+		nameServiceSocketChannel.close();
 		mockClient.close();
 	}
 	
@@ -183,13 +201,22 @@ public class ActiveLoadBalancerTests {
 		Set<Thread> threadSetDefault = Thread.getAllStackTraces().keySet();
 		Set<Server> servers = TestUtils.getServerSet(1);
 		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8001, TestUtils.getRemoteLoadBalancerSet(1),
-				servers, new InetSocketAddress("localhost", 8002));
+				servers, new InetSocketAddress("localhost", 8004));
+		ServerSocketChannel nameServiceSocketChannel = getMockNameServiceSocketChannel();
 		TestUtils.mockServerSockets(servers);
 		Thread activeLoadBalancerThread = new Thread(activeLoadBalancer);
 		activeLoadBalancerThread.start();
 		
+		Selector acceptSelector = Selector.open();
+		nameServiceSocketChannel.configureBlocking(false);
+		nameServiceSocketChannel.register(acceptSelector, SelectionKey.OP_ACCEPT);
+		if (acceptSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		nameServiceSocketChannel.accept();
+		
 		try {
-			Thread.sleep(300);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -209,6 +236,66 @@ public class ActiveLoadBalancerTests {
 		Set<Thread> threadSetPoolIncremented = Thread.getAllStackTraces().keySet();
 		assertEquals(threadSetLBInit.size() + 1, threadSetPoolIncremented.size());
 		activeLoadBalancerThread.interrupt();
+		acceptSelector.close();
+		nameServiceSocketChannel.close();
 		mockClient.close();
+	}
+	
+	/**
+	 * Test that a new active load balancer sends a <code>HOST_ADDR_NOTIFY</code> message
+	 * to the name service when it is started. 
+	 * @throws IOException 
+	 */
+	@Test
+	public void testActiveLoadBalancer_notifyNameService() throws IOException {
+		Set<Server> servers = TestUtils.getServerSet(1);
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8001, TestUtils.getRemoteLoadBalancerSet(1),
+				servers, new InetSocketAddress("localhost", 8004));
+		ServerSocketChannel nameServiceSocketChannel = getMockNameServiceSocketChannel();
+		TestUtils.mockServerSockets(servers);
+		Thread activeLoadBalancerThread = new Thread(activeLoadBalancer);
+		activeLoadBalancerThread.start();
+		
+		Selector acceptSelector = Selector.open();
+		nameServiceSocketChannel.configureBlocking(false);
+		nameServiceSocketChannel.register(acceptSelector, SelectionKey.OP_ACCEPT);
+		if (acceptSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		SocketChannel acceptedNameServiceSocketChannel = nameServiceSocketChannel.accept();
+		ByteBuffer buffer = ByteBuffer.allocate(1);
+		
+		Selector readSelector = Selector.open();
+		acceptedNameServiceSocketChannel.configureBlocking(false);
+		acceptedNameServiceSocketChannel.register(readSelector, SelectionKey.OP_READ);
+		if (readSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		int bytesRead = acceptedNameServiceSocketChannel.read(buffer);
+		assertEquals(1, bytesRead);
+		
+		buffer.flip();
+		MessageType messageType = MessageType.values()[buffer.get()];
+		assertEquals(MessageType.HOST_ADDR_NOTIFY, messageType);
+		activeLoadBalancerThread.interrupt();
+		acceptSelector.close();
+		readSelector.close();
+		nameServiceSocketChannel.close();
+	}
+	
+	/**
+	 * Utility method for creating a {@link ServerSocketChannel} to mock the name service.
+	 * @return a {@link ServerSocketChannel} bound to port 8004. 
+	 */
+	private ServerSocketChannel getMockNameServiceSocketChannel() {
+		ServerSocketChannel mockNameServiceSocketChannel = null;
+		try {
+			mockNameServiceSocketChannel = ServerSocketChannel.open();
+			mockNameServiceSocketChannel.socket().bind(new InetSocketAddress(8004));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return mockNameServiceSocketChannel;
 	}
 }

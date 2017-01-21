@@ -2,6 +2,7 @@ package loadBalancer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
@@ -11,6 +12,7 @@ import java.util.concurrent.Executors;
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
 import connectionUtils.ConnectNIO;
+import connectionUtils.MessageType;
 
 /**
  * @author Joachim
@@ -58,6 +60,9 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	@Override
 	public void run() {
 		System.out.println("Initialising active load balancer service on port " + acceptPort + "...");
+		
+		notifyNameService();
+		
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(acceptPort);
 		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
 		ServerManager serverManager = new ServerManager(servers);
@@ -87,6 +92,28 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		} catch (IOException e) {
 		}
 		threadPoolExecutor.shutdown();
+	}
+	
+	/**
+	 * Opens a {@link SocketChannel} and sends a <code>HOST_ADDR_NOTIFY</code> message
+	 * to the address that is stored for the name service, alerting the service that this
+	 * process is acting as the active load balancer. 
+	 */
+	private void notifyNameService() {
+		System.out.println("Sending host address notification message to name service...");
+		SocketChannel socketChannel = ConnectNIO.getBlockingSocketChannel(nameServiceAddress);
+		ByteBuffer buffer = ByteBuffer.allocate(1);
+		buffer.put((byte) MessageType.HOST_ADDR_NOTIFY.getValue());
+		buffer.flip();
+		try {
+			while (buffer.hasRemaining()) {
+				socketChannel.write(buffer);
+			}
+			System.out.println("Notified name service.");
+			socketChannel.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
