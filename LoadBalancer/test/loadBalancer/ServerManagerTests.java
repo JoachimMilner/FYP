@@ -164,7 +164,4 @@ public class ServerManagerTests {
 		Server availableServer = serverManager.getAvailableServer();
 		assertEquals(server2, availableServer);
 	}
-	
-
-
 }

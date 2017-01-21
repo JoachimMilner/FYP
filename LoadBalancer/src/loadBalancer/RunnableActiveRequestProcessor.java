@@ -6,8 +6,6 @@ import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.util.ArrayDeque;
-import java.util.Deque;
 
 import commsModel.Server;
 import connectionUtils.MessageType;
@@ -55,7 +53,7 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 	public void run() {
 		while (socketChannel.isConnected()) {
 			try {
-				ByteBuffer buffer = ByteBuffer.allocate(20);
+				ByteBuffer buffer = ByteBuffer.allocate(28);
 				int bytesRead = socketChannel.read(buffer);
 
 				if (bytesRead == -1) { // Something went wrong, close channel and terminate
@@ -64,22 +62,7 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 				} else {
 					buffer.flip();
 					MessageType messageType = MessageType.values()[buffer.get()];
-
-					switch (messageType) {
-					case AVAILABLE_SERVER_REQUEST:
-						CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
-						Server server = serverManager.getAvailableServer();
-						buffer.clear();
-						buffer.put((byte) MessageType.SERVER_TOKEN.getValue());
-						buffer.putInt(server.getAddress().getPort());
-
-						socketChannel.write(encoder.encode(CharBuffer.wrap(server.getAddress().getHostString())));
-						break;
-
-					default:
-						// Received a bad request
-						throw new IOException("Bad MessageType received");
-					}
+					processMessage(messageType);
 				}
 			} catch (IOException e) {
 				//e.printStackTrace();
@@ -89,6 +72,33 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 		}
 		System.out.println("Client disconected.");
 
+	}
+
+	@Override
+	protected void processMessage(MessageType messageType) {
+		try {
+			switch (messageType) {
+			case AVAILABLE_SERVER_REQUEST:
+				ByteBuffer buffer = ByteBuffer.allocate(28);
+				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+				Server server = serverManager.getAvailableServer();
+				buffer.clear();
+				buffer.put((byte) MessageType.SERVER_TOKEN.getValue());
+				buffer.putLong(server.getTokenExpiry());
+				buffer.putInt(server.getAddress().getPort());
+				buffer.put(encoder.encode(CharBuffer.wrap(server.getAddress().getHostString())));
+				buffer.flip();
+				while (buffer.hasRemaining()) {
+					socketChannel.write(buffer);
+				}
+				break;
+			default:
+				// Received a bad request
+				throw new IOException("Bad MessageType received");
+			}
+		} catch (IOException e) {
+			//e.printStackTrace();
+		}
 	}
 
 }

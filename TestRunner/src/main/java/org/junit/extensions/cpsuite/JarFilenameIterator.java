@@ -20,6 +20,7 @@ public class JarFilenameIterator implements Iterator<String>, Iterable<String> {
 	private JarEntry next;
 
 	public JarFilenameIterator(File jarFile) throws IOException {
+		@SuppressWarnings("resource")
 		JarFile jar = new JarFile(jarFile);
 		entries = jar.entries();
 		retrieveNextElement();

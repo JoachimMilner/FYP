@@ -2,9 +2,12 @@ package loadBalancer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 import java.util.Set;
 
 import org.junit.Test;
@@ -152,5 +155,60 @@ public class ActiveLoadBalancerTests {
 		assertEquals(expectedNameServiceAddress, nameServiceAddressField.get(activeLoadBalancer));
 	}
 
-
+	/**
+	 * Tests that the {@link ActiveLoadBalancer}'s <code>run</code> method creates a <code>ServerSocketChannel</code> 
+	 * by creating a mock client <code>SocketChannel</code> and attempting to connect. 
+	 * @throws IOException 
+	 */
+	@Test
+	public void testActiveLoadBalancer_socketCreation() throws IOException {
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8001));
+		Thread activeLoadBalancerThread = new Thread(activeLoadBalancer);
+		activeLoadBalancerThread.start();
+		SocketChannel mockClient = SocketChannel.open();
+		mockClient.connect(new InetSocketAddress("localhost", 8000));
+		assertTrue(mockClient.isConnected());
+		activeLoadBalancerThread.interrupt();
+		mockClient.close();
+	}
+	
+	/**
+	 * Tests execution of the thread pool. Connecting a mock client should increase the active thread count
+	 * by one, as well as returning a correct response to a request.
+	 * @throws IOException
+	 */
+	@Test
+	public void testActiveLoadBalancer_createNewThreads() throws IOException {
+		Set<Thread> threadSetDefault = Thread.getAllStackTraces().keySet();
+		Set<Server> servers = TestUtils.getServerSet(1);
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8001, TestUtils.getRemoteLoadBalancerSet(1),
+				servers, new InetSocketAddress("localhost", 8002));
+		TestUtils.mockServerSockets(servers);
+		Thread activeLoadBalancerThread = new Thread(activeLoadBalancer);
+		activeLoadBalancerThread.start();
+		
+		try {
+			Thread.sleep(300);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		Set<Thread> threadSetLBInit = Thread.getAllStackTraces().keySet();
+		assertEquals(threadSetDefault.size() + 2, threadSetLBInit.size());
+		
+		SocketChannel mockClient = SocketChannel.open();
+		mockClient.connect(new InetSocketAddress("localhost", 8001));
+		
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		Set<Thread> threadSetPoolIncremented = Thread.getAllStackTraces().keySet();
+		assertEquals(threadSetLBInit.size() + 1, threadSetPoolIncremented.size());
+		activeLoadBalancerThread.interrupt();
+		mockClient.close();
+	}
 }

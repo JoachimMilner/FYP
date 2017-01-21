@@ -126,7 +126,6 @@ public class AddressResolutionServiceTests {
 		}
 		buffer.clear();
 		int bytesRead = mockClient.read(buffer);
-		//byte[] byteArray = new byte[bytesRead];
 		assertTrue(bytesRead != -1);
 		buffer.flip();
 		MessageType responseMessageType = MessageType.values()[buffer.get()];

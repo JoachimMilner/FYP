@@ -106,6 +106,7 @@ public class TestUtils {
 						if (readSelector.select(1000) == 0) {
 							throw new SocketTimeoutException();
 						}
+						
 						acceptedSocketChannel.read(buffer);
 						buffer.flip();
 						MessageType responseMessageType = MessageType.values()[buffer.get()];

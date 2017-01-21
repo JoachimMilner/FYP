@@ -296,7 +296,7 @@ public class ServerTests {
 		server.calculateTokenExpiry();
 		
 		// Manually calculated value using standard deviation => coefficient of variation
-		long expectedTokenExpiry = System.currentTimeMillis() * 1000 + 33;
+		long expectedTokenExpiry = System.currentTimeMillis() / 1000 + 33;
 		
 		assertEquals(expectedTokenExpiry, server.getTokenExpiry());
 	}
@@ -339,7 +339,7 @@ public class ServerTests {
 		server.calculateTokenExpiry();
 		
 		// Manually calculated value using standard deviation => coefficient of variation
-		long expectedTokenExpiry = System.currentTimeMillis() * 1000 + 81;
+		long expectedTokenExpiry = System.currentTimeMillis() / 1000 + 81;
 		
 		assertEquals(expectedTokenExpiry, server.getTokenExpiry());
 	}
@@ -361,7 +361,6 @@ public class ServerTests {
 		Server server = new Server(new InetSocketAddress("localhost", 8000));
 		
 		int defaultTokenExpiration = 50;
-		
 		Server.setDefaultTokenExpiration(defaultTokenExpiration);
 
 		Deque<Double> cpuLoadValues = new ArrayDeque<>();
@@ -380,8 +379,78 @@ public class ServerTests {
 		server.calculateTokenExpiry();
 		
 		// Manually calculated value using standard deviation => coefficient of variation
-		long expectedTokenExpiry = System.currentTimeMillis() * 1000 + 50;
+		long expectedTokenExpiry = System.currentTimeMillis() / 1000 + 50;
 		
 		assertEquals(expectedTokenExpiry, server.getTokenExpiry());
+	}
+	
+	/**
+	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
+	 * Test case with equal server addresses.
+	 */
+	@Test
+	public void testServer_equalsSameAddresses() {
+		Server server1 = new Server(new InetSocketAddress("127.0.0.2", 8080));
+		Server server2 = new Server(new InetSocketAddress("127.0.0.2", 8080));
+		boolean equalsResult = server1.equals(server2);
+		assertTrue(equalsResult);
+	}
+	
+	/**
+	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
+	 * Test case on same object.
+	 */
+	@Test
+	public void testServer_equalsSameObject() {
+		Server server1 = new Server(new InetSocketAddress("127.0.0.2", 8080));
+		boolean equalsResult = server1.equals(server1);
+		assertTrue(equalsResult);
+	}
+	
+	/**
+	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
+	 * Test case with second server having different host address.
+	 */
+	@Test
+	public void testServer_equalsDifferentHostAddress() {
+		Server server1 = new Server(new InetSocketAddress("127.0.0.2", 8080));
+		Server server2 = new Server(new InetSocketAddress("127.0.0.4", 8080));
+		boolean equalsResult = server1.equals(server2);
+		assertFalse(equalsResult);
+	}
+	
+	/**
+	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
+	 * Test case with second server having different host address.
+	 */
+	@Test
+	public void testServer_equalsDifferentPort() {
+		Server server1 = new Server(new InetSocketAddress("localhost", 8080));
+		Server server2 = new Server(new InetSocketAddress("localhost", 8000));
+		boolean equalsResult = server1.equals(server2);
+		assertFalse(equalsResult);
+	}
+	
+	/**
+	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
+	 * Test case with null.
+	 */
+	@Test
+	public void testServer_equalsNullServer() {
+		Server server1 = new Server(new InetSocketAddress("127.0.0.2", 8080));
+		boolean equalsResult = server1.equals(null);
+		assertFalse(equalsResult);
+	}
+	
+	/**
+	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
+	 * Test case with different class.
+	 */
+	@Test
+	public void testServer_equalsDifferentClass() {
+		Server server1 = new Server(new InetSocketAddress("127.0.0.2", 8080));
+		RemoteLoadBalancer remoteLB = new RemoteLoadBalancer(new InetSocketAddress("127.0.0.2", 8080));
+		boolean equalsResult = server1.equals(remoteLB);
+		assertFalse(equalsResult);
 	}
 }

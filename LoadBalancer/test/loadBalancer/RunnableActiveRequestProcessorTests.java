@@ -251,7 +251,7 @@ public class RunnableActiveRequestProcessorTests {
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);
 		
-		// Set cpu load
+		// Set CPU load
 		Field serverCPULoadField = servers.iterator().next().getClass().getDeclaredField("cpuLoad");
 		serverCPULoadField.setAccessible(true);
 		serverCPULoadField.set(servers.iterator().next(), 50.00);
@@ -263,11 +263,14 @@ public class RunnableActiveRequestProcessorTests {
 		Field serverIsAliveField = servers.iterator().next().getClass().getSuperclass().getDeclaredField("isAlive");
 		serverIsAliveField.setAccessible(true);
 		serverIsAliveField.set(servers.iterator().next(), true);
-		
+		// Set default token expiry
+		int defaultTokenExpiration = 50;
+		Server.setDefaultTokenExpiration(defaultTokenExpiration);
+
 		Thread requestProcessorThread = new Thread(activeRequestProcessor);
 		requestProcessorThread.start();
 		
-		ByteBuffer buffer = ByteBuffer.allocate(20);
+		ByteBuffer buffer = ByteBuffer.allocate(28);
 		buffer.clear();
 		buffer.put((byte)MessageType.AVAILABLE_SERVER_REQUEST.getValue());
 		buffer.flip();
@@ -282,10 +285,16 @@ public class RunnableActiveRequestProcessorTests {
 	    if (selector.select(1000) == 0) {
 	    	throw new SocketTimeoutException();
 	    }
+	    long expectedTokenExpiryTime = System.currentTimeMillis() / 1000 + defaultTokenExpiration;
 	    int bytesRead = mockClientSocketChannel.read(buffer);
-	    assertEquals(18, bytesRead);
+	    assertEquals(22, bytesRead);
+
+	    buffer.flip();
 		MessageType responseMessageType = MessageType.values()[buffer.get()];
 		assertEquals(MessageType.SERVER_TOKEN, responseMessageType);
+		
+		long serverTokenExpiryTime = buffer.getLong();
+		assertEquals(expectedTokenExpiryTime, serverTokenExpiryTime, 1);
 
 		int serverPort = buffer.getInt();
 		assertEquals(8080, serverPort);
@@ -295,5 +304,6 @@ public class RunnableActiveRequestProcessorTests {
 		assertEquals("127.0.0.2", hostAddress);
 		
 		selector.close();
+		requestProcessorThread.interrupt();
 	}
 }

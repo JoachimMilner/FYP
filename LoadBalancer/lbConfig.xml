@@ -1,15 +1,36 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <configuration>
+	<connectPort>
+		8000
+	</connectPort>
 	<servers>
 		<server>
-			192.1
+			<ipAddress>
+				192.1
+			</ipAddress>
+			<port>
+				8000
+			</port>
 		</server>
 	</servers
 	<remoteLoadBalancers>
 		<remoteNode>
-			192.
+			<ipAddress>
+				192.168.1.1
+			</ipAddress>
+			<port>
+				8080
+			</port>
 		</remoteNode>
 	</remoteLoadBalancers>
+	<nameServiceAddress>
+		<ipAddress>
+		
+		</ipAddress>
+		<port>
+		
+		</port>
+	</nameServiceAddress>
 	<heartbeatIntervalMs>
 	
 	</heartbeatIntervalMs>
@@ -17,6 +38,6 @@
 	
 	</heartbeatTimeoutMs>	
 	<defaultServerTokenExpiry>
-	
+		50
 	</defaultServerTokenExpiry>
 </configuration>

@@ -1,10 +1,16 @@
 package loadBalancer;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
+import connectionUtils.ConnectNIO;
 
 /**
  * @author Joachim
@@ -45,12 +51,42 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 * Called on <code>Thread.start()</code> in order to initialise a new cached thread pool that delegates
+	 * incoming connections to a new {@RunnableRequestProcessor}.
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
-
+		System.out.println("Initialising active load balancer service on port " + acceptPort + "...");
+		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(acceptPort);
+		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
+		ServerManager serverManager = new ServerManager(servers);
+		Thread serverManagerThread = new Thread(serverManager);
+		serverManagerThread.start();
+		
+		while (!Thread.currentThread().isInterrupted()) {
+			SocketChannel connectRequestSocket = null;
+			try {
+				connectRequestSocket = serverSocketChannel.accept();
+			} catch (IOException e) {
+				if (Thread.currentThread().isInterrupted()) {
+					break;
+				}
+				e.printStackTrace();
+			}
+			if (connectRequestSocket != null) {
+				System.out.println("Received connection request.");
+				threadPoolExecutor.execute(new RunnableActiveRequestProcessor(connectRequestSocket, this, serverManager));
+			}
+		}
+		System.out.println("Active load balancer shutting down...");
+		
+		serverManagerThread.interrupt();
+		try {
+			serverSocketChannel.close();
+		} catch (IOException e) {
+		}
+		threadPoolExecutor.shutdown();
 	}
 
 }

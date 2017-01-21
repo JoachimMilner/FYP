@@ -126,13 +126,14 @@ public class Server extends AbstractRemote {
 				cpuLoadRecords.pollLast();
 			}
 			isAlive = true;
-			System.out.println("Test " + address.getPort() + " " + cpuLoad);
+			//System.out.println("Test " + address.getPort() + " " + cpuLoad);
 		}
 		try {
 			socketChannel.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 
 	/**
@@ -149,7 +150,7 @@ public class Server extends AbstractRemote {
 			// Calculate a token expiry time based on the CPU load data variance.
 			tokenDurationSeconds = (int) Math.round(Math.abs(1 - getCoV()) * 100);
 		}
-		tokenExpiry = System.currentTimeMillis() * 1000 + tokenDurationSeconds;
+		tokenExpiry = System.currentTimeMillis() / 1000 + tokenDurationSeconds;
 	}
 	
 	/**
@@ -172,6 +173,7 @@ public class Server extends AbstractRemote {
 		}
 		double variance = varianceSum / (dataSetSize - 1);
 		
+		// Calculate standard deviation
 		double standardDeviation = Math.sqrt(variance);
 		
 		return standardDeviation / mean;

@@ -88,11 +88,12 @@ public class RunnableRequestProcessor implements Runnable {
 						buffer.clear();
 						buffer.put((byte)MessageType.HOST_ADDR_RESPONSE.getValue());
 						buffer.putInt(addressResolutionService.getHostPort());
+						buffer.put(encoder.encode(CharBuffer.wrap(addressResolutionService.getHostAddress())));
 						buffer.flip();
 						while(buffer.hasRemaining()) {
 							socketChannel.write(buffer);
 						}
-						socketChannel.write(encoder.encode(CharBuffer.wrap(addressResolutionService.getHostAddress())));
+						//socketChannel.write(encoder.encode(CharBuffer.wrap(addressResolutionService.getHostAddress())));
 						System.out.println("Received host address request from client.");
 						break;
 					default:
