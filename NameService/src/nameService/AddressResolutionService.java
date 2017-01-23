@@ -95,7 +95,7 @@ public class AddressResolutionService {
 	 * <code>HOST_ADDR_NOTIFY</code> or a <code>HOST_ADDR_REQUEST</code>.
 	 */
 	public void startService() {
-		System.out.println("Initialising Address Resolution Service...");
+		System.out.println("Initialising Address Resolution Service on Port " + acceptPort + "...");
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(acceptPort);
 		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
 		while (!Thread.currentThread().isInterrupted()) {

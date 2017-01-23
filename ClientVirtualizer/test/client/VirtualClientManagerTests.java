@@ -4,9 +4,15 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 
 import org.junit.Test;
 
@@ -24,7 +30,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testCreateVirtualClientManager_successful() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0, new InetSocketAddress("localhost", 8000));
 		assertNotNull(clientManager);
 	}
 	
@@ -34,7 +40,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateVirtualClientManager_lessThanOneClient() {
-		new VirtualClientManager(0, 0, 0, 0, 0);
+		new VirtualClientManager(0, 0, 0, 0, 0, new InetSocketAddress("localhost", 8000));
 	}
 	
 	/**
@@ -43,7 +49,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateVirtualClientManager_illegalFrequencyParams() {
-		new VirtualClientManager(1, 1, 0, 0, 0);
+		new VirtualClientManager(1, 1, 0, 0, 0, new InetSocketAddress("localhost", 8000));
 	}
 	
 	/**
@@ -51,8 +57,18 @@ public class VirtualClientManagerTests {
 	 * invalid min/max client request values. Should throw IllegalArgumentException
 	 */
 	@Test(expected=IllegalArgumentException.class)
-	public void testVirtualClientManager_illegalClientRequestParams() {
-		new VirtualClientManager(1, 1, 1, 1, 0);
+	public void testCreateVirtualClientManager_illegalClientRequestParams() {
+		new VirtualClientManager(1, 1, 1, 1, 0, new InetSocketAddress("localhost", 8000));
+	}
+	
+	/**
+	 * Test creating an instance of the {@link VirtualClientManager} class with
+	 * a null {@link InetSocketAddress} passed in for the <code>nameServiceAddress</code>.
+	 * Should throw IllegalArgumentException
+	 */
+	@Test(expected=IllegalArgumentException.class)
+	public void testCreateVirtualClientManager_nullNameServiceAddress() {
+		new VirtualClientManager(1, 0, 0, 0, 0, null);
 	}
 	
 	/**
@@ -60,7 +76,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getNumberOfClients() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0, new InetSocketAddress("localhost", 8000));
 		assertEquals(1, clientManager.getNumberOfClients());
 	}
 	
@@ -70,7 +86,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getNumberOfLiveClients() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0, new InetSocketAddress("localhost", 8000));
 		assertEquals(0, clientManager.getNumberOfLiveClients());
 	}
 
@@ -84,7 +100,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(2, 100, 200, 5, 10);
+		VirtualClientManager clientManager = new VirtualClientManager(2, 100, 200, 5, 10, new InetSocketAddress("localhost", 8004));
 		clientManager.initialiseClientPool();
 		assertEquals(2, clientManager.getNumberOfLiveClients());
 		clientManager.stop();
@@ -102,7 +118,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(1, 5, 25, 50, 100);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 5, 25, 50, 100, new InetSocketAddress("localhost", 8004));
 
 		clientManager.initialiseClientPool();
 		
@@ -142,7 +158,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getTotalRequestsSentNoInitialisation() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0, new InetSocketAddress("localhost", 8004));
 		assertEquals(0, clientManager.getTotalRequestsSent());
 	}
 	
@@ -157,8 +173,10 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(3, 50, 150, 50, 100);
+		VirtualClientManager clientManager = new VirtualClientManager(3, 50, 150, 50, 100, new InetSocketAddress("localhost", 8004));
 		clientManager.initialiseClientPool();
+		
+		mockNameServiceAndLoadBalancers(8004, 8003, 8000);
 		
 		try {
 			Thread.sleep(500);
@@ -177,7 +195,7 @@ public class VirtualClientManagerTests {
 	 */
 	@Test
 	public void testVirtualClientManager_getTotalResponsesReceived() {
-		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0);
+		VirtualClientManager clientManager = new VirtualClientManager(1, 0, 0, 0, 0, new InetSocketAddress("localhost", 8004));
 		assertEquals(0, clientManager.getTotalResponsesReceived());
 	}
 	
@@ -203,4 +221,96 @@ public class VirtualClientManagerTests {
 		assertEquals(10, clientManager.getTotalResponsesReceived());
 		mockServerSocketChannel.close();
 	}*/
+	
+	/**
+	 * Utility method for mocking a ServerSocketChannel, to be used as either
+	 * the name service or load balancer.
+	 */
+	private ServerSocketChannel getMockServerSocketChannel(int port) {
+		ServerSocketChannel mockServerSocketChannel = null;
+		try {
+			mockServerSocketChannel = ServerSocketChannel.open();
+			mockServerSocketChannel.socket().bind(new InetSocketAddress(port));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return mockServerSocketChannel;
+	}
+	
+	/**
+	 * Method for mocking the behaviour of the name service and load balancer so
+	 * we can test the {@link RunnableClientProcess} which requires
+	 * communication with both.
+	 * @throws IOException 
+	 */
+	private void mockNameServiceAndLoadBalancers(int nameServicePort, int loadBalancerPort, int serverPort) throws IOException {
+		ServerSocketChannel mockNameServiceSocketChannel = getMockServerSocketChannel(nameServicePort);
+		Selector nameServiceAcceptSelector = Selector.open();
+		mockNameServiceSocketChannel.configureBlocking(false);
+		mockNameServiceSocketChannel.register(nameServiceAcceptSelector, SelectionKey.OP_ACCEPT);
+		if (nameServiceAcceptSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		SocketChannel acceptedNameServiceSocketChannel = mockNameServiceSocketChannel.accept();
+		ByteBuffer buffer = ByteBuffer.allocate(17);
+
+		Selector nameServiceReadSelector = Selector.open();
+		acceptedNameServiceSocketChannel.configureBlocking(false);
+		acceptedNameServiceSocketChannel.register(nameServiceReadSelector, SelectionKey.OP_READ);
+		if (nameServiceReadSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+
+		// Send the client an address for the mocked load balancer
+		buffer.clear();
+		CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+		buffer.put((byte) MessageType.HOST_ADDR_RESPONSE.getValue());
+		buffer.putInt(loadBalancerPort);
+		buffer.put(encoder.encode(CharBuffer.wrap("localhost")));
+		buffer.flip();
+		while (buffer.hasRemaining()) {
+			acceptedNameServiceSocketChannel.write(buffer);
+		}
+		nameServiceAcceptSelector.close();
+		nameServiceReadSelector.close();
+		mockNameServiceSocketChannel.close();
+		
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		ServerSocketChannel mockLoadBalancerSocketChannel = getMockServerSocketChannel(loadBalancerPort);
+		mockLoadBalancerSocketChannel.configureBlocking(false);
+		Selector loadBalancerAcceptSelector = Selector.open();
+		mockLoadBalancerSocketChannel.register(loadBalancerAcceptSelector, SelectionKey.OP_ACCEPT);
+		if (loadBalancerAcceptSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		SocketChannel acceptedMockLoadBalancerSocketChannel = mockLoadBalancerSocketChannel.accept();
+		ByteBuffer loadBalancerBuffer = ByteBuffer.allocate(28);
+
+		acceptedMockLoadBalancerSocketChannel.configureBlocking(false);
+		Selector loadBalancerReadSelector = Selector.open();
+		acceptedMockLoadBalancerSocketChannel.register(loadBalancerReadSelector, SelectionKey.OP_READ);
+		if (loadBalancerReadSelector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		
+		loadBalancerBuffer.clear();
+		loadBalancerBuffer.put((byte) MessageType.SERVER_TOKEN.getValue());
+		loadBalancerBuffer.putLong(System.currentTimeMillis() / 1000 + 50);
+		loadBalancerBuffer.putInt(serverPort);
+		loadBalancerBuffer.put(encoder.encode(CharBuffer.wrap("localhost")));
+		loadBalancerBuffer.flip();
+		while (loadBalancerBuffer.hasRemaining()) {
+			acceptedMockLoadBalancerSocketChannel.write(loadBalancerBuffer);
+		}
+
+		loadBalancerAcceptSelector.close();
+		loadBalancerReadSelector.close();
+		mockLoadBalancerSocketChannel.close();
+	}
 }

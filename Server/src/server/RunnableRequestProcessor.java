@@ -62,6 +62,7 @@ public class RunnableRequestProcessor implements Runnable {
 	 */
 	@Override
 	public void run() {
+		boolean isClient = false;
 		while (socketChannel.isConnected()) {
 			try {
 				ByteBuffer buffer = ByteBuffer.allocate(81);
@@ -76,6 +77,10 @@ public class RunnableRequestProcessor implements Runnable {
 
 					switch (messageType) {
 					case CLIENT_REQUEST:
+						if (!isClient) {
+							System.out.println("Server received connection request.");
+							isClient = true;
+						}
 						threadManager.incrementTotalRequestsReceived();
 						long[] requestData = new long[10];
 						for (int i = 0; i < requestData.length; i++) {
@@ -132,7 +137,9 @@ public class RunnableRequestProcessor implements Runnable {
 				break;
 			}
 		}
-		System.out.println("Client disconected.");
+		if (isClient) {
+			System.out.println("Client disconected.");
+		}
 	}
 	
 

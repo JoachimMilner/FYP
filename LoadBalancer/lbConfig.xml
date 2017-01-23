@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <configuration>
 	<connectPort>
-		8000
+		8001
 	</connectPort>
 	<servers>
 		<server>
 			<ipAddress>
-				192.1
+				localhost
 			</ipAddress>
 			<port>
 				8000
 			</port>
 		</server>
-	</servers
+	</servers>
 	<remoteLoadBalancers>
 		<remoteNode>
 			<ipAddress>
@@ -25,15 +25,15 @@
 	</remoteLoadBalancers>
 	<nameServiceAddress>
 		<ipAddress>
-		
+			localhost
 		</ipAddress>
 		<port>
-		
+			8003
 		</port>
 	</nameServiceAddress>
-	<heartbeatIntervalMs>
+	<heartbeatIntervalSecs>
 	
-	</heartbeatIntervalMs>
+	</heartbeatIntervalSecs>
 	<heartbeatTimeoutMs>
 	
 	</heartbeatTimeoutMs>	

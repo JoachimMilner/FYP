@@ -70,20 +70,21 @@ public class AddressResolutionServiceTests {
 		SocketChannel mockServer = SocketChannel.open();
 		mockServer.connect(new InetSocketAddress("localhost", 8000));
 
-		ByteBuffer buffer = ByteBuffer.allocate(1);
+		ByteBuffer buffer = ByteBuffer.allocate(5);
 		buffer.clear();
 		buffer.put((byte) MessageType.HOST_ADDR_NOTIFY.getValue());
+		buffer.putInt(8080);
 		buffer.flip();
 		while (buffer.hasRemaining()) {
 			mockServer.write(buffer);
 		}
 		try {
-			Thread.sleep(10);
+			Thread.sleep(20);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		assertEquals("127.0.0.1", addressResolutionService.getHostAddress());
-		assertEquals(mockServer.socket().getLocalPort(), addressResolutionService.getHostPort());
+		assertEquals(8080, addressResolutionService.getHostPort());
 		serviceThread.interrupt();
 		mockServer.close();
 	}

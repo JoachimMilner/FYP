@@ -89,7 +89,6 @@ public class ThreadPooledServer implements IConnectableComponent, Runnable {
 				e.printStackTrace();
 			}
 			if (connectRequestSocket != null) {
-				System.out.println("Server received connection request.");
 				threadPoolExecutor.execute(new RunnableRequestProcessor(connectRequestSocket, this));
 			}
 		}

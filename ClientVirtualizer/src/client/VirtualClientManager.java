@@ -67,6 +67,12 @@ public class VirtualClientManager implements IConnectableComponent {
 	 * The number of server responses received by all virtual clients.
 	 */
 	private int totalResponsesReceived = 0;
+	
+	
+	/**
+	 * The static address for the name resolution service. 
+	 */
+	private InetSocketAddress nameServiceAddress;
 
 	
 	/**
@@ -101,7 +107,7 @@ public class VirtualClientManager implements IConnectableComponent {
 	 *             than 1.
 	 */
 	public VirtualClientManager(int maxClients, int minSendFrequencyMs, int maxSendFrequencyMs, int minClientRequests,
-			int maxClientRequests) {
+			int maxClientRequests, InetSocketAddress nameServiceAddress) {
 		if (maxClients < 1)
 			throw new IllegalArgumentException("numberOfClients must be at least 1.");
 		if (minSendFrequencyMs > maxSendFrequencyMs)
@@ -109,12 +115,15 @@ public class VirtualClientManager implements IConnectableComponent {
 					"Minimum message sending frequency must be less than or equal to maximum frequency.");
 		if (minClientRequests > maxClientRequests)
 			throw new IllegalArgumentException("Minimum client requests must be less than or equal to the maximum.");
+		if (nameServiceAddress == null)
+			throw new IllegalArgumentException("Name service address cannot be null.");
 
 		this.maxClients = maxClients;
 		this.minSendFrequencyMs = minSendFrequencyMs;
 		this.maxSendFrequencyMs = maxSendFrequencyMs;
 		this.minClientRequests = minClientRequests;
 		this.maxClientRequests = maxClientRequests;
+		this.nameServiceAddress = nameServiceAddress;
 	}
 
 	
@@ -221,12 +230,12 @@ public class VirtualClientManager implements IConnectableComponent {
 						}
 						startClientMonitor();
 					}
-					for (int i = 0; i < 20; i++) {
+/*					for (int i = 0; i < 20; i++) {
 						System.out.println(" ");
 					}
 					System.out.println("Total Live Virtual Clients: " + numberOfLiveClients);
 					System.out.println("Total Messages Sent: " + totalRequestsSent);
-					System.out.println("Total Messages Received: " + totalResponsesReceived);
+					System.out.println("Total Messages Received: " + totalResponsesReceived);*/
 				}
 			}
 		}).start();
@@ -242,7 +251,7 @@ public class VirtualClientManager implements IConnectableComponent {
 				maxSendFrequencyMs + 1);
 		int totalRequestsToSend = ThreadLocalRandom.current().nextInt(minClientRequests,
 				maxClientRequests + 1);
-		RunnableClientProcess newClient = new RunnableClientProcess(new InetSocketAddress("localhost", 8000), this,
+		RunnableClientProcess newClient = new RunnableClientProcess(nameServiceAddress, this,
 				messageSendFrequencyMs, totalRequestsToSend);
 		clientThreadExecutor.execute(newClient);
 		numberOfLiveClients++;

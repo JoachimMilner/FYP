@@ -102,8 +102,9 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	private void notifyNameService() {
 		System.out.println("Sending host address notification message to name service...");
 		SocketChannel socketChannel = ConnectNIO.getBlockingSocketChannel(nameServiceAddress);
-		ByteBuffer buffer = ByteBuffer.allocate(1);
+		ByteBuffer buffer = ByteBuffer.allocate(5);
 		buffer.put((byte) MessageType.HOST_ADDR_NOTIFY.getValue());
+		buffer.putInt(acceptPort);
 		buffer.flip();
 		try {
 			while (buffer.hasRemaining()) {

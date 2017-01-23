@@ -263,7 +263,7 @@ public class ActiveLoadBalancerTests {
 			throw new SocketTimeoutException();
 		}
 		SocketChannel acceptedNameServiceSocketChannel = nameServiceSocketChannel.accept();
-		ByteBuffer buffer = ByteBuffer.allocate(1);
+		ByteBuffer buffer = ByteBuffer.allocate(5);
 		
 		Selector readSelector = Selector.open();
 		acceptedNameServiceSocketChannel.configureBlocking(false);
@@ -272,11 +272,13 @@ public class ActiveLoadBalancerTests {
 			throw new SocketTimeoutException();
 		}
 		int bytesRead = acceptedNameServiceSocketChannel.read(buffer);
-		assertEquals(1, bytesRead);
+		assertEquals(5, bytesRead);
 		
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];
 		assertEquals(MessageType.HOST_ADDR_NOTIFY, messageType);
+		int port = buffer.getInt();
+		assertEquals(8001, port);
 		activeLoadBalancerThread.interrupt();
 		acceptSelector.close();
 		readSelector.close();

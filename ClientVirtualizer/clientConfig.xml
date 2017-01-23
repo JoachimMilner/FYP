@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <configuration>
-	<maxClients>5</maxClients>
-	<minSendFrequencyMs>500</minSendFrequencyMs>
-	<maxSendFrequencyMs>1500</maxSendFrequencyMs>
-	<minClientRequests>1</minClientRequests>
-	<maxClientRequests>15</maxClientRequests>
+	<maxClients>
+		1
+	</maxClients>
+	<minSendFrequencyMs>
+		1000
+	</minSendFrequencyMs>
+	<maxSendFrequencyMs>
+		3000
+	</maxSendFrequencyMs>
+	<minClientRequests>
+		1
+	</minClientRequests>
+	<maxClientRequests>
+		15
+	</maxClientRequests>
+	<nameServiceIP>
+		localhost
+	</nameServiceIP>
+	<nameServicePort>
+		8003
+	</nameServicePort>
 </configuration>

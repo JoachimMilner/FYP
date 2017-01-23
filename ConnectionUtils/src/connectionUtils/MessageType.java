@@ -63,7 +63,7 @@ public enum MessageType {
 	/**
 	 * Response from a node to indicate that it is alive.
 	 */
-	ALIVE_RESPONSE(8),
+	ALIVE_CONFIRM(8),
 	
 	
 	////////// CLIENT-LOAD BALANCER MESSAGES //////////

@@ -33,7 +33,7 @@ public class LoadBalancer {
 		    HierarchicalConfiguration<ImmutableNode> config = configs.xml("lbConfig.xml");
 		    
 		    // Accept port
-		    acceptPort = config.getInt("acceptPort");
+		    acceptPort = config.getInt("connectPort");
 		    
 		    // List of backend servers
 			List<HierarchicalConfiguration<ImmutableNode>> serverNodes = config.configurationsAt("servers.server");
@@ -43,7 +43,7 @@ public class LoadBalancer {
 				servers.add(new Server(new InetSocketAddress(ipAddress, port)));
 			}
 			
-			// List of oother load balancer nodes in the system
+			// List of other load balancer nodes in the system
 			List<HierarchicalConfiguration<ImmutableNode>> remoteLBNodes = config.configurationsAt("remoteLoadBalancers.remoteNode");
 			for(HierarchicalConfiguration<ImmutableNode> remoteLoadBalancer : remoteLBNodes) {
 				String ipAddress = remoteLoadBalancer.getString("ipAddress");
