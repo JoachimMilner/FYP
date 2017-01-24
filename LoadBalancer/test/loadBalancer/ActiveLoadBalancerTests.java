@@ -222,7 +222,7 @@ public class ActiveLoadBalancerTests {
 		}
 		
 		Set<Thread> threadSetLBInit = Thread.getAllStackTraces().keySet();
-		assertEquals(threadSetDefault.size() + 2, threadSetLBInit.size());
+		assertEquals(threadSetDefault.size() + 3, threadSetLBInit.size());
 		
 		SocketChannel mockClient = SocketChannel.open();
 		mockClient.connect(new InetSocketAddress("localhost", 8001));

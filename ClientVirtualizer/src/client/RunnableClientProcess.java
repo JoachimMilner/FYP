@@ -199,7 +199,7 @@ public class RunnableClientProcess implements Runnable {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	

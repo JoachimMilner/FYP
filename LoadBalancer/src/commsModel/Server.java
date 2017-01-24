@@ -2,6 +2,7 @@ package commsModel;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
@@ -110,10 +111,21 @@ public class Server extends AbstractRemote {
 			}
 		}
 		buffer.clear();
+		
 		try {
+			socketChannel.socket().setSoTimeout(1000);
 			socketChannel.read(buffer);
 		} catch (IOException e) {
 			e.printStackTrace();
+			if (e.getClass().equals(SocketTimeoutException.class)) {
+				isAlive = false;
+				try {
+					socketChannel.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				return;
+			}
 		}
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];
@@ -133,7 +145,6 @@ public class Server extends AbstractRemote {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	/**

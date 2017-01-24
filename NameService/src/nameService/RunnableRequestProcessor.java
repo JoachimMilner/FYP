@@ -64,7 +64,7 @@ public class RunnableRequestProcessor implements Runnable {
 	public void run() {
 		while (socketChannel.isConnected()) {
 			try {
-				ByteBuffer buffer = ByteBuffer.allocate(17);
+				ByteBuffer buffer = ByteBuffer.allocate(27);
 				int bytesRead = socketChannel.read(buffer);
 
 				if (bytesRead == -1) { // Something went wrong, close channel

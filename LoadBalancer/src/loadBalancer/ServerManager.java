@@ -45,7 +45,8 @@ public class ServerManager implements Runnable {
 	public void run() {
 
 		while (!Thread.currentThread().isInterrupted()) {
-			for (Server server : servers) {
+			// Final declaration used for < Java 8 compatibility
+			for (final Server server : servers) {
 				new Thread(new Runnable() {
 					
 					@Override
@@ -57,7 +58,7 @@ public class ServerManager implements Runnable {
 			}
 
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}

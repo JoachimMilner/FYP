@@ -100,9 +100,18 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(2, 100, 200, 5, 10, new InetSocketAddress("localhost", 8004));
+		VirtualClientManager clientManager = new VirtualClientManager(1, 100, 200, 5, 10, new InetSocketAddress("localhost", 8004));
 		clientManager.initialiseClientPool();
-		assertEquals(2, clientManager.getNumberOfLiveClients());
+		
+		mockNameServiceAndLoadBalancers(8004, 8003, 8000);
+		assertEquals(1, clientManager.getNumberOfLiveClients());
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		clientManager.stop();
 		mockServerSocketChannel.close();
 	}
@@ -121,6 +130,8 @@ public class VirtualClientManagerTests {
 		VirtualClientManager clientManager = new VirtualClientManager(1, 5, 25, 50, 100, new InetSocketAddress("localhost", 8004));
 
 		clientManager.initialiseClientPool();
+		
+		mockNameServiceAndLoadBalancers(8004, 8003, 8000);
 		
 		SocketChannel serverSideClientSocket = mockServerSocketChannel.accept();
 		
@@ -173,7 +184,7 @@ public class VirtualClientManagerTests {
 		ServerSocketChannel mockServerSocketChannel = null;
 		mockServerSocketChannel = ServerSocketChannel.open();
 		mockServerSocketChannel.socket().bind(new InetSocketAddress(8000));
-		VirtualClientManager clientManager = new VirtualClientManager(3, 50, 150, 50, 100, new InetSocketAddress("localhost", 8004));
+		VirtualClientManager clientManager = new VirtualClientManager(1, 50, 150, 50, 100, new InetSocketAddress("localhost", 8004));
 		clientManager.initialiseClientPool();
 		
 		mockNameServiceAndLoadBalancers(8004, 8003, 8000);

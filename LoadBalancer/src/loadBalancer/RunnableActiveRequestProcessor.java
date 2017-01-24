@@ -79,7 +79,7 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 		try {
 			switch (messageType) {
 			case AVAILABLE_SERVER_REQUEST:
-				ByteBuffer buffer = ByteBuffer.allocate(28);
+				ByteBuffer buffer = ByteBuffer.allocate(38);
 				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
 				Server server = serverManager.getAvailableServer();
 				buffer.clear();
