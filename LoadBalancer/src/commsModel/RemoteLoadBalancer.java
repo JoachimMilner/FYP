@@ -1,6 +1,7 @@
 package commsModel;
 
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 
 /**
  * @author Joachim
@@ -26,6 +27,13 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	 * non-zero value.
 	 */
 	private int electionOrdinality;
+
+	/**
+	 * The SocketChannel that is currently held for the connection to this
+	 * RemoteLoadBalancer. Used to make communication with this node more
+	 * convenient.
+	 */
+	private SocketChannel socketChannel;
 
 	/**
 	 * Creates a new RemoteLoadBalancer object instance that hold relevant
@@ -75,5 +83,22 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	 */
 	public void setElectionOrdinality(int electionOrdinality) {
 		this.electionOrdinality = electionOrdinality;
+	}
+
+	/**
+	 * @return the current SocketChannel that is (or should be) connected to
+	 *         this remote node.
+	 */
+	public SocketChannel getSocketChannel() {
+		return socketChannel;
+	}
+
+	/**
+	 * @param socketChannel
+	 *            the SocketChannel that will be used to send/receive message
+	 *            to/from this remote node.
+	 */
+	public void setSocketChannel(SocketChannel socketChannel) {
+		this.socketChannel = socketChannel;
 	}
 }

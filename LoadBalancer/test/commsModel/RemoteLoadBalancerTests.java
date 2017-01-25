@@ -3,8 +3,10 @@ package commsModel;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 
 import org.junit.Test;
 
@@ -122,6 +124,51 @@ public class RemoteLoadBalancerTests {
 		electionOrdinalityField.setAccessible(true);
 
 		assertEquals(expectedElectionOrdinality, electionOrdinalityField.get(remoteLoadBalancer));
+	}
+	
+	/**
+	 * Test the {@link RemoteLoadBalancer}'s <code>getSocketChannel</code>
+	 * method. The method should return the object that we set using
+	 * reflection.
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IOException 
+	 */
+	@Test
+	public void testRemoteLoadBalancer_getSocketChannel() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, IOException {
+		RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress("localhost", 8000));
+		SocketChannel expectedSocketChannel = SocketChannel.open();
+
+		Field socketChannelField = remoteLoadBalancer.getClass().getDeclaredField("socketChannel");
+		socketChannelField.setAccessible(true);
+		socketChannelField.set(remoteLoadBalancer, expectedSocketChannel);
+
+		SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
+		assertEquals(expectedSocketChannel, socketChannel);
+	}
+	
+	/**
+	 * Test the {@link RemoteLoadBalancer}'s <code>setSocketChannel</code>
+	 * method. The method should set the <code>socketChannel</code>
+	 * property of the object to the value passed in.
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
+	 * @throws IOException 
+	 */
+	@Test
+	public void testRemoteLoadBalancer_setSocketChannel() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+		RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress("localhost", 8000));
+		SocketChannel expectedSocketChannel = SocketChannel.open();
+		remoteLoadBalancer.setSocketChannel(expectedSocketChannel);
+
+		Field socketChannelField = remoteLoadBalancer.getClass().getDeclaredField("socketChannel");
+		socketChannelField.setAccessible(true);
+
+		assertEquals(expectedSocketChannel, socketChannelField.get(remoteLoadBalancer));
 	}
 
 }
