@@ -1,7 +1,6 @@
 package faultModule;
 
 import java.io.IOException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
@@ -51,6 +50,14 @@ public class HeartbeatBroadcaster implements Runnable {
 		this.heartbeatIntervalSecs = heartbeatIntervalSecs;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Runnable#run() Begins sending ALIVE_CONFIRM messages at
+	 * the specified heartbeat interval rate to all other load balancer nodes in
+	 * the system. Also listens for ALIVE_REQUEST messages and responds with an
+	 * ALIVE_CONFIRM if one is received.
+	 */
 	@Override
 	public void run() {
 
@@ -58,16 +65,17 @@ public class HeartbeatBroadcaster implements Runnable {
 
 			for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				if (remoteLoadBalancer.getSocketChannel() == null) {
-					remoteLoadBalancer.setSocketChannel(ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress()));
+					remoteLoadBalancer
+							.setSocketChannel(ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress()));
 				}
-				if(remoteLoadBalancer.getSocketChannel().isConnected()) {
+				if (remoteLoadBalancer.getSocketChannel().isConnected()) {
 					sendHeartbeat(remoteLoadBalancer.getSocketChannel());
 				}
 			}
-			
+
 			try {
 				Thread checkForMessageThread = new Thread(new Runnable() {
-					
+
 					@Override
 					public void run() {
 						while (!Thread.currentThread().isInterrupted()) {
@@ -77,13 +85,13 @@ public class HeartbeatBroadcaster implements Runnable {
 								}
 							}
 							try {
-								Thread.sleep(heartbeatIntervalSecs * 100 );
+								Thread.sleep(heartbeatIntervalSecs * 100);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
 						}
 					}
-					
+
 				});
 				checkForMessageThread.start();
 				Thread.sleep(heartbeatIntervalSecs * 1000);
@@ -92,7 +100,7 @@ public class HeartbeatBroadcaster implements Runnable {
 				Thread.currentThread().interrupt();
 			}
 		}
-		
+
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			try {
 				remoteLoadBalancer.getSocketChannel().close();
@@ -102,6 +110,13 @@ public class HeartbeatBroadcaster implements Runnable {
 		}
 	}
 
+	/**
+	 * Sends an <code>ALIVE_CONFIRM</code> message (i.e. a heartbeat) to the
+	 * specified {@link SocketChannel}.
+	 * 
+	 * @param socketChannel
+	 *            the SocketChannel on which to send the heartbeat message
+	 */
 	private void sendHeartbeat(SocketChannel socketChannel) {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
 		buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
@@ -114,7 +129,18 @@ public class HeartbeatBroadcaster implements Runnable {
 			}
 		}
 	}
-	
+
+	/**
+	 * Listens for messages on the specified {@link SocketChannel}, and responds
+	 * to an <code>ALIVE_REQUEST</code> message with a
+	 * <code>ALIVE_CONFIRM</code> message. Since this class uses not blocking
+	 * sockets to communicate with other nodes, this method will return straight
+	 * away if no messages are found in the buffer. Therefore, this method
+	 * should be called periodically from this class's <code>run</code> method.
+	 * 
+	 * @param socketChannel
+	 *            the SocketChannel on which to check for messages.
+	 */
 	private void checkForMessages(SocketChannel socketChannel) {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
 		try {
