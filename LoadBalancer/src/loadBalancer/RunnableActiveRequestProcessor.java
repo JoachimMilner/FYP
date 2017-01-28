@@ -77,9 +77,10 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 	@Override
 	protected void processMessage(MessageType messageType) {
 		try {
+			ByteBuffer buffer;
 			switch (messageType) {
 			case AVAILABLE_SERVER_REQUEST:
-				ByteBuffer buffer = ByteBuffer.allocate(38);
+				buffer = ByteBuffer.allocate(38);
 				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
 				Server server = serverManager.getAvailableServer();
 				buffer.clear();
@@ -89,6 +90,14 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 				buffer.put(encoder.encode(CharBuffer.wrap(server.getAddress().getHostString())));
 				buffer.flip();
 				while (buffer.hasRemaining()) {
+					socketChannel.write(buffer);
+				}
+				break;
+			case ALIVE_REQUEST:
+				buffer = ByteBuffer.allocate(1);
+				buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
+				buffer.flip();
+				while (buffer.hasRemaining()){
 					socketChannel.write(buffer);
 				}
 				break;

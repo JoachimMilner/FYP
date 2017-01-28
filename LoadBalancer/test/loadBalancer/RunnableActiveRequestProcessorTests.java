@@ -171,11 +171,12 @@ public class RunnableActiveRequestProcessorTests {
 	 * {@link RunnableActiveRequestProcessor} is set correctly in the class
 	 * constructor. Use reflection to check the value after the constructor is
 	 * called.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	@Test
-	public void testActiveRequestProcessorConstructor_socketChannelIsSet()
-			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+	public void testActiveRequestProcessorConstructor_socketChannelIsSet() throws NoSuchFieldException,
+			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
@@ -187,17 +188,18 @@ public class RunnableActiveRequestProcessorTests {
 		socketChannelField.setAccessible(true);
 		assertEquals(acceptedSocketChannel, socketChannelField.get(activeRequestProcessor));
 	}
-	
+
 	/**
 	 * Tests that the <code>loadBalancer</code> property of the
 	 * {@link RunnableActiveRequestProcessor} is set correctly in the class
 	 * constructor. Use reflection to check the value after the constructor is
 	 * called.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	@Test
-	public void testActiveRequestProcessorConstructor_loadBalancerIsSet()
-			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+	public void testActiveRequestProcessorConstructor_loadBalancerIsSet() throws NoSuchFieldException,
+			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
@@ -209,17 +211,18 @@ public class RunnableActiveRequestProcessorTests {
 		loadBalancerField.setAccessible(true);
 		assertEquals(activeLoadBalancer, loadBalancerField.get(activeRequestProcessor));
 	}
-	
+
 	/**
 	 * Tests that the <code>serverManager</code> property of the
 	 * {@link RunnableActiveRequestProcessor} is set correctly in the class
 	 * constructor. Use reflection to check the value after the constructor is
 	 * called.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	@Test
-	public void testActiveRequestProcessorConstructor_serverManagerIsSet()
-			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+	public void testActiveRequestProcessorConstructor_serverManagerIsSet() throws NoSuchFieldException,
+			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
@@ -231,18 +234,21 @@ public class RunnableActiveRequestProcessorTests {
 		serverManagerField.setAccessible(true);
 		assertEquals(serverManager, serverManagerField.get(activeRequestProcessor));
 	}
-	
+
 	/**
-	 * Test that the {@link RunnableActiveRequestProcessor} correctly processes and responds to a mock client 
-	 * requesting the details of an available server. 
-	 * @throws IOException 
-	 * @throws SecurityException 
-	 * @throws NoSuchFieldException 
-	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException 
+	 * Test that the {@link RunnableActiveRequestProcessor} correctly processes
+	 * and responds to a mock client requesting the details of an available
+	 * server.
+	 * 
+	 * @throws IOException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
 	 */
 	@Test
-	public void testActiveRequestProcessor_processClientRequest() throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public void testActiveRequestProcessor_processClientRequest() throws IOException, NoSuchFieldException,
+			SecurityException, IllegalArgumentException, IllegalAccessException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
@@ -250,7 +256,7 @@ public class RunnableActiveRequestProcessorTests {
 		ServerManager serverManager = new ServerManager(servers);
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);
-		
+
 		// Set CPU load
 		Field serverCPULoadField = servers.iterator().next().getClass().getDeclaredField("cpuLoad");
 		serverCPULoadField.setAccessible(true);
@@ -269,39 +275,86 @@ public class RunnableActiveRequestProcessorTests {
 
 		Thread requestProcessorThread = new Thread(activeRequestProcessor);
 		requestProcessorThread.start();
-		
+
 		ByteBuffer buffer = ByteBuffer.allocate(28);
 		buffer.clear();
-		buffer.put((byte)MessageType.AVAILABLE_SERVER_REQUEST.getValue());
+		buffer.put((byte) MessageType.AVAILABLE_SERVER_REQUEST.getValue());
 		buffer.flip();
-		while(buffer.hasRemaining()) {
+		while (buffer.hasRemaining()) {
 			mockClientSocketChannel.write(buffer);
 		}
-		
-	    buffer.clear();
-	    Selector selector = Selector.open();
-	    mockClientSocketChannel.configureBlocking(false);
-	    mockClientSocketChannel.register(selector, SelectionKey.OP_READ);
-	    if (selector.select(1000) == 0) {
-	    	throw new SocketTimeoutException();
-	    }
-	    long expectedTokenExpiryTime = System.currentTimeMillis() / 1000 + defaultTokenExpiration;
-	    int bytesRead = mockClientSocketChannel.read(buffer);
-	    assertEquals(22, bytesRead);
 
-	    buffer.flip();
+		buffer.clear();
+		Selector selector = Selector.open();
+		mockClientSocketChannel.configureBlocking(false);
+		mockClientSocketChannel.register(selector, SelectionKey.OP_READ);
+		if (selector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		long expectedTokenExpiryTime = System.currentTimeMillis() / 1000 + defaultTokenExpiration;
+		int bytesRead = mockClientSocketChannel.read(buffer);
+		assertEquals(22, bytesRead);
+
+		buffer.flip();
 		MessageType responseMessageType = MessageType.values()[buffer.get()];
 		assertEquals(MessageType.SERVER_TOKEN, responseMessageType);
-		
+
 		long serverTokenExpiryTime = buffer.getLong();
 		assertEquals(expectedTokenExpiryTime, serverTokenExpiryTime, 1);
 
 		int serverPort = buffer.getInt();
 		assertEquals(8080, serverPort);
-		
+
 		CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
 		String hostAddress = charBuffer.toString();
 		assertEquals("127.0.0.2", hostAddress);
+
+		selector.close();
+		requestProcessorThread.interrupt();
+	}
+
+	/**
+	 * Test that the {@link RunnableActiveRequestProcessor} responds to an
+	 * <code>ALIVE_REQUEST</code> message. This is to confirm that the active
+	 * load balancer can verify its status in the case that the connection from
+	 * the {@link HeartbeatBroadcaster} drops but the process is still running.
+	 * @throws IOException 
+	 */
+	@Test
+	public void testActiveRequestProcessor_respondToAliveRequest() throws IOException {
+		createAcceptedSocketChannel();
+		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
+		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
+				acceptedSocketChannel, activeLoadBalancer, serverManager);
+		
+		Thread requestProcessorThread = new Thread(activeRequestProcessor);
+		requestProcessorThread.start();
+		
+		ByteBuffer buffer = ByteBuffer.allocate(1);
+		buffer.clear();
+		buffer.put((byte) MessageType.ALIVE_REQUEST.getValue());
+		buffer.flip();
+		while (buffer.hasRemaining()) {
+			mockClientSocketChannel.write(buffer);
+		}
+
+		buffer.clear();
+		Selector selector = Selector.open();
+		mockClientSocketChannel.configureBlocking(false);
+		mockClientSocketChannel.register(selector, SelectionKey.OP_READ);
+		if (selector.select(1000) == 0) {
+			throw new SocketTimeoutException();
+		}
+		
+		int bytesRead = mockClientSocketChannel.read(buffer);
+		assertEquals(1, bytesRead);
+		
+		buffer.flip();
+		
+		MessageType messageType = MessageType.values()[buffer.get()];
+		assertEquals(MessageType.ALIVE_CONFIRM, messageType);
 		
 		selector.close();
 		requestProcessorThread.interrupt();

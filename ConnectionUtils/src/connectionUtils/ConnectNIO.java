@@ -32,7 +32,7 @@ public class ConnectNIO {
 			while (!socketChannel.finishConnect()) {
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return socketChannel;
 	}

@@ -31,6 +31,9 @@
 			8003
 		</port>
 	</nameServiceAddress>
+	<initialConnectTimeoutSecs>
+		5
+	</initialConnectTimeoutSecs>
 	<heartbeatIntervalSecs>
 	
 	</heartbeatIntervalSecs>

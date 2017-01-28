@@ -75,7 +75,31 @@ public enum MessageType {
 	/**
 	 * A server token message containing the address of an available server to use. 
 	 */
-	SERVER_TOKEN(10);
+	SERVER_TOKEN(10),
+	
+	
+	////////// ACTIVE-PASSIVE COORDINATION MESSAGES //////////
+	/**
+	 * A request to the recipient node for it's current load balancer state (active/passive).
+	 */
+	STATE_REQUEST(11),
+	
+	/**
+	 * A message notifying that the sending node is the active load balancer.
+	 */
+	ACTIVE_NOTIFY(12),
+	
+	/**
+	 * A message notifying that the sending node is a passive load balancer, to be
+	 * accompanied by it's current election ordinality. 
+	 */
+	PASSIVE_NOTIFY(13),
+	
+	/**
+	 * A message notifying the recipient that an election is currently in progress,
+	 * indicating that the recipient node should wait for the election to finish.
+	 */
+	ELECTION_IN_PROGRESS_NOTIFY(14);
 	
 
 	/**

@@ -34,6 +34,14 @@ public abstract class AbstractRemote {
 		return address;
 	}
 	
+	
+	/**
+	 * @param isAlive the alive state of this remote process.
+	 */
+	public void setIsAlive(boolean isAlive) {
+		this.isAlive = isAlive;
+	}
+	
 
 	/**
 	 * @return true if this remote process is alive or false if it is down or unresponsive.

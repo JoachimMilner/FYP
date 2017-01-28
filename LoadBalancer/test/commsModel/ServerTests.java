@@ -64,6 +64,26 @@ public class ServerTests {
 	}
 
 	/**
+	 * Test the {@link Server} object's <code>setIsAlive</code> method. Should
+	 * set the <code>isAlive</code> field to the passed parameter.
+	 * 
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 */
+	@Test
+	public void testServer_setIsAlive()
+			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Server server = new Server(new InetSocketAddress("localhost", 8000));
+		server.setIsAlive(true);
+
+		Field isAliveField = server.getClass().getSuperclass().getDeclaredField("isAlive");
+		isAliveField.setAccessible(true);
+		assertTrue((boolean) isAliveField.get(server));
+	}
+
+	/**
 	 * Test the {@link Server} object's <code>isAlive</code> method. Should
 	 * return false as soon as the object has been instantiated.
 	 */
@@ -294,13 +314,14 @@ public class ServerTests {
 		serverCPULoadRecordsField.set(server, cpuLoadValues);
 
 		server.calculateTokenExpiry();
-		
-		// Manually calculated value using standard deviation => coefficient of variation
+
+		// Manually calculated value using standard deviation => coefficient of
+		// variation
 		long expectedTokenExpiry = System.currentTimeMillis() / 1000 + 33;
-		
+
 		assertEquals(expectedTokenExpiry, server.getTokenExpiry());
 	}
-	
+
 	/**
 	 * Tests that the {@link Server}'s <code>calculateTokenExpiry</code> method
 	 * works correctly. This method should use the current list of CPU load
@@ -337,17 +358,18 @@ public class ServerTests {
 		serverCPULoadRecordsField.set(server, cpuLoadValues);
 
 		server.calculateTokenExpiry();
-		
-		// Manually calculated value using standard deviation => coefficient of variation
+
+		// Manually calculated value using standard deviation => coefficient of
+		// variation
 		long expectedTokenExpiry = System.currentTimeMillis() / 1000 + 81;
-		
+
 		assertEquals(expectedTokenExpiry, server.getTokenExpiry());
 	}
-	
+
 	/**
 	 * Tests that the {@link Server}'s <code>calculateTokenExpiry</code> method
 	 * works correctly. This method should return the default token expiration
-	 * when it contains less than 12 CPU load values. 
+	 * when it contains less than 12 CPU load values.
 	 * 
 	 * @throws IOException
 	 * @throws SecurityException
@@ -357,9 +379,9 @@ public class ServerTests {
 	 */
 	@Test
 	public void testServer_calculateTokenExpiryDefaultExpiration() throws IOException, NoSuchFieldException,
-	SecurityException, IllegalArgumentException, IllegalAccessException {
+			SecurityException, IllegalArgumentException, IllegalAccessException {
 		Server server = new Server(new InetSocketAddress("localhost", 8000));
-		
+
 		int defaultTokenExpiration = 50;
 		Server.setDefaultTokenExpiration(defaultTokenExpiration);
 
@@ -377,16 +399,17 @@ public class ServerTests {
 		serverCPULoadRecordsField.set(server, cpuLoadValues);
 
 		server.calculateTokenExpiry();
-		
-		// Manually calculated value using standard deviation => coefficient of variation
+
+		// Manually calculated value using standard deviation => coefficient of
+		// variation
 		long expectedTokenExpiry = System.currentTimeMillis() / 1000 + 50;
-		
+
 		assertEquals(expectedTokenExpiry, server.getTokenExpiry());
 	}
-	
+
 	/**
-	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
-	 * Test case with equal server addresses.
+	 * Test the overridden <code>equals</code> method of the
+	 * {@link AbstractRemote} class. Test case with equal server addresses.
 	 */
 	@Test
 	public void testServer_equalsSameAddresses() {
@@ -395,10 +418,10 @@ public class ServerTests {
 		boolean equalsResult = server1.equals(server2);
 		assertTrue(equalsResult);
 	}
-	
+
 	/**
-	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
-	 * Test case on same object.
+	 * Test the overridden <code>equals</code> method of the
+	 * {@link AbstractRemote} class. Test case on same object.
 	 */
 	@Test
 	public void testServer_equalsSameObject() {
@@ -406,10 +429,11 @@ public class ServerTests {
 		boolean equalsResult = server1.equals(server1);
 		assertTrue(equalsResult);
 	}
-	
+
 	/**
-	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
-	 * Test case with second server having different host address.
+	 * Test the overridden <code>equals</code> method of the
+	 * {@link AbstractRemote} class. Test case with second server having
+	 * different host address.
 	 */
 	@Test
 	public void testServer_equalsDifferentHostAddress() {
@@ -418,10 +442,11 @@ public class ServerTests {
 		boolean equalsResult = server1.equals(server2);
 		assertFalse(equalsResult);
 	}
-	
+
 	/**
-	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
-	 * Test case with second server having different host address.
+	 * Test the overridden <code>equals</code> method of the
+	 * {@link AbstractRemote} class. Test case with second server having
+	 * different host address.
 	 */
 	@Test
 	public void testServer_equalsDifferentPort() {
@@ -430,10 +455,10 @@ public class ServerTests {
 		boolean equalsResult = server1.equals(server2);
 		assertFalse(equalsResult);
 	}
-	
+
 	/**
-	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
-	 * Test case with null.
+	 * Test the overridden <code>equals</code> method of the
+	 * {@link AbstractRemote} class. Test case with null.
 	 */
 	@Test
 	public void testServer_equalsNullServer() {
@@ -441,10 +466,10 @@ public class ServerTests {
 		boolean equalsResult = server1.equals(null);
 		assertFalse(equalsResult);
 	}
-	
+
 	/**
-	 * Test the overridden <code>equals</code> method of the {@link AbstractRemote} class.
-	 * Test case with different class.
+	 * Test the overridden <code>equals</code> method of the
+	 * {@link AbstractRemote} class. Test case with different class.
 	 */
 	@Test
 	public void testServer_equalsDifferentClass() {
