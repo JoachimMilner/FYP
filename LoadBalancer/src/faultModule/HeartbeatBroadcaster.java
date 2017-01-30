@@ -64,11 +64,13 @@ public class HeartbeatBroadcaster implements Runnable {
 		while (!Thread.currentThread().isInterrupted()) {
 
 			for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-				if (remoteLoadBalancer.getSocketChannel() == null) {
+				if (remoteLoadBalancer.getSocketChannel() == null
+						|| !remoteLoadBalancer.getSocketChannel().isConnected()) {
 					remoteLoadBalancer
 							.setSocketChannel(ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress()));
 				}
-				if (remoteLoadBalancer.getSocketChannel().isConnected()) {
+				if (remoteLoadBalancer.getSocketChannel() != null
+						&& remoteLoadBalancer.getSocketChannel().isConnected()) {
 					sendHeartbeat(remoteLoadBalancer.getSocketChannel());
 				}
 			}
@@ -80,14 +82,15 @@ public class HeartbeatBroadcaster implements Runnable {
 					public void run() {
 						while (!Thread.currentThread().isInterrupted()) {
 							for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-								if (remoteLoadBalancer.getSocketChannel() != null) {
+								if (remoteLoadBalancer.getSocketChannel() != null
+										&& remoteLoadBalancer.getSocketChannel().isConnected()) {
 									checkForMessages(remoteLoadBalancer.getSocketChannel());
 								}
 							}
 							try {
 								Thread.sleep(heartbeatIntervalSecs * 100);
 							} catch (InterruptedException e) {
-								e.printStackTrace();
+								// e.printStackTrace();
 							}
 						}
 					}
@@ -101,13 +104,11 @@ public class HeartbeatBroadcaster implements Runnable {
 			}
 		}
 
-		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-			try {
-				remoteLoadBalancer.getSocketChannel().close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		/*
+		 * for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+		 * try { remoteLoadBalancer.getSocketChannel().close(); } catch
+		 * (IOException e) { e.printStackTrace(); } }
+		 */
 	}
 
 	/**
@@ -125,7 +126,7 @@ public class HeartbeatBroadcaster implements Runnable {
 			try {
 				socketChannel.write(buffer);
 			} catch (IOException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 		}
 	}

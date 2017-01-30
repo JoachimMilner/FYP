@@ -1,6 +1,7 @@
 package commsModel;
 
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 
 /**
  * @author Joachim
@@ -26,6 +27,13 @@ public abstract class AbstractRemote {
 	 */
 	protected boolean isAlive = false;
 	
+	/**
+	 * The SocketChannel that is currently held for the connection to this
+	 * remote node. Used to make communication with this node more
+	 * convenient.
+	 */
+	protected SocketChannel socketChannel;
+	
 	
 	/**
 	 * @return the address of the remote process that this object represents.
@@ -48,6 +56,23 @@ public abstract class AbstractRemote {
 	 */
 	public boolean isAlive() {
 		return isAlive;
+	}
+	
+	/**
+	 * @return the current SocketChannel that is (or should be) connected to
+	 *         this remote node.
+	 */
+	public SocketChannel getSocketChannel() {
+		return socketChannel;
+	}
+
+	/**
+	 * @param socketChannel
+	 *            the SocketChannel that will be used to send/receive message
+	 *            to/from this remote node.
+	 */
+	public void setSocketChannel(SocketChannel socketChannel) {
+		this.socketChannel = socketChannel;
 	}
 
 

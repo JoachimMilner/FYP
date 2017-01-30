@@ -4,10 +4,10 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ConnectionUtils"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre1.8.0_111"/>
 	<classpathentry kind="lib" path="C:/DEV/FYP/ClientVirtualizer/lib/commons-beanutils-1.9.3.jar"/>
 	<classpathentry kind="lib" path="C:/DEV/FYP/ClientVirtualizer/lib/commons-configuration2-2.1.jar"/>
 	<classpathentry kind="lib" path="C:/DEV/FYP/ClientVirtualizer/lib/commons-lang3-3.5.jar"/>
 	<classpathentry kind="lib" path="C:/DEV/FYP/ClientVirtualizer/lib/commons-logging-1.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

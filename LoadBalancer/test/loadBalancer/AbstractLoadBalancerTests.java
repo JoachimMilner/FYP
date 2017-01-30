@@ -148,9 +148,10 @@ public class AbstractLoadBalancerTests {
 	 * performing an election, so the <code>coordinateState</code> method should
 	 * wait before periodically re-requesting the state of the other nodes,
 	 * until it is notified that the election is finished.
+	 * @throws IOException 
 	 */
 	@Test
-	public void testAbstractLoadBalancer_coordinateStateElectionInProgress() {
+	public void testAbstractLoadBalancer_coordinateStateElectionInProgress() throws IOException {
 		Set<RemoteLoadBalancer> remoteLoadBalancers = TestUtils.getRemoteLoadBalancerSet(3);
 		
 		Thread[] mockRemoteLBThreads = new Thread[3];
@@ -193,11 +194,11 @@ public class AbstractLoadBalancerTests {
 						}
 						
 						buffer.clear();
-						System.out.println("test" + j);
+						
 						acceptedSocketChannel.read(buffer);
 						buffer.flip();
 						MessageType messageType = MessageType.values()[buffer.get()];
-						System.out.println(messageType);
+						
 						if (messageType.equals(MessageType.STATE_REQUEST)) {
 							receivedSecondRequestFlags[j] = true;
 						}
@@ -244,6 +245,7 @@ public class AbstractLoadBalancerTests {
 				assertEquals(remoteLoadBalancer.getAddress().getPort() - 8000,
 						remoteLoadBalancer.getElectionOrdinality());
 			}
+			remoteLoadBalancer.getSocketChannel().close();
 		}
 
 		assertEquals(LoadBalancerState.PASSIVE, loadBalancerState);

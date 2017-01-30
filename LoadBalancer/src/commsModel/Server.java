@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
 import loadBalancer.ServerManager;
 
@@ -78,28 +76,25 @@ public class Server extends AbstractRemote {
 	public long getTokenExpiry() {
 		return tokenExpiry;
 	}
-	
+
 	/**
-	 * @param value the default token expiration in seconds to be set for all server objects. 
+	 * @param value
+	 *            the default token expiration in seconds to be set for all
+	 *            server objects.
 	 */
 	public static void setDefaultTokenExpiration(int value) {
 		defaultTokenExpiration = value;
 	}
 
 	/**
-	 * Attempts to connect to and retrieve the CPU load of the remote server
-	 * that this object represents. As this method uses a blocking socket, it
-	 * should always be run in a new thread from a {@link ServerManager}
-	 * instance. In the case that the remote server is down or unresponsive and
-	 * the connection fails, this method will set the <code>isAlive</code> state
-	 * of this object to false and return, otherwise sets it to true.
+	 * Attempts to retrieve the CPU load of the remote server that this object
+	 * represents. As this method uses a blocking socket, it should always be
+	 * run in a new thread from a {@link ServerManager} instance. In the case
+	 * that the remote server is down or unresponsive and the communication
+	 * fails, this method will set the <code>isAlive</code> state of this object
+	 * to false and return, otherwise sets it to true.
 	 */
 	public void updateServerState() {
-		SocketChannel socketChannel = ConnectNIO.getBlockingSocketChannel(address);
-		if (socketChannel == null) {
-			isAlive = false;
-			return;
-		}
 		ByteBuffer buffer = ByteBuffer.allocate(9);
 		buffer.put((byte) MessageType.SERVER_CPU_REQUEST.getValue());
 		buffer.flip();
@@ -111,7 +106,7 @@ public class Server extends AbstractRemote {
 			}
 		}
 		buffer.clear();
-		
+
 		try {
 			socketChannel.socket().setSoTimeout(1000);
 			socketChannel.read(buffer);
@@ -138,7 +133,7 @@ public class Server extends AbstractRemote {
 				cpuLoadRecords.pollLast();
 			}
 			isAlive = true;
-			//System.out.println("Test " + address.getPort() + " " + cpuLoad);
+			// System.out.println("Test " + address.getPort() + " " + cpuLoad);
 		}
 		try {
 			socketChannel.close();
@@ -158,14 +153,17 @@ public class Server extends AbstractRemote {
 		if (cpuLoadRecords.size() < 12) {
 			tokenDurationSeconds = defaultTokenExpiration;
 		} else {
-			// Calculate a token expiry time based on the CPU load data variance.
+			// Calculate a token expiry time based on the CPU load data
+			// variance.
 			tokenDurationSeconds = (int) Math.round(Math.abs(1 - getCoV()) * 100);
 		}
 		tokenExpiry = System.currentTimeMillis() / 1000 + tokenDurationSeconds;
 	}
-	
+
 	/**
-	 * Calculates the coefficient of variation using the values in <code>cpuLoadRecords</code>
+	 * Calculates the coefficient of variation using the values in
+	 * <code>cpuLoadRecords</code>
+	 * 
 	 * @return the coefficient of variation of this server's cpu load data.
 	 */
 	private double getCoV() {
@@ -176,17 +174,17 @@ public class Server extends AbstractRemote {
 			mean += value;
 		}
 		mean = mean / dataSetSize;
-		
+
 		// Calculate Variance
 		double varianceSum = 0;
 		for (double value : cpuLoadRecords) {
-			varianceSum += Math.pow(value - mean, 2); 
+			varianceSum += Math.pow(value - mean, 2);
 		}
 		double variance = varianceSum / (dataSetSize - 1);
-		
+
 		// Calculate standard deviation
 		double standardDeviation = Math.sqrt(variance);
-		
+
 		return standardDeviation / mean;
 	}
 }

@@ -6,7 +6,7 @@ package connectionUtils;
  * 		MessageType class used to handle all data sending/receiving between
  *         network nodes. Note that the MessageType enumerations are never used
  *         directly - they are converted to/from their numerical value on every
- *         send/received.
+ *         send/receive.
  *         </p>
  */
 public enum MessageType {

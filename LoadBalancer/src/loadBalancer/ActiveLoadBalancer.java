@@ -29,12 +29,18 @@ import connectionUtils.MessageType;
 public class ActiveLoadBalancer extends AbstractLoadBalancer {
 
 	/**
-	 * Creates a new ActiveLoadBalancer object that acts as the primary load balancer process in the system.
-	 * The <code>run</code> method prompts this object to start listening to requests and 
+	 * Creates a new ActiveLoadBalancer object that acts as the primary load
+	 * balancer process in the system. The <code>run</code> method prompts this
+	 * object to start listening to requests and responding accordingly.
+	 * 
 	 * @param acceptPort
+	 *            the port on which to accept incoming connection requests
 	 * @param remoteLoadBalancers
+	 *            the set of remote load balancers in the system
 	 * @param servers
+	 *            the set of all backend servers in the system
 	 * @param nameServiceAddress
+	 *            the address of the name service
 	 */
 	public ActiveLoadBalancer(int acceptPort, Set<RemoteLoadBalancer> remoteLoadBalancers, Set<Server> servers,
 			InetSocketAddress nameServiceAddress) {
@@ -44,7 +50,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			throw new IllegalArgumentException("Servers set cannot be null or empty.");
 		if (nameServiceAddress == null)
 			throw new IllegalArgumentException("Name service address cannot be null.");
-		
+
 		this.acceptPort = acceptPort;
 		this.remoteLoadBalancers = remoteLoadBalancers;
 		this.servers = servers;
@@ -52,23 +58,24 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * Called on <code>Thread.start()</code> in order to initialise a new cached thread pool that delegates
-	 * incoming connections to a new {@RunnableRequestProcessor}.
+	 * (non-Javadoc) Called on <code>Thread.start()</code> in order to
+	 * initialise a new cached thread pool that delegates incoming connections
+	 * to a new {@RunnableRequestProcessor}.
+	 * 
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run() {
 		System.out.println("Initialising active load balancer service on port " + acceptPort + "...");
-		
+
 		notifyNameService();
-		
+
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(acceptPort);
 		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
 		ServerManager serverManager = new ServerManager(servers);
 		Thread serverManagerThread = new Thread(serverManager);
 		serverManagerThread.start();
-		
+
 		while (!Thread.currentThread().isInterrupted()) {
 			SocketChannel connectRequestSocket = null;
 			try {
@@ -81,11 +88,12 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			}
 			if (connectRequestSocket != null) {
 				System.out.println("Received connection request.");
-				threadPoolExecutor.execute(new RunnableActiveRequestProcessor(connectRequestSocket, this, serverManager));
+				threadPoolExecutor
+						.execute(new RunnableActiveRequestProcessor(connectRequestSocket, this, serverManager));
 			}
 		}
 		System.out.println("Active load balancer shutting down...");
-		
+
 		serverManagerThread.interrupt();
 		try {
 			serverSocketChannel.close();
@@ -93,11 +101,11 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		}
 		threadPoolExecutor.shutdown();
 	}
-	
+
 	/**
-	 * Opens a {@link SocketChannel} and sends a <code>HOST_ADDR_NOTIFY</code> message
-	 * to the address that is stored for the name service, alerting the service that this
-	 * process is acting as the active load balancer. 
+	 * Opens a {@link SocketChannel} and sends a <code>HOST_ADDR_NOTIFY</code>
+	 * message to the address that is stored for the name service, alerting the
+	 * service that this process is acting as the active load balancer.
 	 */
 	private void notifyNameService() {
 		System.out.println("Sending host address notification message to name service...");

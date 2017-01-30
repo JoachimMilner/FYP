@@ -3,6 +3,7 @@ package loadBalancer;
 import java.util.Set;
 
 import commsModel.Server;
+import connectionUtils.ConnectNIO;
 
 /**
  * @author Joachim
@@ -50,8 +51,15 @@ public class ServerManager implements Runnable {
 				new Thread(new Runnable() {
 					
 					@Override
-					public void run() {						
-						server.updateServerState();
+					public void run() {			
+						if (server.getSocketChannel() == null || !server.getSocketChannel().isConnected()) {
+							server.setSocketChannel(ConnectNIO.getBlockingSocketChannel(server.getAddress()));
+						}
+						if (server.getSocketChannel() != null && server.getSocketChannel().isConnected()) {
+							server.updateServerState();
+						} else {
+							server.setIsAlive(false);
+						}
 					}
 
 				}).start();

@@ -1,11 +1,13 @@
 package server;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
+
+import com.sun.management.OperatingSystemMXBean;
 
 import connectionUtils.MessageType;
 
@@ -116,10 +118,11 @@ public class RunnableRequestProcessor implements Runnable {
 						responsesSent++;
 						break;
 					case SERVER_CPU_REQUEST:
-						// Get the local machine's CPU usage here. We will mock this for now.
+						OperatingSystemMXBean osMXBean = (com.sun.management.OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean();
+						double cpuUsage = osMXBean.getProcessCpuLoad() * 100;
+						System.out.println(cpuUsage);
 						buffer.clear();
 						buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
-						double cpuUsage = ThreadLocalRandom.current().nextDouble(0.1, 99.9);
 						buffer.putDouble(cpuUsage);
 						buffer.flip();
 						while (buffer.hasRemaining()) {

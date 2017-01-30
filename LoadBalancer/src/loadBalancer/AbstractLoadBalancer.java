@@ -52,8 +52,8 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 * <ul>
 	 * <li>Attempt to message all other load balancer nodes and request their
 	 * state.</li>
-	 * <li>If any node responds with election_in_progress, wait for election
-	 * to finish and re-request states.</li>
+	 * <li>If any node responds with election_in_progress, wait for election to
+	 * finish and re-request states.</li>
 	 * <li>If any node responds as active, set flag on that node and enter
 	 * passive state.</li>
 	 * <li>If no responses, elevate self to active state.</li>
@@ -98,6 +98,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 
 			int activeCount = 0;
 			int passiveCount = 0;
+			boolean electionInProgress = false;
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				LoadBalancerState state = remoteLoadBalancer.getState();
 				if (state != null) {
@@ -109,14 +110,14 @@ public abstract class AbstractLoadBalancer implements Runnable {
 						passiveCount++;
 						break;
 					case ELECTION_IN_PROGRESS:
-						determinedState = LoadBalancerState.ELECTION_IN_PROGRESS;
+						electionInProgress = true;
 						break;
 					}
 				}
 			}
 			int totalResponses = activeCount + passiveCount;
 
-			if (determinedState != null && determinedState.equals(LoadBalancerState.ELECTION_IN_PROGRESS)) {
+			if (electionInProgress) {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
@@ -144,10 +145,11 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 */
 	private static void sendStateRequest(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
 		try {
+			if (remoteLoadBalancer.getSocketChannel() == null || !remoteLoadBalancer.getSocketChannel().isConnected()) {
+				remoteLoadBalancer
+						.setSocketChannel(ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress()));
+			}
 			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
-			if (socketChannel == null || !socketChannel.isConnected()) {
-				socketChannel = ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress());
-			} 
 			ByteBuffer buffer = ByteBuffer.allocate(5);
 			buffer.put((byte) MessageType.STATE_REQUEST.getValue());
 			buffer.flip();
@@ -166,6 +168,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				socketChannel.read(buffer);
 				buffer.flip();
 				MessageType messageType = MessageType.values()[buffer.get()];
+				System.out.println(messageType);
 				switch (messageType) {
 				case ACTIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);

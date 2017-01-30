@@ -141,7 +141,7 @@ public class RemoteLoadBalancerTests {
 		RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress("localhost", 8000));
 		SocketChannel expectedSocketChannel = SocketChannel.open();
 
-		Field socketChannelField = remoteLoadBalancer.getClass().getDeclaredField("socketChannel");
+		Field socketChannelField = remoteLoadBalancer.getClass().getSuperclass().getDeclaredField("socketChannel");
 		socketChannelField.setAccessible(true);
 		socketChannelField.set(remoteLoadBalancer, expectedSocketChannel);
 
@@ -165,7 +165,7 @@ public class RemoteLoadBalancerTests {
 		SocketChannel expectedSocketChannel = SocketChannel.open();
 		remoteLoadBalancer.setSocketChannel(expectedSocketChannel);
 
-		Field socketChannelField = remoteLoadBalancer.getClass().getDeclaredField("socketChannel");
+		Field socketChannelField = remoteLoadBalancer.getClass().getSuperclass().getDeclaredField("socketChannel");
 		socketChannelField.setAccessible(true);
 
 		assertEquals(expectedSocketChannel, socketChannelField.get(remoteLoadBalancer));
