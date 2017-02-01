@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
@@ -14,9 +16,16 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.sun.management.OperatingSystemMXBean;
 
 import connectionUtils.MessageType;
 
@@ -355,11 +364,20 @@ public class RunnableRequestProcessorTests {
 	 * Test that the {@link RunnableRequestProcessor} returns the server's CPU load when sent a 
 	 * <code>SERVER_CPU_REQUEST</code>.
 	 * @throws IOException
+	 * @throws SecurityException 
+	 * @throws NoSuchFieldException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
 	@Test
-	public void testRunnableRequestProcessor_getServerCPULoad() throws IOException {
+	public void testRunnableRequestProcessor_getServerCPULoad() throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		createAcceptedSocketChannel();
-		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000));
+		ThreadPooledServer threadManager = new ThreadPooledServer(1, 8000); 
+		Field threadManagerMBSField = threadManager.getClass().getDeclaredField("mBeanServer");
+		threadManagerMBSField.setAccessible(true);
+		threadManagerMBSField.set(threadManager, ManagementFactory.getPlatformMBeanServer());
+		
+		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, threadManager);
 		new Thread(requestProcessor).start();
 		
 		// Send a request for the server's CPU load
@@ -384,7 +402,7 @@ public class RunnableRequestProcessorTests {
 		MessageType responseMessageType = MessageType.values()[buffer.get()];
 		assertEquals(MessageType.SERVER_CPU_NOTIFY, responseMessageType);
 		double serverLoad = buffer.getDouble();
-		assertTrue(serverLoad > 0);
+		assertTrue(serverLoad != Double.NaN);
 		selector.close();
 	}
 }

@@ -245,4 +245,25 @@ public class ThreadPooledServerTests {
 		serverThread.interrupt();
 		mockClient.close();
 	}
+	
+	/**
+	 * Tests that the {@link ThreadPooledServer} initialises its mBeanServer 
+	 * property when started. This is to allow processor threads to retrieve 
+	 * the machine's CPU load when needed. 
+	 */
+	@Test
+	public void testThreadPooledServer_initMBeanServer() {
+		ThreadPooledServer threadPooledServer = new ThreadPooledServer(1, 8000);
+		Thread serverThread = new Thread(threadPooledServer);
+		serverThread.start();
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			
+		}
+		
+		assertNotNull(threadPooledServer.getMBeanServer());
+		
+		serverThread.interrupt();
+	}
 }

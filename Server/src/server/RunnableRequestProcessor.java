@@ -1,13 +1,18 @@
 package server;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 
-import com.sun.management.OperatingSystemMXBean;
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
 
 import connectionUtils.MessageType;
 
@@ -23,19 +28,20 @@ public class RunnableRequestProcessor implements Runnable {
 	 * The accepted client's SocketChannel.
 	 */
 	private SocketChannel socketChannel;
-	
+
 	/**
-	 * The total number of messages that this object has sent in response to client requests.
+	 * The total number of messages that this object has sent in response to
+	 * client requests.
 	 */
 	private int responsesSent = 0;
-		
+
 	/**
-	 * The ThreadPooledServer instance that manages this RunnableRequestProcessor. The RunnableRequestProcessor
-	 * will update the total requests received and responses sent values via this object.
+	 * The ThreadPooledServer instance that manages this
+	 * RunnableRequestProcessor. The RunnableRequestProcessor will update the
+	 * total requests received and responses sent values via this object.
 	 */
 	private ThreadPooledServer threadManager;
 
-	
 	/**
 	 * Constructor for creating a new RunnableRequestProcessor. Accepts a
 	 * {@link SocketChannel}, reads the request bytes from it, processes a
@@ -49,11 +55,10 @@ public class RunnableRequestProcessor implements Runnable {
 			throw new IllegalArgumentException("Null or disconnected SocketChannel.");
 		if (threadManager == null)
 			throw new IllegalArgumentException("ThreadPooledServer instance cannot be null.");
-		
+
 		this.socketChannel = socketChannel;
 		this.threadManager = threadManager;
 	}
-	
 
 	/*
 	 * (non-Javadoc) To be called on <code>Thread.start()</code> to listen for
@@ -70,7 +75,8 @@ public class RunnableRequestProcessor implements Runnable {
 				ByteBuffer buffer = ByteBuffer.allocate(81);
 				int bytesRead = socketChannel.read(buffer);
 
-				if (bytesRead == -1) { // Something went wrong, close channel and terminate
+				if (bytesRead == -1) { // Something went wrong, close channel
+										// and terminate
 					socketChannel.close();
 					break;
 				} else {
@@ -89,19 +95,23 @@ public class RunnableRequestProcessor implements Runnable {
 							try {
 								requestData[i] = buffer.getLong();
 							} catch (BufferUnderflowException e) {
-								// Something went wrong, close channel and terminate
+								// Something went wrong, close channel and
+								// terminate
 								socketChannel.close();
 								break;
 							}
 						}
-						System.out.println("Server Thread (ID:" + Thread.currentThread().getId() + ") received client request: " + Arrays.toString(requestData));
+						System.out.println("Server Thread (ID:" + Thread.currentThread().getId()
+								+ ") received client request: " + Arrays.toString(requestData));
 						long startTime = System.currentTimeMillis();
-						
+
 						long[] processedResponseValues = processSumOfPrimes(requestData);
-						
+
 						long endTime = System.currentTimeMillis();
-		
-						System.out.println("Server Thread (ID:" + Thread.currentThread().getId() + ") finished processing client request in " + (endTime - startTime) + "ms, sending response..." );
+
+						System.out.println("Server Thread (ID:" + Thread.currentThread().getId()
+								+ ") finished processing client request in " + (endTime - startTime)
+								+ "ms, sending response...");
 
 						buffer.clear();
 						buffer.put((byte) MessageType.SERVER_RESPONSE.getValue());
@@ -117,9 +127,8 @@ public class RunnableRequestProcessor implements Runnable {
 						threadManager.incrementTotalResponsesSent();
 						responsesSent++;
 						break;
-					case SERVER_CPU_REQUEST:
-						OperatingSystemMXBean osMXBean = (com.sun.management.OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean();
-						double cpuUsage = osMXBean.getProcessCpuLoad() * 100;
+					case SERVER_CPU_REQUEST:;
+						double cpuUsage = getSystemCPULoad();
 						System.out.println(cpuUsage);
 						buffer.clear();
 						buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
@@ -135,8 +144,8 @@ public class RunnableRequestProcessor implements Runnable {
 					}
 				}
 			} catch (IOException e) {
-				//e.printStackTrace();
-				
+				// e.printStackTrace();
+
 				break;
 			}
 		}
@@ -144,15 +153,14 @@ public class RunnableRequestProcessor implements Runnable {
 			System.out.println("Client disconected.");
 		}
 	}
-	
 
 	/**
-	 * @return The total number of responses that this RunnableRequestProcessor has sent.
+	 * @return The total number of responses that this RunnableRequestProcessor
+	 *         has sent.
 	 */
 	public int getResponsesSent() {
 		return responsesSent;
 	}
-	
 
 	/**
 	 * Private method for processing a client's request. Finds the total sum of
@@ -177,7 +185,6 @@ public class RunnableRequestProcessor implements Runnable {
 		}
 		return summatedPrimeValues;
 	}
-	
 
 	/**
 	 * Determines whether a number is a prime number.
@@ -193,5 +200,35 @@ public class RunnableRequestProcessor implements Runnable {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Retrieves the {@link MBeanServer} object from the
+	 * <code>threadManager</code> and attempts to get the current CPU load for
+	 * this machine.
+	 * 
+	 * @return a double representing the CPU load of the machine with 2 decimal
+	 *         point precision, or NaN if the value cannot be obtained.
+	 */
+	private double getSystemCPULoad() {
+		try {
+			ObjectName name    = ObjectName.getInstance("java.lang:type=OperatingSystem");
+			AttributeList list = threadManager.getMBeanServer().getAttributes(name, new String[]{ "SystemCpuLoad" });
+			if (list.isEmpty()) {
+				return Double.NaN;
+			}
+			
+			Attribute att = (Attribute)list.get(0);
+	    	Double value  = (Double)att.getValue();
+	    	
+		    if (value == -1.0) {
+		    	return Double.NaN;
+		    }
+		   
+		    return ((int)(value * 10000) / 100.0);
+		} catch (MalformedObjectNameException | NullPointerException | InstanceNotFoundException | ReflectionException e) {
+			e.printStackTrace();
+			return Double.NaN;
+		}
 	}
 }

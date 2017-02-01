@@ -1,10 +1,13 @@
 package server;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.management.MBeanServer;
 
 import connectionUtils.*;
 
@@ -46,6 +49,13 @@ public class ThreadPooledServer implements IConnectableComponent, Runnable {
 	 * 
 	 */
 	private int totalResponsesSent = 0;
+	
+	
+	/**
+	 * The MBeanServer that {@link RunnableRequestProcessor}s can access
+	 * in order to retrieve the machine's CPU load. 
+	 */
+	private MBeanServer mBeanServer;
 
 	
 	/**
@@ -76,6 +86,9 @@ public class ThreadPooledServer implements IConnectableComponent, Runnable {
 	@Override
 	public void run() {
 		System.out.println("Initialising Server Thread Pool on Port " + connectPort + "...");
+		// Initialise MBeanServer for getting CPU load. 
+		mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(connectPort);
 		ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(threadPoolSize);
 		while (!Thread.currentThread().isInterrupted()) {
@@ -134,5 +147,12 @@ public class ThreadPooledServer implements IConnectableComponent, Runnable {
 	 */
 	public synchronized void incrementTotalResponsesSent() {
 		totalResponsesSent++;
+	}
+	
+	/**
+	 * @return the initialised MBeanServer used to access system properties.
+	 */
+	public MBeanServer getMBeanServer() {
+		return mBeanServer;
 	}
 }
