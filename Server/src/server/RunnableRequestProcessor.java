@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -101,17 +100,17 @@ public class RunnableRequestProcessor implements Runnable {
 								break;
 							}
 						}
-						System.out.println("Server Thread (ID:" + Thread.currentThread().getId()
-								+ ") received client request: " + Arrays.toString(requestData));
-						long startTime = System.currentTimeMillis();
+						//System.out.println("Server Thread (ID:" + Thread.currentThread().getId()
+							//	+ ") received client request: " + Arrays.toString(requestData));
+						//long startTime = System.currentTimeMillis();
 
 						long[] processedResponseValues = processSumOfPrimes(requestData);
 
-						long endTime = System.currentTimeMillis();
+						//long endTime = System.currentTimeMillis();
 
-						System.out.println("Server Thread (ID:" + Thread.currentThread().getId()
-								+ ") finished processing client request in " + (endTime - startTime)
-								+ "ms, sending response...");
+						//System.out.println("Server Thread (ID:" + Thread.currentThread().getId()
+							//	+ ") finished processing client request in " + (endTime - startTime)
+							//	+ "ms, sending response...");
 
 						buffer.clear();
 						buffer.put((byte) MessageType.SERVER_RESPONSE.getValue());
@@ -129,6 +128,9 @@ public class RunnableRequestProcessor implements Runnable {
 						break;
 					case SERVER_CPU_REQUEST:;
 						double cpuUsage = getSystemCPULoad();
+						if (Double.isNaN(cpuUsage)) {
+							cpuUsage = -1.00;
+						}
 						System.out.println(cpuUsage);
 						buffer.clear();
 						buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
@@ -206,6 +208,8 @@ public class RunnableRequestProcessor implements Runnable {
 	 * Retrieves the {@link MBeanServer} object from the
 	 * <code>threadManager</code> and attempts to get the current CPU load for
 	 * this machine.
+	 * </br>
+	 * Method based on code from: {@link http://stackoverflow.com/a/21962037}
 	 * 
 	 * @return a double representing the CPU load of the machine with 2 decimal
 	 *         point precision, or NaN if the value cannot be obtained.

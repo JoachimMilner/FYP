@@ -111,7 +111,7 @@ public class Server extends AbstractRemote {
 			socketChannel.socket().setSoTimeout(1000);
 			socketChannel.read(buffer);
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			if (e.getClass().equals(SocketTimeoutException.class)) {
 				isAlive = false;
 				try {
@@ -119,8 +119,8 @@ public class Server extends AbstractRemote {
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-				return;
 			}
+			return;
 		}
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];

@@ -16,16 +16,9 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.management.Attribute;
-import javax.management.AttributeList;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.sun.management.OperatingSystemMXBean;
 
 import connectionUtils.MessageType;
 

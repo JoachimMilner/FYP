@@ -72,7 +72,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 		int numberOfRemotes = remoteLoadBalancers.size();
 		Thread[] connectionThreads = new Thread[numberOfRemotes];
 
-		while (determinedState == null || determinedState.equals(LoadBalancerState.ELECTION_IN_PROGRESS)) {
+		while (determinedState == null) {
 			Iterator<RemoteLoadBalancer> iterator = remoteLoadBalancers.iterator();
 			for (int i = 0; i < numberOfRemotes; i++) {
 				final RemoteLoadBalancer remoteLoadBalancer = iterator.next();
@@ -81,7 +81,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 
 					@Override
 					public void run() {
-						sendStateRequest(remoteLoadBalancer, connectTimeoutSecs);
+						requestState(remoteLoadBalancer, connectTimeoutSecs);
 					}
 
 				});
@@ -143,7 +143,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 * @param connectTimeoutSecs
 	 *            the duration in seconds to wait for a response
 	 */
-	private static void sendStateRequest(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
+	private static void requestState(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
 		try {
 			if (remoteLoadBalancer.getSocketChannel() == null || !remoteLoadBalancer.getSocketChannel().isConnected()) {
 				remoteLoadBalancer
@@ -168,7 +168,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				socketChannel.read(buffer);
 				buffer.flip();
 				MessageType messageType = MessageType.values()[buffer.get()];
-				System.out.println(messageType);
+				//System.out.println(messageType);
 				switch (messageType) {
 				case ACTIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
