@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="606.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Separator layoutY="375.0" prefHeight="8.0" prefWidth="933.0" />
+      <Separator layoutX="372.0" orientation="VERTICAL" prefHeight="378.0" prefWidth="6.0" />
+      <LineChart layoutX="379.0" layoutY="3.0" prefHeight="371.0" prefWidth="552.0">
+        <xAxis>
+          <CategoryAxis side="BOTTOM" />
+        </xAxis>
+        <yAxis>
+          <NumberAxis side="LEFT" />
+        </yAxis>
+      </LineChart>
+      <Label layoutX="16.0" layoutY="377.0" prefHeight="24.0" prefWidth="196.0" text="Load Balancer Feed" />
+      <Separator layoutX="-1.0" layoutY="234.0" prefHeight="8.0" prefWidth="375.0" />
+      <Label layoutX="13.0" layoutY="9.0" prefHeight="24.0" prefWidth="91.0" text="Client Options" />
+      <Label layoutX="13.0" layoutY="235.0" prefHeight="24.0" prefWidth="130.0" text="Name Service Feed" />
+      <TextArea fx:id="loadBalancerTextArea" editable="false" focusTraversable="false" layoutX="14.0" layoutY="401.0" prefHeight="197.0" prefWidth="905.0" />
+      <TextArea fx:id="nameServiceTextArea" editable="false" layoutX="14.0" layoutY="259.0" prefHeight="110.0" prefWidth="350.0" />
+      <Label layoutX="14.0" layoutY="38.0" prefHeight="24.0" prefWidth="73.0" text="Max Clients:" />
+      <TextField fx:id="maxClientsTextField" layoutX="87.0" layoutY="38.0" prefHeight="25.0" prefWidth="61.0" />
+      <TextField fx:id="minSendFrequencyTextField" layoutX="43.0" layoutY="88.0" prefHeight="25.0" prefWidth="139.0" />
+      <Separator layoutX="14.0" layoutY="63.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
+      <Separator layoutX="14.0" layoutY="115.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
+      <Label layoutX="14.0" layoutY="68.0" prefHeight="17.0" prefWidth="186.0" text="Message Sending Frequency (ms)" />
+      <Label layoutX="14.0" layoutY="92.0" prefHeight="17.0" prefWidth="29.0" text="Min:" />
+      <Label layoutX="196.0" layoutY="92.0" prefHeight="17.0" prefWidth="29.0" text="Max:" />
+      <TextField fx:id="maxSendFrequencyTextField" layoutX="224.0" layoutY="88.0" prefHeight="25.0" prefWidth="139.0" />
+      <Label layoutX="14.0" layoutY="121.0" prefHeight="17.0" prefWidth="186.0" text="Messages Per Client" />
+      <TextField fx:id="minMessageCountTextField" layoutX="44.0" layoutY="140.0" prefHeight="25.0" prefWidth="139.0" />
+      <Label layoutX="15.0" layoutY="144.0" prefHeight="17.0" prefWidth="29.0" text="Min:" />
+      <Label layoutX="197.0" layoutY="144.0" prefHeight="17.0" prefWidth="29.0" text="Max:" />
+      <TextField fx:id="maxMessageCountTextField" layoutX="225.0" layoutY="140.0" prefHeight="25.0" prefWidth="139.0" />
+      <Separator layoutX="14.0" layoutY="167.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
+      <Separator layoutX="14.0" layoutY="29.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
+      <Button fx:id="updateClientOptionsButton" layoutX="13.0" layoutY="175.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="61.0" text="Update" />
+      <Label layoutX="15.0" layoutY="213.0" text="Requests Sent:" />
+      <Label fx:id="requestsSentLabel" layoutX="96.0" layoutY="213.0" prefHeight="17.0" prefWidth="73.0" text="0" />
+      <Label layoutX="176.0" layoutY="213.0" text="Responses Received:" />
+      <Label fx:id="responsesReceivedLabel" layoutX="290.0" layoutY="213.0" prefHeight="17.0" prefWidth="73.0" text="0" />
+      <Separator layoutX="14.0" layoutY="201.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
+   </children>
+</Pane>
