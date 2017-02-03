@@ -33,9 +33,9 @@ public class AbstractLoadBalancerTests {
 	 * Test the {@link AbstractLoadBalancer}'s <code>coordinateState</code>
 	 * method. This test checks that when a new load balancer node is started,
 	 * it initially messages all other load balancers in the system to request
-	 * their state. And then notes accordingly which node are in which state.
-	 * Passive nodes should have their <code>electionOrdinality</code> field set
-	 * to the sent integer value. </br>
+	 * their state. Then notes accordingly which node are in which state.
+	 * Passive nodes should have their <code>isElectedBackup</code> field set
+	 * accordingly. </br>
 	 * In this test case, one remote load balancer confirms its state as active
 	 * while the other return passive. The <code>coordinateState</code> method
 	 * should therefore return <code>PASSIVE</code>.
@@ -68,7 +68,7 @@ public class AbstractLoadBalancerTests {
 						acceptSelector.close();
 						acceptedSocketChannel.configureBlocking(true);
 
-						ByteBuffer buffer = ByteBuffer.allocate(5);
+						ByteBuffer buffer = ByteBuffer.allocate(2);
 						acceptedSocketChannel.socket().setSoTimeout(1000);
 
 						acceptedSocketChannel.read(buffer);
@@ -84,7 +84,13 @@ public class AbstractLoadBalancerTests {
 							buffer.put((byte) MessageType.ACTIVE_NOTIFY.getValue());
 						} else {
 							buffer.put((byte) MessageType.PASSIVE_NOTIFY.getValue());
-							buffer.putInt(j);
+							// isElectedBackup value
+							if (j == 1) {
+								buffer.put((byte)1); //true
+							} else {
+								buffer.put((byte)0); //false
+							}
+							
 						}
 						buffer.flip();
 						while (buffer.hasRemaining()) {
@@ -117,8 +123,11 @@ public class AbstractLoadBalancerTests {
 				assertEquals(LoadBalancerState.ACTIVE, remoteLoadBalancer.getState());
 			} else {
 				assertEquals(LoadBalancerState.PASSIVE, remoteLoadBalancer.getState());
-				assertEquals(remoteLoadBalancer.getAddress().getPort() - 8000,
-						remoteLoadBalancer.getElectionOrdinality());
+				if (remoteLoadBalancer.getAddress().getPort() == 8001) {
+					assertTrue(remoteLoadBalancer.isElectedBackup());
+				} else {
+					assertFalse(remoteLoadBalancer.isElectedBackup());
+				}
 			}
 		}
 
@@ -208,7 +217,12 @@ public class AbstractLoadBalancerTests {
 							buffer.put((byte) MessageType.ACTIVE_NOTIFY.getValue());
 						} else {
 							buffer.put((byte) MessageType.PASSIVE_NOTIFY.getValue());
-							buffer.putInt(j);
+							// isElectedBackup value
+							if (j == 1) {
+								buffer.put((byte)1); //true
+							} else {
+								buffer.put((byte)0); //false
+							}
 						}
 						buffer.flip();
 						while (buffer.hasRemaining()) {
@@ -242,8 +256,11 @@ public class AbstractLoadBalancerTests {
 				assertEquals(LoadBalancerState.ACTIVE, remoteLoadBalancer.getState());
 			} else {
 				assertEquals(LoadBalancerState.PASSIVE, remoteLoadBalancer.getState());
-				assertEquals(remoteLoadBalancer.getAddress().getPort() - 8000,
-						remoteLoadBalancer.getElectionOrdinality());
+				if (remoteLoadBalancer.getAddress().getPort() == 8001) {
+					assertTrue(remoteLoadBalancer.isElectedBackup());
+				} else {
+					assertFalse(remoteLoadBalancer.isElectedBackup());
+				}
 			}
 			remoteLoadBalancer.getSocketChannel().close();
 		}

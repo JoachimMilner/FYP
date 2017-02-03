@@ -175,8 +175,8 @@ public abstract class AbstractLoadBalancer implements Runnable {
 					break;
 				case PASSIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
-					int electionOrdinality = buffer.getInt();
-					remoteLoadBalancer.setElectionOrdinality(electionOrdinality);
+					boolean isElectedBackup = buffer.get() != 0;
+					remoteLoadBalancer.setIsElectedBackup(isElectedBackup);
 					break;
 				case ELECTION_IN_PROGRESS_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ELECTION_IN_PROGRESS);

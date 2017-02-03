@@ -20,12 +20,11 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	private LoadBalancerState state;
 
 	/**
-	 * The election ranking of this remote load balancer process, coordinated by
-	 * the {@link ElectionManager} of each load balancer instance. If this is
-	 * the active load balancer, the value is set to 0, otherwise it is a
-	 * non-zero value.
+	 * Boolean value indicating whether this node has been elected as the backup
+	 * to take over in the case of primary failure. Set to false by default, set
+	 * to true after an election has been coordinated.
 	 */
-	private int electionOrdinality;
+	private boolean isElectedBackup = false;
 
 	/**
 	 * Creates a new RemoteLoadBalancer object instance that hold relevant
@@ -61,19 +60,18 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	}
 
 	/**
-	 * @return the election ordinality of the remote load balancer process that
-	 *         this object represents.
+	 * @return true if this remote load balancer has been elected as the node to
+	 *         take over in the case of primary failure, otherwise false.
 	 */
-	public int getElectionOrdinality() {
-		return electionOrdinality;
+	public boolean isElectedBackup() {
+		return isElectedBackup;
 	}
 
 	/**
-	 * @param electionOrdinality
-	 *            the current election ordinality of the remote load balancer
-	 *            process that this object represents.
+	 * @param isElectedBackup
+	 *            whether this node is the elected backup. 
 	 */
-	public void setElectionOrdinality(int electionOrdinality) {
-		this.electionOrdinality = electionOrdinality;
+	public void setIsElectedBackup(boolean isElectedBackup) {
+		this.isElectedBackup = isElectedBackup;
 	}
 }

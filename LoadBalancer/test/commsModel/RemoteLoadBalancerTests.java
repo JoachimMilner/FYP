@@ -90,22 +90,22 @@ public class RemoteLoadBalancerTests {
 	}
 
 	/**
-	 * Test the {@link RemoteLoadBalancer}'s <code>getElectionOrdinality</code>
-	 * method. The method should return the int value that we set using
+	 * Test the {@link RemoteLoadBalancer}'s <code>isElectedBackup</code>
+	 * method. The method should return the boolean value that we set using
 	 * reflection.
 	 */
 	@Test
-	public void testRemoteLoadBalancer_getElectionOrdinality()
+	public void testRemoteLoadBalancer_isElectedBackup()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress("localhost", 8000));
-		int expectedElectionOrdinality = 1;
+		boolean expectedIsElectedBackup = true;
 
-		Field electionOrdinalityField = remoteLoadBalancer.getClass().getDeclaredField("electionOrdinality");
-		electionOrdinalityField.setAccessible(true);
-		electionOrdinalityField.set(remoteLoadBalancer, expectedElectionOrdinality);
+		Field isElectedBackupField = remoteLoadBalancer.getClass().getDeclaredField("isElectedBackup");
+		isElectedBackupField.setAccessible(true);
+		isElectedBackupField.set(remoteLoadBalancer, expectedIsElectedBackup);
 
-		int electionOrdinality = remoteLoadBalancer.getElectionOrdinality();
-		assertEquals(expectedElectionOrdinality, electionOrdinality);
+		boolean isElectedBackup = remoteLoadBalancer.isElectedBackup();
+		assertEquals(expectedIsElectedBackup, isElectedBackup);
 	}
 
 	/**
@@ -114,16 +114,16 @@ public class RemoteLoadBalancerTests {
 	 * property of the object to the value passed in.
 	 */
 	@Test
-	public void testRemoteLoadBalancer_setElectionOrdinality()
+	public void testRemoteLoadBalancer_setIsElectedBackup()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress("localhost", 8000));
-		int expectedElectionOrdinality = 1;
-		remoteLoadBalancer.setElectionOrdinality(expectedElectionOrdinality);
+		boolean expectedIsElectedBackup = true;
+		remoteLoadBalancer.setIsElectedBackup(expectedIsElectedBackup);
 
-		Field electionOrdinalityField = remoteLoadBalancer.getClass().getDeclaredField("electionOrdinality");
-		electionOrdinalityField.setAccessible(true);
+		Field isElectedBackupField = remoteLoadBalancer.getClass().getDeclaredField("isElectedBackup");
+		isElectedBackupField.setAccessible(true);
 
-		assertEquals(expectedElectionOrdinality, electionOrdinalityField.get(remoteLoadBalancer));
+		assertEquals(expectedIsElectedBackup, isElectedBackupField.get(remoteLoadBalancer));
 	}
 	
 	/**
