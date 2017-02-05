@@ -161,9 +161,9 @@ public class RunnableClientProcessTests {
 		Thread clientThread = new Thread(
 				new RunnableClientProcess(new InetSocketAddress("localhost", 8001), clientManager, 100, 10));
 		clientThread.start();
-		
+
 		mockNameServiceAndLoadBalancers(8001, 8002);
-		
+
 		mockServerSocketChannel.accept();
 		clientThread.interrupt();
 
@@ -189,9 +189,9 @@ public class RunnableClientProcessTests {
 		Thread clientThread = new Thread(
 				new RunnableClientProcess(new InetSocketAddress("localhost", 8001), clientManager, 10, 5));
 		clientThread.start();
-		
+
 		mockNameServiceAndLoadBalancers(8001, 8002);
-		
+
 		mockServerSocketChannel.accept();
 
 		try {
@@ -202,7 +202,6 @@ public class RunnableClientProcessTests {
 
 		assertFalse(clientThread.isAlive());
 	}
-	 
 
 	/**
 	 * Starts a {@link RunnableClientProcess} thread and attempts to close the
@@ -241,9 +240,9 @@ public class RunnableClientProcessTests {
 		Thread clientThread = new Thread(
 				new RunnableClientProcess(new InetSocketAddress("localhost", 8001), clientManager, 50, 100));
 		clientThread.start();
-		
+
 		mockNameServiceAndLoadBalancers(8001, 8002);
-		
+
 		mockServerSocketChannel.accept();
 		try {
 			Thread.sleep(1000);
@@ -277,9 +276,9 @@ public class RunnableClientProcessTests {
 		Thread clientThread = new Thread(
 				new RunnableClientProcess(new InetSocketAddress("localhost", 8001), clientManager, 100, 50));
 		clientThread.start();
-		
+
 		mockNameServiceAndLoadBalancers(8001, 8002);
-		
+
 		SocketChannel acceptedClientSocket = mockServerSocketChannel.accept();
 
 		ByteBuffer buffer = ByteBuffer.allocate(81);
@@ -314,18 +313,20 @@ public class RunnableClientProcessTests {
 	 * address of the load balancer when it starts.
 	 * 
 	 * @throws IOException
-	 * @throws SecurityException 
-	 * @throws NoSuchFieldException 
-	 * @throws IllegalAccessException 
-	 * @throws IllegalArgumentException 
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
 	 */
 	@Test
-	public void testRunnableClientProcess_requestHostNameResolution() throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	public void testRunnableClientProcess_requestHostNameResolution() throws IOException, NoSuchFieldException,
+			SecurityException, IllegalArgumentException, IllegalAccessException {
 		ServerSocketChannel mockNameServiceSocketChannel = getMockServerSocketChannel(8001);
 
 		VirtualClientManager clientManager = new VirtualClientManager(1, 1, 1, 1, 1,
 				new InetSocketAddress("localhost", 8001));
-		RunnableClientProcess clientProcess = new RunnableClientProcess(new InetSocketAddress("localhost", 8001), clientManager, 100, 50);
+		RunnableClientProcess clientProcess = new RunnableClientProcess(new InetSocketAddress("localhost", 8001),
+				clientManager, 100, 50);
 		Field loadBalancerAddressField = clientProcess.getClass().getDeclaredField("loadBalancerAddress");
 		loadBalancerAddressField.setAccessible(true);
 		loadBalancerAddressField.set(clientProcess, new InetSocketAddress("localhost", 8002));
@@ -353,7 +354,7 @@ public class RunnableClientProcessTests {
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];
 		assertEquals(MessageType.HOST_ADDR_REQUEST, messageType);
-		
+
 		try {
 			Thread.sleep(50);
 		} catch (InterruptedException e) {
@@ -494,7 +495,7 @@ public class RunnableClientProcessTests {
 		loadBalancerBuffer.flip();
 		messageType = MessageType.values()[loadBalancerBuffer.get()];
 		assertEquals(MessageType.AVAILABLE_SERVER_REQUEST, messageType);
-		
+
 		loadBalancerBuffer.clear();
 		loadBalancerBuffer.put((byte) MessageType.SERVER_TOKEN.getValue());
 		loadBalancerBuffer.putLong(System.currentTimeMillis() / 1000 + 50);
@@ -504,7 +505,7 @@ public class RunnableClientProcessTests {
 		while (loadBalancerBuffer.hasRemaining()) {
 			acceptedMockLoadBalancerSocketChannel.write(loadBalancerBuffer);
 		}
-		
+
 		try {
 			Thread.sleep(50);
 		} catch (InterruptedException e) {
@@ -537,7 +538,8 @@ public class RunnableClientProcessTests {
 	 * Method for mocking the behaviour of the name service and load balancer so
 	 * we can test the {@link RunnableClientProcess} which requires
 	 * communication with both.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	private void mockNameServiceAndLoadBalancers(int nameServicePort, int loadBalancerPort) throws IOException {
 		ServerSocketChannel mockNameServiceSocketChannel = getMockServerSocketChannel(nameServicePort);
@@ -570,7 +572,7 @@ public class RunnableClientProcessTests {
 		nameServiceAcceptSelector.close();
 		nameServiceReadSelector.close();
 		mockNameServiceSocketChannel.close();
-		
+
 		try {
 			Thread.sleep(50);
 		} catch (InterruptedException e) {
@@ -593,7 +595,7 @@ public class RunnableClientProcessTests {
 		if (loadBalancerReadSelector.select(1000) == 0) {
 			throw new SocketTimeoutException();
 		}
-		
+
 		loadBalancerBuffer.clear();
 		loadBalancerBuffer.put((byte) MessageType.SERVER_TOKEN.getValue());
 		loadBalancerBuffer.putLong(System.currentTimeMillis() / 1000 + 50);
