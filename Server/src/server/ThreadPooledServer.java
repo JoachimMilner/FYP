@@ -18,7 +18,7 @@ import connectionUtils.*;
  *         ThreadPooledServer should be instantiated and started in a thread
  *         when the application starts.
  */
-public class ThreadPooledServer implements IConnectableComponent, Runnable {
+public class ThreadPooledServer implements Runnable {
 
 	/**
 	 * The size of the thread pool to be created for handling received client
