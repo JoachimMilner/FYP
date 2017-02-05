@@ -11,7 +11,8 @@ public enum LogMessageType {
 
 	////////// NODE REGISTRATION MESSAGES //////////
 	/**
-	 * Message from the ClientVirtualizer requesting to register.
+	 * Message from the ClientVirtualizer requesting to register. Message should
+	 * also contain the default client configuration settings.
 	 */
 	CLIENT_REGISTER(0),
 

@@ -83,13 +83,16 @@ public class ComponentLogger {
 	/**
 	 * Attempts to register this component with the node monitor, expecting to
 	 * receive a unique ID for this node in response. Should only be called
-	 * once.
+	 * once. If the registration is successful, this method returns the
+	 * connected SocketChannel.
 	 * 
 	 * @param registrationType
 	 *            the type of this component (i.e. Client, Server, NameService
 	 *            or LoadBalancer)
+	 * @return the SocketChannel that has been connected to the NodeMonitor if
+	 *         successful, otherwise null.
 	 */
-	public void registerWithNodeMonitor(LogMessageType registrationType) {
+	public SocketChannel registerWithNodeMonitor(LogMessageType registrationType) {
 		System.out.println("Attempting to register with NodeMonitor...");
 		if (socketChannel == null) {
 			socketChannel = ConnectNIO.getNonBlockingSocketChannel(nodeMonitorAddress);
@@ -118,10 +121,11 @@ public class ComponentLogger {
 				componentID = buffer.getInt();
 			} else {
 				System.out.println("Failed to register with NodeMonitor.");
-				return;
+				return null;
 			}
 		} catch (IOException e) {
 		}
+		return socketChannel;
 	}
 
 	/**

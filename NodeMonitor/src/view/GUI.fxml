@@ -29,22 +29,22 @@
       <TextArea fx:id="mainFeedTextArea" editable="false" focusTraversable="false" layoutX="14.0" layoutY="401.0" prefHeight="197.0" prefWidth="905.0" />
       <TextArea fx:id="nameServiceTextArea" editable="false" layoutX="14.0" layoutY="259.0" prefHeight="110.0" prefWidth="350.0" />
       <Label layoutX="14.0" layoutY="38.0" prefHeight="24.0" prefWidth="73.0" text="Max Clients:" />
-      <TextField fx:id="maxClientsTextField" layoutX="87.0" layoutY="38.0" prefHeight="25.0" prefWidth="61.0" />
-      <TextField fx:id="minSendFrequencyTextField" layoutX="43.0" layoutY="88.0" prefHeight="25.0" prefWidth="139.0" />
+      <TextField fx:id="maxClientsTextField" disable="true" layoutX="87.0" layoutY="38.0" prefHeight="25.0" prefWidth="61.0" />
+      <TextField fx:id="minSendFrequencyTextField" disable="true" layoutX="43.0" layoutY="88.0" prefHeight="25.0" prefWidth="139.0" />
       <Separator layoutX="14.0" layoutY="63.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
       <Separator layoutX="14.0" layoutY="115.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
       <Label layoutX="14.0" layoutY="68.0" prefHeight="17.0" prefWidth="186.0" text="Message Sending Frequency (ms)" />
       <Label layoutX="14.0" layoutY="92.0" prefHeight="17.0" prefWidth="29.0" text="Min:" />
       <Label layoutX="196.0" layoutY="92.0" prefHeight="17.0" prefWidth="29.0" text="Max:" />
-      <TextField fx:id="maxSendFrequencyTextField" layoutX="224.0" layoutY="88.0" prefHeight="25.0" prefWidth="139.0" />
+      <TextField fx:id="maxSendFrequencyTextField" disable="true" layoutX="224.0" layoutY="88.0" prefHeight="25.0" prefWidth="139.0" />
       <Label layoutX="14.0" layoutY="121.0" prefHeight="17.0" prefWidth="186.0" text="Messages Per Client" />
-      <TextField fx:id="minMessageCountTextField" layoutX="44.0" layoutY="140.0" prefHeight="25.0" prefWidth="139.0" />
+      <TextField fx:id="minMessageCountTextField" disable="true" layoutX="44.0" layoutY="140.0" prefHeight="25.0" prefWidth="139.0" />
       <Label layoutX="15.0" layoutY="144.0" prefHeight="17.0" prefWidth="29.0" text="Min:" />
       <Label layoutX="197.0" layoutY="144.0" prefHeight="17.0" prefWidth="29.0" text="Max:" />
-      <TextField fx:id="maxMessageCountTextField" layoutX="225.0" layoutY="140.0" prefHeight="25.0" prefWidth="139.0" />
+      <TextField fx:id="maxMessageCountTextField" disable="true" layoutX="225.0" layoutY="140.0" prefHeight="25.0" prefWidth="139.0" />
       <Separator layoutX="14.0" layoutY="167.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
       <Separator layoutX="14.0" layoutY="29.0" opacity="0.3" prefHeight="8.0" prefWidth="350.0" />
-      <Button fx:id="updateClientOptionsButton" layoutX="13.0" layoutY="175.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="61.0" text="Update" />
+      <Button fx:id="updateClientOptionsButton" layoutX="13.0" layoutY="175.0" mnemonicParsing="false" onAction="#updateClientConfiguration" prefHeight="25.0" prefWidth="61.0" text="Update" />
       <Label layoutX="15.0" layoutY="213.0" text="Requests Sent:" />
       <Label fx:id="requestsSentLabel" layoutX="96.0" layoutY="213.0" prefHeight="17.0" prefWidth="73.0" text="0" />
       <Label layoutX="176.0" layoutY="213.0" text="Responses Received:" />
