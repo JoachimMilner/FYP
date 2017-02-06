@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 
 import connectionUtils.MessageType;
+import logging.ComponentLogger;
+import logging.LogMessageType;
 
 /**
  * @author Joachim
@@ -82,6 +84,7 @@ public class RunnableRequestProcessor implements Runnable {
 						addressResolutionService.setHostAddress(hostAddress);
 						addressResolutionService.setHostPort(hostPort);
 						System.out.println("Received host address notification message from host at: " + hostAddress + ":" + hostPort);
+						ComponentLogger.getInstance().log(LogMessageType.NAME_SERVICE_ADDR_REGISTERED, new Integer(hostPort), hostAddress);
 						break;
 					case HOST_ADDR_REQUEST:
 						CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
@@ -108,5 +111,4 @@ public class RunnableRequestProcessor implements Runnable {
 			}
 		}
 	}
-
 }

@@ -54,14 +54,14 @@ public enum LogMessageType {
 	 * balancer after re-requesting name resolution from the name service. </br>
 	 * Not currently used.
 	 */
-	/* CLIENT_CANNOT_CONNECT_TO_SERVICE(7), */
+	CLIENT_CANNOT_CONNECT_TO_SERVICE(7), 
 
 	/**
 	 * Message indicating that the load balancer service has been recovered from
 	 * the client's perspective. </br>
 	 * Not currently used.
 	 */
-	/* CLIENT_RECONNECTED_TO_SERVICE(8), */
+	CLIENT_RECONNECTED_TO_SERVICE(8), 
 
 	/**
 	 * Message indicating that a node has registered its address with the name

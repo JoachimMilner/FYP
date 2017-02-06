@@ -34,7 +34,7 @@ public class ComponentLogger {
 	/**
 	 * The address held for the node monitor.
 	 */
-	private InetSocketAddress nodeMonitorAddress;
+	private static InetSocketAddress nodeMonitorAddress;
 
 	/**
 	 * The SocketChannel that this component is connected to the node monitor
@@ -61,7 +61,7 @@ public class ComponentLogger {
 	 * @return a new instance of this class if one has not already been created,
 	 *         otherwise returns the singleton instance.
 	 */
-	public ComponentLogger getInstance() {
+	public static ComponentLogger getInstance() {
 		if (nodeMonitorAddress == null) {
 			throw new IllegalStateException(
 					"The address of the node monitor must be set before this class can be initialised.");
@@ -72,12 +72,13 @@ public class ComponentLogger {
 		return instance;
 	}
 
+
 	/**
 	 * @param nodeMonitorAddress
 	 *            the address of the node monitor.
 	 */
-	public void setMonitorAddress(InetSocketAddress nodeMonitorAddress) {
-		this.nodeMonitorAddress = nodeMonitorAddress;
+	public static void setMonitorAddress(InetSocketAddress address) {
+		nodeMonitorAddress = address;
 	}
 
 	/**
@@ -137,7 +138,7 @@ public class ComponentLogger {
 	 * @param params
 	 *            any additional parameters that are used for this log message
 	 */
-	public void log(LogMessageType logMessageType, Object[]... params) {
+	public void log(LogMessageType logMessageType, Object... params) {
 		ByteBuffer buffer = ByteBuffer.allocate(50);
 		buffer.put((byte) logMessageType.getValue());
 		buffer.putInt(componentID);
@@ -162,6 +163,7 @@ public class ComponentLogger {
 			try {
 				socketChannel.write(buffer);
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}

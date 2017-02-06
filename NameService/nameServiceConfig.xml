@@ -3,4 +3,10 @@
 	<acceptPort>
 		8003
 	</acceptPort>
+	<nodeMonitorPort>
+		8000
+	</nodeMonitorPort>
+	<nodeMonitorIP>
+		localhost
+	</nodeMonitorIP>
 </configuration>
