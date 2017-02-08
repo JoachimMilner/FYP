@@ -14,6 +14,8 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
 import connectionUtils.MessageType;
+import logging.ComponentLogger;
+import logging.LogMessageType;
 
 /**
  * @author Joachim Class used to processing received client requests. When a
@@ -128,16 +130,17 @@ public class RunnableRequestProcessor implements Runnable {
 						break;
 					case SERVER_CPU_REQUEST:;
 						double cpuUsage = getSystemCPULoad();
-						if (Double.isNaN(cpuUsage)) {
-							cpuUsage = -1.00;
-						}
-						System.out.println(cpuUsage);
-						buffer.clear();
-						buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
-						buffer.putDouble(cpuUsage);
-						buffer.flip();
-						while (buffer.hasRemaining()) {
-							socketChannel.write(buffer);
+						if (!Double.isNaN(cpuUsage)) {
+							//cpuUsage = -1.00;
+							ComponentLogger.getInstance().log(LogMessageType.SERVER_CPU_LOAD, new Double(cpuUsage));
+							System.out.println(cpuUsage);
+							buffer.clear();
+							buffer.put((byte) MessageType.SERVER_CPU_NOTIFY.getValue());
+							buffer.putDouble(cpuUsage);
+							buffer.flip();
+							while (buffer.hasRemaining()) {
+								socketChannel.write(buffer);
+							}
 						}
 						break;
 					default:

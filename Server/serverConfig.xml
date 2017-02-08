@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <configuration>
 	<threadPoolSize>10</threadPoolSize>
-	<connectPort>8000</connectPort>
+	<connectPort>8001</connectPort>
+		<nodeMonitorPort>
+		8000
+	</nodeMonitorPort>
+	<nodeMonitorIP>
+		localhost
+	</nodeMonitorIP>
 </configuration>
