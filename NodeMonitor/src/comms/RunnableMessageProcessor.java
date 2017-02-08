@@ -12,6 +12,7 @@ import logging.LogMessageType;
 import model.ClientVirtualizer;
 import model.NameService;
 import model.Server;
+import model.CPULoadReading;
 import model.SystemModel;
 
 /**
@@ -59,9 +60,10 @@ public class RunnableMessageProcessor implements Runnable {
 					socketChannel.close();
 					break;
 				} else {
+					long messageReceivedTime = System.currentTimeMillis();
 					buffer.flip();
 					LogMessageType messageType = LogMessageType.values()[buffer.get()];
-					
+					int componentID = 0;
 					switch (messageType) {
 					// COMPONENT REGISTER MESSAGES
 					case CLIENT_REGISTER:
@@ -116,6 +118,7 @@ public class RunnableMessageProcessor implements Runnable {
 						}
 						controller.appendMainFeed("Server at "
 								+ socketChannel.socket().getRemoteSocketAddress().toString() + " registered.");
+						controller.addDataSeriesToGraph(server.getSeries());
 						systemModel.getServers().add(server);
 						break;
 					case LOAD_BALANCER_REGISTER:
@@ -134,6 +137,10 @@ public class RunnableMessageProcessor implements Runnable {
 						controller.appendNameServiceFeed("Load balancer at " + registeredHostAddress + ":" + registeredHostPort + " registered with name service.");
 						break;
 					case SERVER_CPU_LOAD:
+						componentID = buffer.getInt();
+						double cpuLoadReading = buffer.getDouble();
+						Server sendingServer = systemModel.getServerByID(componentID);
+						sendingServer.pushCPULoadValue(new CPULoadReading(cpuLoadReading, messageReceivedTime, controller.getApplicationStartTime()));
 						break;
 					case LOAD_BALANCER_PROMOTED:
 						break;

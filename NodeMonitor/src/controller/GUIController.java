@@ -4,14 +4,21 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import comms.ConnectionHandler;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import model.CPULoadReading;
+import model.Server;
 import model.SystemModel;
 
 /**
@@ -23,7 +30,14 @@ import model.SystemModel;
  *         component.
  *         </p>
  */
+/**
+ * @author Joachim
+ *
+ */
 public class GUIController implements Initializable {
+
+	@FXML
+	private LineChart<Number, Number> serverLoadLineChart;
 
 	@FXML
 	private TextArea mainFeedTextArea;
@@ -55,19 +69,39 @@ public class GUIController implements Initializable {
 	@FXML
 	private Label responsesReceivedLabel;
 
+	private long applicationStartTime;
+
+	/**
+	 * The data model used to represent the entire system
+	 */
 	private SystemModel systemModel;
 
+	/**
+	 * Used to store the most recent client configuration option values so we
+	 * can enable/disable the update button as the fields are edited.
+	 */
 	private int[] currentClientConfigValues = new int[5];
 
+	/**
+	 * Set as global variables so we can safely close the program
+	 */
 	private Thread connectionHandlerThread;
+	private Thread graphHandlerThread;
+	
+	@FXML
+	private NumberAxis lineChartXAxis;
+	@FXML
+	private NumberAxis lineChartYAxis;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		applicationStartTime = System.currentTimeMillis();
 		updateClientOptionsButton.setDisable(true);
 		appendMainFeed("Waiting for components to register...");
 		systemModel = new SystemModel();
 		connectionHandlerThread = new Thread(new ConnectionHandler(systemModel, this));
 		connectionHandlerThread.start();
+		initializeServerGraphThread();
 	}
 
 	/**
@@ -94,6 +128,87 @@ public class GUIController implements Initializable {
 				}
 			});
 		}
+	}
+
+	private void initializeServerGraphThread() {
+		lineChartXAxis.setLabel("Time elapsed since t=0 (s)");
+		lineChartXAxis.setTickUnit(60);
+		lineChartYAxis.setLabel("CPU Load (%)");
+		lineChartYAxis.setTickUnit(100);
+		lineChartYAxis.setLowerBound(0);
+		lineChartYAxis.setUpperBound(100);
+		
+		// Concurrent updating of the JavaFX UI based on code from: http://stackoverflow.com/a/20498014
+		@SuppressWarnings("rawtypes")
+		Task task = new Task<Void>() {
+			  @Override
+			  public Void call() {
+			    while (!Thread.currentThread().isInterrupted()) {
+			    	
+			      Platform.runLater(new Runnable() {
+			    	  
+			        @Override
+			        public void run() {
+			        	refreshServerGraph();
+			        }
+			        
+			      });
+			      
+			      try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			    }
+				return null;
+			  }
+			};
+			graphHandlerThread = new Thread(task);
+			graphHandlerThread.setDaemon(true);
+			graphHandlerThread.start();
+//		graphHandlerThread = new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				while (!Thread.currentThread().isInterrupted()) {
+//					if (!systemModel.getServers().isEmpty()) {
+//						
+//					}
+//					
+//					try {
+//						Thread.sleep(1000);
+//					} catch (InterruptedException e) {
+//						Thread.currentThread().interrupt();
+//					}
+//				}
+//			}
+//			
+//		});
+//		graphHandlerThread.start();
+	}
+	
+	private void refreshServerGraph() {
+		long msElapsedSinceStart = (long) applicationStartTime - System.currentTimeMillis();
+		int xAxisMin = msElapsedSinceStart < 60000 ? 0 : (int) Math.floor(msElapsedSinceStart / 1000) - 60;
+		int xAxisMax = msElapsedSinceStart < 60000 ? 60 : (int) Math.floor(msElapsedSinceStart / 1000);
+		lineChartXAxis.setLowerBound(xAxisMin);
+		lineChartXAxis.setUpperBound(xAxisMax);
+	}
+	
+	/**
+	 * Adds the specified XYChart data series to the UI's graph.
+	 * @param series the series to add to the graph
+	 */
+	public void addDataSeriesToGraph(XYChart.Series<Number, Number> series) {
+		Platform.runLater(new Runnable() {
+			
+			@Override
+			public void run() {
+				serverLoadLineChart.getData().add(series);
+			}
+			
+		});
+		
 	}
 
 	/**
@@ -183,12 +298,20 @@ public class GUIController implements Initializable {
 	 * @param totalRequests
 	 * @param totalResponses
 	 */
-	public void updateClientRequestResponseCount(int totalRequests, int totalResponses) {
-		requestsSentLabel.setText(totalRequests + "");
-		responsesReceivedLabel.setText(totalResponses + "");
+	public void refreshClientRequestResponseCount() {
+		requestsSentLabel.setText(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
+		responsesReceivedLabel.setText(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");
+	}
+	
+	/**
+	 * @return the start time of this application process in milliseconds.
+	 */
+	public long getApplicationStartTime() {
+		return applicationStartTime;
 	}
 
 	public void shutdown() {
 		connectionHandlerThread.interrupt();
+		graphHandlerThread.interrupt();
 	}
 }

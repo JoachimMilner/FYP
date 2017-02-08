@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <configuration>
 	<connectPort>
-		8001
+		8002
 	</connectPort>
 	<servers>
 		<server>
@@ -9,7 +9,7 @@
 				localhost
 			</ipAddress>
 			<port>
-				8000
+				8001
 			</port>
 		</server>
 	</servers>

@@ -1,5 +1,6 @@
 package model;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -25,12 +26,12 @@ public class SystemModel {
 	/**
 	 * The set of Servers in the system. 
 	 */
-	private Set<Server> servers;
+	private Set<Server> servers = new HashSet<>();
 	
 	/**
 	 * The set of LoadBalancers in the system. 
 	 */
-	private Set<LoadBalancer> loadBalancers;
+	private Set<LoadBalancer> loadBalancers = new HashSet<>();
 
 	/**
 	 * @return The ClientVirtualizer in the system.
@@ -68,10 +69,18 @@ public class SystemModel {
 	}
 
 	/**
-	 * @param servers The set of Servers in the system. 
+	 * Finds and returns the server object with the given ID, or null if 
+	 * the server does not exist in the Set.
+	 * @param serverID the ID of the server to be found
+	 * @return the server with the given ID, or null if it is not located
 	 */
-	public void setServers(Set<Server> servers) {
-		this.servers = servers;
+	public Server getServerByID(int serverID) {
+		for (Server server : servers) {
+			if (server.getComponentID() == serverID) {
+				return server;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -79,12 +88,5 @@ public class SystemModel {
 	 */
 	public Set<LoadBalancer> getLoadBalancers() {
 		return loadBalancers;
-	}
-
-	/**
-	 * @param loadBalancers The set of LoadBalancers in the system. 
-	 */
-	public void setLoadBalancers(Set<LoadBalancer> loadBalancers) {
-		this.loadBalancers = loadBalancers;
 	}
 }

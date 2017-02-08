@@ -4,6 +4,9 @@ import java.net.InetSocketAddress;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javafx.application.Platform;
+import javafx.scene.chart.XYChart;
+
 /**
  * @author Joachim
  *         <p>
@@ -20,6 +23,10 @@ public class Server extends AbstractRemoteSystemComponent {
 	private Queue<CPULoadReading> cpuLoadValues = new LinkedBlockingQueue<>();
 
 	/**
+	 * The XY Series of data points that are plotted on the UI graph.
+	 */
+	private XYChart.Series<Number, Number> series = new XYChart.Series<>();;
+	/**
 	 * Constructs a new Server object with the given componentID and
 	 * remoteAddress that will be used primarily for storing CPU load values.
 	 * 
@@ -31,8 +38,9 @@ public class Server extends AbstractRemoteSystemComponent {
 	public Server(int componentID, InetSocketAddress remoteAddress) {
 		this.componentID = componentID;
 		this.remoteAddress = remoteAddress;
+		series.setName("Server " + componentID);
 	}
-	
+
 	/**
 	 * @return the CPU load values that are held for this server.
 	 */
@@ -41,50 +49,36 @@ public class Server extends AbstractRemoteSystemComponent {
 	}
 
 	/**
-	 * @author Joachim
-	 *         <p>
-	 * 		Simple class used to hold a cpu load reading associated with a
-	 *         timestamp
-	 *         </p>
-	 *
+	 * @return The XY Series of data points that are plotted on the UI graph.
 	 */
-	public class CPULoadReading {
+	public XYChart.Series<Number, Number> getSeries() {
+		return series;
+	}
 
-		/**
-		 * The CPU load value as a percentage
-		 */
-		private double cpuLoad;
+	/**
+	 * Pushes the given cpu load reading on to this Server's queue of CPU load
+	 * values, and removes values from the head of this queue if they are more
+	 * than 60 seconds old.
+	 * 
+	 * @param cpuLoadReading
+	 *            the CPU load reading to be pushed on to the queue
+	 */
+	public void pushCPULoadValue(CPULoadReading cpuLoadReading) {
+		cpuLoadValues.add(cpuLoadReading);
+		Platform.runLater(new Runnable() {
+			
+			@Override
+			public void run() {
+				series.getData().add(new XYChart.Data<Number, Number>(cpuLoadReading.getTimestampAsSecondsElapsed(),
+						cpuLoadReading.getCpuLoad()));
+			}
+			
+		});
 
-		/**
-		 * The timestamp in milliseconds of this reading, recorded by the
-		 * NodeMonitor.
-		 */
-		private long timestamp;
-
-		/**
-		 * @param cpuLoad
-		 *            the CPU load reading for this instance
-		 * @param timestamp
-		 *            the timestamp recorded by the NodeMonitor
-		 */
-		public CPULoadReading(double cpuLoad, long timestamp) {
-			this.cpuLoad = cpuLoad;
-			this.timestamp = timestamp;
-		}
-
-		/**
-		 * @return the CPU load reading held in this instance.
-		 */
-		public double getCpuLoad() {
-			return cpuLoad;
-		}
-
-		/**
-		 * @return the time at which this reading was received by the
-		 *         NodeMonitor.
-		 */
-		public long getTimestamp() {
-			return timestamp;
+		while (!cpuLoadValues.isEmpty() && 
+				cpuLoadValues.peek().getTimestamp() < System.currentTimeMillis() - 60000) {
+			cpuLoadValues.poll();
+			series.getData().remove(0);
 		}
 	}
 }

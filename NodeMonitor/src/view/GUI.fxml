@@ -14,12 +14,12 @@
    <children>
       <Separator layoutY="375.0" prefHeight="8.0" prefWidth="933.0" />
       <Separator layoutX="372.0" orientation="VERTICAL" prefHeight="378.0" prefWidth="6.0" />
-      <LineChart layoutX="379.0" layoutY="3.0" prefHeight="371.0" prefWidth="552.0">
+      <LineChart fx:id="serverLoadLineChart" layoutX="379.0" layoutY="3.0" prefHeight="371.0" prefWidth="552.0" title="Server CPU Load">
         <xAxis>
-          <CategoryAxis side="BOTTOM" />
+          <NumberAxis side="BOTTOM" fx:id="lineChartXAxis" />
         </xAxis>
         <yAxis>
-          <NumberAxis side="LEFT" />
+          <NumberAxis side="LEFT" fx:id="lineChartYAxis" />
         </yAxis>
       </LineChart>
       <Label layoutX="16.0" layoutY="377.0" prefHeight="24.0" prefWidth="196.0" text="Main Feed" />
