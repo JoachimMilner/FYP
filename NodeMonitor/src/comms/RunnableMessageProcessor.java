@@ -200,9 +200,11 @@ public class RunnableMessageProcessor implements Runnable {
 					case SERVER_CPU_LOAD:
 						componentID = buffer.getInt();
 						double cpuLoadReading = buffer.getDouble();
-						Server sendingServer = systemModel.getServerByID(componentID);
-						sendingServer.pushCPULoadValue(new CPULoadReading(cpuLoadReading, messageReceivedTime,
-								controller.getApplicationStartTime()));
+						if (cpuLoadReading != 0) {
+							Server sendingServer = systemModel.getServerByID(componentID);
+							sendingServer.pushCPULoadValue(new CPULoadReading(cpuLoadReading, messageReceivedTime,
+									controller.getApplicationStartTime()));
+						}
 						break;
 					case LOAD_BALANCER_PROMOTED:
 						componentID = buffer.getInt();

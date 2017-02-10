@@ -128,7 +128,7 @@ public class RunnableRequestProcessor implements Runnable {
 						threadManager.incrementTotalResponsesSent();
 						responsesSent++;
 						break;
-					case SERVER_CPU_REQUEST:;
+					case SERVER_CPU_REQUEST:
 						double cpuUsage = getSystemCPULoad();
 						if (!Double.isNaN(cpuUsage)) {
 							//cpuUsage = -1.00;

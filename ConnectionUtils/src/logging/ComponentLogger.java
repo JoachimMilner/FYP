@@ -106,7 +106,6 @@ public class ComponentLogger {
 		try {
 			while (buffer.hasRemaining()) {
 				socketChannel.write(buffer);
-
 			}
 			Selector readSelector = Selector.open();
 			socketChannel.register(readSelector, SelectionKey.OP_READ);
@@ -125,6 +124,7 @@ public class ComponentLogger {
 				return null;
 			}
 		} catch (IOException e) {
+			System.out.println("Failed to register with NodeMonitor.");
 		}
 		return socketChannel;
 	}
