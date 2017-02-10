@@ -59,4 +59,10 @@
 	<defaultServerTokenExpiry>
 		50
 	</defaultServerTokenExpiry>
+		<nodeMonitorPort>
+		8000
+	</nodeMonitorPort>
+	<nodeMonitorIP>
+		localhost
+	</nodeMonitorIP>
 </configuration>

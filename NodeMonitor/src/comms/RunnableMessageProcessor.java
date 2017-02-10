@@ -9,10 +9,11 @@ import java.nio.charset.Charset;
 
 import controller.GUIController;
 import logging.LogMessageType;
-import model.CPULoadReading;
 import model.ClientVirtualizer;
+import model.LoadBalancer;
 import model.NameService;
 import model.Server;
+import model.CPULoadReading;
 import model.SystemModel;
 
 /**
@@ -131,6 +132,7 @@ public class RunnableMessageProcessor implements Runnable {
 									(InetSocketAddress) socketChannel.socket().getRemoteSocketAddress());
 							serverOutputInfoString = "at " + socketChannel.socket().getRemoteSocketAddress().toString() + " registered.";
 							controller.addDataSeriesToGraph(server.getSeries());
+							systemModel.getServers().add(server);
 						}
 
 						server.setSocketChannel(socketChannel);
@@ -143,12 +145,43 @@ public class RunnableMessageProcessor implements Runnable {
 						}
 						
 						controller.appendMainFeed("Server " + serverOutputInfoString);  
-						systemModel.getServers().add(server);
 						componentID = server.getComponentID();
 						break;
 					case LOAD_BALANCER_REGISTER:
-
+						componentName = "LoadBalancer";
+						LoadBalancer loadBalancer = null;
 						
+						// Check if this is a server reconnecting
+						boolean isReconnectedLoadBalancer = false;
+						String loadBalancerOutputInfoString = "";
+						for (LoadBalancer lb : systemModel.getLoadBalancers()) {
+							if (socketChannel.socket().getInetAddress().getHostAddress()
+									.equals(lb.getSocketChannel().socket().getInetAddress().getHostAddress())) {
+								loadBalancer = lb;
+								isReconnectedLoadBalancer = true;
+								loadBalancerOutputInfoString = loadBalancer.getComponentID() + " reconnected.";
+								break;
+							}
+						}
+						
+						if (!isReconnectedLoadBalancer) {
+							int loadBalancerID = systemModel.getLoadBalancers().size() + 1;
+							loadBalancer = new LoadBalancer(loadBalancerID, (InetSocketAddress) socketChannel.socket().getRemoteSocketAddress());
+							loadBalancerOutputInfoString = "at " + socketChannel.socket().getRemoteSocketAddress().toString() + " registered.";
+							systemModel.getLoadBalancers().add(loadBalancer);
+						}
+						
+						loadBalancer.setSocketChannel(socketChannel);
+						buffer.clear();
+						buffer.put((byte) LogMessageType.REGISTRATION_CONFIRM.getValue());
+						buffer.putInt(loadBalancer.getComponentID());
+						buffer.flip();
+						while (buffer.hasRemaining()) {
+							socketChannel.write(buffer);
+						}
+						
+						controller.appendMainFeed("LoadBalancer " + loadBalancerOutputInfoString);
+						componentID = loadBalancer.getComponentID();
 						break;
 
 					// LOG MESSAGES
@@ -172,6 +205,8 @@ public class RunnableMessageProcessor implements Runnable {
 								controller.getApplicationStartTime()));
 						break;
 					case LOAD_BALANCER_PROMOTED:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " elevated to active state.");
 						break;
 					case LOAD_BALANCER_DEMOTED:
 						break;

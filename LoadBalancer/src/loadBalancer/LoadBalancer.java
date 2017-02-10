@@ -12,6 +12,8 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
+import logging.ComponentLogger;
+import logging.LogMessageType;
 
 public class LoadBalancer {
 
@@ -28,6 +30,8 @@ public class LoadBalancer {
 		Set<RemoteLoadBalancer> remoteLoadBalancers = new HashSet<>();
 		InetSocketAddress nameServiceAddress = null;
 		int defaultServerTokenExpiry = 0;
+		int nodeMonitorPort = 0;
+		String nodeMonitorIP = "";
 		try
 		{
 		    HierarchicalConfiguration<ImmutableNode> config = configs.xml("lbConfig.xml");
@@ -56,7 +60,12 @@ public class LoadBalancer {
 			int nameServicePort = config.getInt("nameServiceAddress.port");
 			nameServiceAddress = new InetSocketAddress(nameServiceIP, nameServicePort);
 			
+			// Default server token expiration length
 		    defaultServerTokenExpiry = config.getInt("defaultServerTokenExpiry");
+		    
+		    // NodeMonitor address
+		    nodeMonitorPort = config.getInt("nodeMonitorPort");
+		    nodeMonitorIP = config.getString("nodeMonitorIP");
 		}
 		catch (ConfigurationException cex)
 		{
@@ -65,6 +74,9 @@ public class LoadBalancer {
 		}
 		// Set Server class default token expiration value
 		Server.setDefaultTokenExpiration(defaultServerTokenExpiry);
+		
+		ComponentLogger.setMonitorAddress(new InetSocketAddress(nodeMonitorIP, nodeMonitorPort));
+		ComponentLogger.getInstance().registerWithNodeMonitor(LogMessageType.LOAD_BALANCER_REGISTER);
 		
 		// Call determine LB state
 		AbstractLoadBalancer loadBalancer = new ActiveLoadBalancer(acceptPort, remoteLoadBalancers, servers, nameServiceAddress);

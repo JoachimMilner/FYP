@@ -13,6 +13,8 @@ import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
 import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
+import logging.ComponentLogger;
+import logging.LogMessageType;
 
 /**
  * @author Joachim
@@ -67,6 +69,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	@Override
 	public void run() {
 		System.out.println("Initialising active load balancer service on port " + acceptPort + "...");
+		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMOTED);
 
 		notifyNameService();
 
