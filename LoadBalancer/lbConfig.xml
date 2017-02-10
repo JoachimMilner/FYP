@@ -12,6 +12,22 @@
 				8001
 			</port>
 		</server>
+				<server>
+			<ipAddress>
+				localhost
+			</ipAddress>
+			<port>
+				8004
+			</port>
+		</server>
+				<server>
+			<ipAddress>
+				localhost
+			</ipAddress>
+			<port>
+				8005
+			</port>
+		</server>
 	</servers>
 	<remoteLoadBalancers>
 		<remoteNode>

@@ -13,6 +13,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -38,6 +39,12 @@ public class GUIController implements Initializable {
 
 	@FXML
 	private LineChart<Number, Number> serverLoadLineChart;
+
+	@FXML
+	private NumberAxis lineChartXAxis;
+
+	@FXML
+	private NumberAxis lineChartYAxis;
 
 	@FXML
 	private TextArea mainFeedTextArea;
@@ -69,6 +76,10 @@ public class GUIController implements Initializable {
 	@FXML
 	private Label responsesReceivedLabel;
 
+	/**
+	 * The time in milliseconds that this process was started, used for
+	 * timestamping.
+	 */
 	private long applicationStartTime;
 
 	/**
@@ -87,11 +98,6 @@ public class GUIController implements Initializable {
 	 */
 	private Thread connectionHandlerThread;
 	private Thread graphHandlerThread;
-	
-	@FXML
-	private NumberAxis lineChartXAxis;
-	@FXML
-	private NumberAxis lineChartYAxis;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -131,84 +137,91 @@ public class GUIController implements Initializable {
 	}
 
 	private void initializeServerGraphThread() {
+		serverLoadLineChart.setCreateSymbols(false);
+		
+		lineChartXAxis.setAutoRanging(false);
 		lineChartXAxis.setLabel("Time elapsed since t=0 (s)");
-		lineChartXAxis.setTickUnit(60);
+		// lineChartXAxis.setTickUnit(60);
+
+		lineChartYAxis.setAutoRanging(false);
 		lineChartYAxis.setLabel("CPU Load (%)");
-		lineChartYAxis.setTickUnit(100);
+		// lineChartYAxis.setTickUnit(100);
 		lineChartYAxis.setLowerBound(0);
 		lineChartYAxis.setUpperBound(100);
-		
-		// Concurrent updating of the JavaFX UI based on code from: http://stackoverflow.com/a/20498014
+
+		// Concurrent updating of the JavaFX UI based on code from:
+		// http://stackoverflow.com/a/20498014
 		@SuppressWarnings("rawtypes")
 		Task task = new Task<Void>() {
-			  @Override
-			  public Void call() {
-			    while (!Thread.currentThread().isInterrupted()) {
-			    	
-			      Platform.runLater(new Runnable() {
-			    	  
-			        @Override
-			        public void run() {
-			        	refreshServerGraph();
-			        }
-			        
-			      });
-			      
-			      try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
+			@Override
+			public Void call() {
+				while (!Thread.currentThread().isInterrupted()) {
+
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							refreshServerGraph();
+						}
+
+					});
+
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
 				}
-			    }
 				return null;
-			  }
-			};
-			graphHandlerThread = new Thread(task);
-			graphHandlerThread.setDaemon(true);
-			graphHandlerThread.start();
-//		graphHandlerThread = new Thread(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				while (!Thread.currentThread().isInterrupted()) {
-//					if (!systemModel.getServers().isEmpty()) {
-//						
-//					}
-//					
-//					try {
-//						Thread.sleep(1000);
-//					} catch (InterruptedException e) {
-//						Thread.currentThread().interrupt();
-//					}
-//				}
-//			}
-//			
-//		});
-//		graphHandlerThread.start();
+			}
+		};
+		graphHandlerThread = new Thread(task);
+		graphHandlerThread.setDaemon(true);
+		graphHandlerThread.start();
 	}
-	
+
 	private void refreshServerGraph() {
-		long msElapsedSinceStart = (long) applicationStartTime - System.currentTimeMillis();
+		long msElapsedSinceStart = System.currentTimeMillis() - applicationStartTime;
 		int xAxisMin = msElapsedSinceStart < 60000 ? 0 : (int) Math.floor(msElapsedSinceStart / 1000) - 60;
 		int xAxisMax = msElapsedSinceStart < 60000 ? 60 : (int) Math.floor(msElapsedSinceStart / 1000);
 		lineChartXAxis.setLowerBound(xAxisMin);
 		lineChartXAxis.setUpperBound(xAxisMax);
+
+		for (Server server : systemModel.getServers()) {
+			
+			Series<Number, Number> serverDataSeries = server.getSeries();
+			
+			while (server.getNewCPULoadValueCount() > 0) {
+				CPULoadReading cpuLoadReading = server.getCPULoadValues().poll();
+				server.decrementNewCPULoadValueCount();
+				serverDataSeries.getData().add(new XYChart.Data<Number, Number>(
+						cpuLoadReading.getTimestampAsSecondsElapsed(), cpuLoadReading.getCpuLoad()));
+			}
+			
+			while (!serverDataSeries.getData().isEmpty() && (double) serverDataSeries.getData().get(0)
+					.getXValue() < xAxisMin) {
+				serverDataSeries.getData().remove(0);
+			}
+			System.out.println(serverDataSeries.getData().size());
+		}
 	}
-	
+
 	/**
 	 * Adds the specified XYChart data series to the UI's graph.
-	 * @param series the series to add to the graph
+	 * 
+	 * @param series
+	 *            the series to add to the graph
 	 */
 	public void addDataSeriesToGraph(XYChart.Series<Number, Number> series) {
 		Platform.runLater(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				serverLoadLineChart.getData().add(series);
 			}
-			
+
 		});
-		
+
 	}
 
 	/**
@@ -302,7 +315,7 @@ public class GUIController implements Initializable {
 		requestsSentLabel.setText(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
 		responsesReceivedLabel.setText(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");
 	}
-	
+
 	/**
 	 * @return the start time of this application process in milliseconds.
 	 */

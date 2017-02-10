@@ -163,7 +163,7 @@ public class ComponentLogger {
 			try {
 				socketChannel.write(buffer);
 			} catch (IOException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		}
 	}

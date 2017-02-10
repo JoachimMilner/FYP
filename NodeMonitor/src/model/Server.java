@@ -4,7 +4,6 @@ import java.net.InetSocketAddress;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import javafx.application.Platform;
 import javafx.scene.chart.XYChart;
 
 /**
@@ -23,9 +22,16 @@ public class Server extends AbstractRemoteSystemComponent {
 	private Queue<CPULoadReading> cpuLoadValues = new LinkedBlockingQueue<>();
 
 	/**
+	 * The number of new CPU load values for the JavaFX thread to retrieve from
+	 * the <code>cpuLoadValues</code> queue.
+	 */
+	private int newCPULoadValueCount = 0;
+
+	/**
 	 * The XY Series of data points that are plotted on the UI graph.
 	 */
-	private XYChart.Series<Number, Number> series = new XYChart.Series<>();;
+	private XYChart.Series<Number, Number> series = new XYChart.Series<>();
+
 	/**
 	 * Constructs a new Server object with the given componentID and
 	 * remoteAddress that will be used primarily for storing CPU load values.
@@ -49,6 +55,21 @@ public class Server extends AbstractRemoteSystemComponent {
 	}
 
 	/**
+	 * The number of new CPU load values for the JavaFX thread to retrieve from
+	 * the <code>cpuLoadValues</code> queue.
+	 */
+	public int getNewCPULoadValueCount() {
+		return newCPULoadValueCount;
+	}
+
+	/**
+	 * Decrements the counter for the number of new CPU load values that have been received by the remote Server.
+	 */
+	public void decrementNewCPULoadValueCount() {
+		newCPULoadValueCount--;
+	}
+
+	/**
 	 * @return The XY Series of data points that are plotted on the UI graph.
 	 */
 	public XYChart.Series<Number, Number> getSeries() {
@@ -57,28 +78,14 @@ public class Server extends AbstractRemoteSystemComponent {
 
 	/**
 	 * Pushes the given cpu load reading on to this Server's queue of CPU load
-	 * values, and removes values from the head of this queue if they are more
-	 * than 60 seconds old.
+	 * values, and increments the counter indicating that the JavaFX should
+	 * retrieve a value from the head of the <code>cpuLoadValues</code> queue.
 	 * 
 	 * @param cpuLoadReading
 	 *            the CPU load reading to be pushed on to the queue
 	 */
 	public void pushCPULoadValue(CPULoadReading cpuLoadReading) {
 		cpuLoadValues.add(cpuLoadReading);
-		Platform.runLater(new Runnable() {
-			
-			@Override
-			public void run() {
-				series.getData().add(new XYChart.Data<Number, Number>(cpuLoadReading.getTimestampAsSecondsElapsed(),
-						cpuLoadReading.getCpuLoad()));
-			}
-			
-		});
-
-		while (!cpuLoadValues.isEmpty() && 
-				cpuLoadValues.peek().getTimestamp() < System.currentTimeMillis() - 60000) {
-			cpuLoadValues.poll();
-			series.getData().remove(0);
-		}
+		newCPULoadValueCount++;
 	}
 }

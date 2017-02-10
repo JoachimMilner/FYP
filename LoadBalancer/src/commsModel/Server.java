@@ -102,7 +102,7 @@ public class Server extends AbstractRemote {
 			try {
 				socketChannel.write(buffer);
 			} catch (IOException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		}
 		buffer.clear();
