@@ -21,4 +21,10 @@
 	<nameServicePort>
 		8003
 	</nameServicePort>
+	<nodeMonitorPort>
+		8000
+	</nodeMonitorPort>
+	<nodeMonitorIP>
+		localhost
+	</nodeMonitorIP>
 </configuration>

@@ -72,7 +72,6 @@ public class ComponentLogger {
 		return instance;
 	}
 
-
 	/**
 	 * @param nodeMonitorAddress
 	 *            the address of the node monitor.
@@ -90,17 +89,27 @@ public class ComponentLogger {
 	 * @param registrationType
 	 *            the type of this component (i.e. Client, Server, NameService
 	 *            or LoadBalancer)
+	 * @param additionalClientParams
+	 *            a little messy but allows the client to send its default
+	 *            configuration values on registration.
 	 * @return the SocketChannel that has been connected to the NodeMonitor if
 	 *         successful, otherwise null.
 	 */
-	public SocketChannel registerWithNodeMonitor(LogMessageType registrationType) {
+	public SocketChannel registerWithNodeMonitor(LogMessageType registrationType, int... additionalClientParams) {
 		System.out.println("Attempting to register with NodeMonitor...");
 		if (socketChannel == null) {
 			socketChannel = ConnectNIO.getNonBlockingSocketChannel(nodeMonitorAddress);
 		}
 
-		ByteBuffer buffer = ByteBuffer.allocate(5);
+		ByteBuffer buffer = ByteBuffer.allocate(21);
 		buffer.put((byte) registrationType.getValue());
+		if (additionalClientParams.length > 0) {
+			buffer.putInt(additionalClientParams[0]);
+			buffer.putInt(additionalClientParams[1]);
+			buffer.putInt(additionalClientParams[2]);
+			buffer.putInt(additionalClientParams[3]);
+			buffer.putInt(additionalClientParams[4]);
+		}
 		buffer.flip();
 
 		try {
@@ -163,7 +172,7 @@ public class ComponentLogger {
 			try {
 				socketChannel.write(buffer);
 			} catch (IOException e) {
-				//e.printStackTrace();
+				// e.printStackTrace();
 			}
 		}
 	}

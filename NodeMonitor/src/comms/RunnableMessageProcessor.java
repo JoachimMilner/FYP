@@ -49,7 +49,7 @@ public class RunnableMessageProcessor implements Runnable {
 
 	@Override
 	public void run() {
-		// Variables initialized here so we can log when if the component
+		// Variables initialised here so we can log when if the component
 		// disconnects.
 		int componentID = 0;
 		String componentName = "";
