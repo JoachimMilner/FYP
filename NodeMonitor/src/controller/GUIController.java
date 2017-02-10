@@ -138,7 +138,7 @@ public class GUIController implements Initializable {
 
 	private void initializeServerGraphThread() {
 		serverLoadLineChart.setCreateSymbols(false);
-		
+
 		lineChartXAxis.setAutoRanging(false);
 		lineChartXAxis.setLabel("Time elapsed since t=0 (s)");
 		// lineChartXAxis.setTickUnit(60);
@@ -188,21 +188,21 @@ public class GUIController implements Initializable {
 		lineChartXAxis.setUpperBound(xAxisMax);
 
 		for (Server server : systemModel.getServers()) {
-			
+
 			Series<Number, Number> serverDataSeries = server.getSeries();
-			
+
 			while (server.getNewCPULoadValueCount() > 0) {
 				CPULoadReading cpuLoadReading = server.getCPULoadValues().poll();
 				server.decrementNewCPULoadValueCount();
 				serverDataSeries.getData().add(new XYChart.Data<Number, Number>(
 						cpuLoadReading.getTimestampAsSecondsElapsed(), cpuLoadReading.getCpuLoad()));
 			}
-			
-			while (!serverDataSeries.getData().isEmpty() && (double) serverDataSeries.getData().get(0)
-					.getXValue() < xAxisMin) {
+
+			while (!serverDataSeries.getData().isEmpty()
+					&& (double) serverDataSeries.getData().get(0).getXValue() < xAxisMin) {
 				serverDataSeries.getData().remove(0);
 			}
-			System.out.println(serverDataSeries.getData().size());
+			//System.out.println(serverDataSeries.getData().size());
 		}
 	}
 
@@ -323,6 +323,10 @@ public class GUIController implements Initializable {
 		return applicationStartTime;
 	}
 
+	/**
+	 * Called when the program exits in order to make sure sockets are closed
+	 * and threads are killed properly.
+	 */
 	public void shutdown() {
 		connectionHandlerThread.interrupt();
 		graphHandlerThread.interrupt();
