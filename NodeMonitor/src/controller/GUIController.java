@@ -18,6 +18,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import log.Utilities;
 import model.CPULoadReading;
 import model.Server;
 import model.SystemModel;
@@ -257,7 +258,7 @@ public class GUIController implements Initializable {
 	 *            the message to be appended
 	 */
 	public void appendMainFeed(String message) {
-		mainFeedTextArea.appendText(message + "\n");
+		mainFeedTextArea.appendText(Utilities.getFormattedTimestamp() + " " + message + "\n");
 	}
 
 	/**
@@ -266,7 +267,7 @@ public class GUIController implements Initializable {
 	 * @param message
 	 */
 	public void appendNameServiceFeed(String message) {
-		nameServiceTextArea.appendText(message + "\n");
+		nameServiceTextArea.appendText(Utilities.getFormattedTimestamp() + " " + message + "\n");
 	}
 
 	/**
@@ -312,8 +313,18 @@ public class GUIController implements Initializable {
 	 * @param totalResponses
 	 */
 	public void refreshClientRequestResponseCount() {
-		requestsSentLabel.setText(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
-		responsesReceivedLabel.setText(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");
+		Platform.runLater(new Runnable() {
+			
+			@Override
+			public void run() {
+				requestsSentLabel.setText(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
+				responsesReceivedLabel.setText(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");
+			}
+			
+		});
+
+/*		requestSentProperty.setValue(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
+		responsesReceivedProperty.setValue(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");*/
 	}
 
 	/**

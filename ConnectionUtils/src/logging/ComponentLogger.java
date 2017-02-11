@@ -11,6 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import connectionUtils.ConnectNIO;
 
@@ -163,6 +164,9 @@ public class ComponentLogger {
 				}
 			} else if (paramClass.equals(Integer.class)) {
 				buffer.putInt((int) param);
+			} else if (paramClass.equals(AtomicInteger.class)) {
+				AtomicInteger atomicInt = (AtomicInteger) param;
+				buffer.putInt(atomicInt.get());
 			} else if (paramClass.equals(Double.class)) {
 				buffer.putDouble((double) param);
 			}

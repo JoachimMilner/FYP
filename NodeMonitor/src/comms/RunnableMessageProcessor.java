@@ -186,6 +186,13 @@ public class RunnableMessageProcessor implements Runnable {
 
 					// LOG MESSAGES
 					case CLIENT_MESSAGE_COUNT:
+						// get componentID (not needed here)
+						buffer.getInt();
+						int requestsSent = buffer.getInt();
+						int responsesReceived = buffer.getInt();
+						systemModel.getClientVirtualizer().setTotalRequestsSent(requestsSent);
+						systemModel.getClientVirtualizer().setTotalResponsesReceived(responsesReceived);
+						controller.refreshClientRequestResponseCount();
 						break;
 					case NAME_SERVICE_ADDR_REGISTERED:
 						// get componentID (not needed here)
@@ -194,8 +201,8 @@ public class RunnableMessageProcessor implements Runnable {
 						CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
 						String registeredHostAddress = charBuffer.toString();
 						systemModel.getNameService().setCurrentHostAddress(registeredHostPort, registeredHostAddress);
-						controller.appendNameServiceFeed("Load balancer at " + registeredHostAddress + ":"
-								+ registeredHostPort + " registered with name service.");
+						controller.appendNameServiceFeed("LoadBalancer at " + registeredHostAddress + ":"
+								+ registeredHostPort + " registered.");
 						break;
 					case SERVER_CPU_LOAD:
 						componentID = buffer.getInt();

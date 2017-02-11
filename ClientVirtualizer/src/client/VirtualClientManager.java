@@ -217,6 +217,7 @@ public class VirtualClientManager {
 						}
 						startClientMonitor();
 					}
+					ComponentLogger.getInstance().log(LogMessageType.CLIENT_MESSAGE_COUNT, totalRequestsSent, totalResponsesReceived);
 					/*
 					 * for (int i = 0; i < 20; i++) { System.out.println(" "); }
 					 * System.out.println("Total Live Virtual Clients: " +
