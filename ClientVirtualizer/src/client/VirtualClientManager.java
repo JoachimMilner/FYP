@@ -186,7 +186,7 @@ public class VirtualClientManager {
 	public void initialiseClientPool() {
 		System.out.println("Initialising Virtual Client Pool...");
 
-		clientThreadExecutor = Executors.newFixedThreadPool(maxClients.get());
+		clientThreadExecutor = Executors.newCachedThreadPool();
 		for (int i = 0; i < maxClients.get(); i++) {
 			createNewClientThread();
 		}
@@ -208,6 +208,7 @@ public class VirtualClientManager {
 					if (numberOfLiveClients.get() < maxClients.get()) {
 						createNewClientThread();
 					}
+					//System.out.println(numberOfLiveClients.get());
 					try {
 						Thread.sleep(minSendFrequencyMs.get() / 2);
 					} catch (InterruptedException e) {

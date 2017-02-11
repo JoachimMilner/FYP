@@ -121,13 +121,16 @@ public class RunnableClientProcess implements Runnable {
 		int requestsSent = 0;
 		while (!Thread.currentThread().isInterrupted() && requestsSent < totalRequests) {
 			sendDataRequest();
-			checkForMessages();
-			try {
-				Thread.sleep(sendFrequencyMs);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
 			requestsSent++;
+			checkForMessages();
+			
+			if (requestsSent < totalRequests) {
+				try {
+					Thread.sleep(sendFrequencyMs);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			}
 			
 			if (System.currentTimeMillis() / 1000 >= currentServerToken.getTokenExpiry()) {
 				// Token has expired, get a new one.
@@ -138,7 +141,7 @@ public class RunnableClientProcess implements Runnable {
 		clientManager.notifyThreadFinished();
 		// Keep client alive for a couple of seconds after sending all messages
 		// to check for replies.
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 10; i++) {
 			checkForMessages();
 			try {
 				Thread.sleep(100);
