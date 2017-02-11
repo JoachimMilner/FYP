@@ -7,6 +7,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import logging.ComponentLogger;
 import logging.LogMessageType;
@@ -24,46 +25,46 @@ public class VirtualClientManager {
 	 * The maximum number of virtual clients that this VirtualClientManager will
 	 * maintain at any time.
 	 */
-	private int maxClients;
+	private AtomicInteger maxClients = new AtomicInteger();
 
 	/**
 	 * The number of virtual clients that this VirtualClientManager has started.
 	 */
-	private int numberOfLiveClients = 0;
+	private AtomicInteger numberOfLiveClients = new AtomicInteger(0);
 
 	/**
 	 * The minimum message sending frequency to be allocated to a client in
 	 * milliseconds.
 	 */
-	private int minSendFrequencyMs;
+	private AtomicInteger minSendFrequencyMs = new AtomicInteger();
 
 	/**
 	 * The maximum message sending frequency to be allocated to a client in
 	 * milliseconds.
 	 */
-	private int maxSendFrequencyMs;
+	private AtomicInteger maxSendFrequencyMs = new AtomicInteger();
 
 	/**
 	 * The minimum number of requests that a virtual client created by this
 	 * VirtualClientManagerwill send.
 	 */
-	private int minClientRequests;
+	private AtomicInteger minClientRequests = new AtomicInteger();
 
 	/**
 	 * The maximum number of requests that a virtual client created by this
 	 * VirtualClientManagerwill send.
 	 */
-	private int maxClientRequests;
+	private AtomicInteger maxClientRequests = new AtomicInteger();
 
 	/**
 	 * The number of requests sent by all virtual clients.
 	 */
-	private int totalRequestsSent = 0;
+	private AtomicInteger totalRequestsSent = new AtomicInteger(0);
 
 	/**
 	 * The number of server responses received by all virtual clients.
 	 */
-	private int totalResponsesReceived = 0;
+	private AtomicInteger totalResponsesReceived = new AtomicInteger(0);
 
 	/**
 	 * The static address for the name resolution service.
@@ -111,11 +112,11 @@ public class VirtualClientManager {
 		if (nameServiceAddress == null)
 			throw new IllegalArgumentException("Name service address cannot be null.");
 
-		this.maxClients = maxClients;
-		this.minSendFrequencyMs = minSendFrequencyMs;
-		this.maxSendFrequencyMs = maxSendFrequencyMs;
-		this.minClientRequests = minClientRequests;
-		this.maxClientRequests = maxClientRequests;
+		this.maxClients.set(maxClients);
+		this.minSendFrequencyMs.set(minSendFrequencyMs);
+		this.maxSendFrequencyMs.set(maxSendFrequencyMs);
+		this.minClientRequests.set(minClientRequests);
+		this.maxClientRequests.set(maxClientRequests);
 		this.nameServiceAddress = nameServiceAddress;
 	}
 
@@ -124,7 +125,7 @@ public class VirtualClientManager {
 	 *         object contains.
 	 */
 	public int getNumberOfClients() {
-		return maxClients;
+		return maxClients.get();
 	}
 
 	/**
@@ -132,7 +133,7 @@ public class VirtualClientManager {
 	 *         object has started.
 	 */
 	public int getNumberOfLiveClients() {
-		return numberOfLiveClients;
+		return numberOfLiveClients.get();
 	}
 
 	/**
@@ -140,15 +141,15 @@ public class VirtualClientManager {
 	 *         {@link RunnableClientProcess} threads.
 	 */
 	public int getTotalRequestsSent() {
-		return totalRequestsSent;
+		return totalRequestsSent.get();
 	}
 
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they send a
-	 * server request. Synchronized for thread safety.
+	 * server request.
 	 */
-	public synchronized void incrementTotalRequestsSent() {
-		totalRequestsSent++;
+	public void incrementTotalRequestsSent() {
+		totalRequestsSent.incrementAndGet();
 	}
 
 	/**
@@ -156,26 +157,25 @@ public class VirtualClientManager {
 	 *         <code>SocketChannel</code>.
 	 */
 	public int getTotalResponsesReceived() {
-		return totalResponsesReceived;
+		return totalResponsesReceived.get();
 
 	}
 
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they receive a
-	 * message from the server. Synchronized for thread safety.
+	 * message from the server.
 	 */
-	public synchronized void incrementTotalResponsesReceived() {
-		totalResponsesReceived++;
+	public void incrementTotalResponsesReceived() {
+		totalResponsesReceived.incrementAndGet();
 	}
 
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they have sent
 	 * the total number of messages assigned to them. Decrements the number of
-	 * live clients so we can monitor the thread pool size. Synchronized for
-	 * thread safety.
+	 * live clients so we can monitor the thread pool size.
 	 */
-	public synchronized void notifyThreadFinished() {
-		numberOfLiveClients--;
+	public void notifyThreadFinished() {
+		numberOfLiveClients.decrementAndGet();
 	}
 
 	/**
@@ -186,8 +186,8 @@ public class VirtualClientManager {
 	public void initialiseClientPool() {
 		System.out.println("Initialising Virtual Client Pool...");
 
-		clientThreadExecutor = Executors.newFixedThreadPool(maxClients);
-		for (int i = 0; i < maxClients; i++) {
+		clientThreadExecutor = Executors.newFixedThreadPool(maxClients.get());
+		for (int i = 0; i < maxClients.get(); i++) {
 			createNewClientThread();
 		}
 		startClientMonitor();
@@ -195,8 +195,9 @@ public class VirtualClientManager {
 
 	/**
 	 * Starts a new thread that will monitor the size of the virtual client pool
-	 * every 250ms. If the size of the pool falls below the max, a new virtual
-	 * client will be created iteratively, up to the maximum.
+	 * at a rate of half of the minimum message sending frequency. If the size
+	 * of the pool falls below the max, a new virtual client will be created
+	 * iteratively, up to the maximum.
 	 * 
 	 */
 	private void startClientMonitor() {
@@ -204,11 +205,11 @@ public class VirtualClientManager {
 			@Override
 			public void run() {
 				while (!clientMonitorThreadStopped) {
-					if (numberOfLiveClients < maxClients) {
+					if (numberOfLiveClients.get() < maxClients.get()) {
 						createNewClientThread();
 					}
 					try {
-						Thread.sleep(250);
+						Thread.sleep(minSendFrequencyMs.get() / 2);
 					} catch (InterruptedException e) {
 						if (clientMonitorThreadStopped) {
 							break;
@@ -235,12 +236,12 @@ public class VirtualClientManager {
 	 * {@link RunnableClientProcess}.
 	 */
 	private void createNewClientThread() {
-		int messageSendFrequencyMs = ThreadLocalRandom.current().nextInt(minSendFrequencyMs, maxSendFrequencyMs + 1);
-		int totalRequestsToSend = ThreadLocalRandom.current().nextInt(minClientRequests, maxClientRequests + 1);
+		int messageSendFrequencyMs = ThreadLocalRandom.current().nextInt(minSendFrequencyMs.get(), maxSendFrequencyMs.get() + 1);
+		int totalRequestsToSend = ThreadLocalRandom.current().nextInt(minClientRequests.get(), maxClientRequests.get() + 1);
 		RunnableClientProcess newClient = new RunnableClientProcess(nameServiceAddress, this, messageSendFrequencyMs,
 				totalRequestsToSend);
 		clientThreadExecutor.execute(newClient);
-		numberOfLiveClients++;
+		numberOfLiveClients.incrementAndGet();
 	}
 
 	/**
@@ -271,11 +272,11 @@ public class VirtualClientManager {
 							buffer.flip();
 							LogMessageType messageType = LogMessageType.values()[buffer.get()];
 							if (messageType.equals(LogMessageType.CLIENT_UPDATE_SETTINGS)) {
-								maxClients = buffer.getInt();
-								minSendFrequencyMs = buffer.getInt();
-								maxSendFrequencyMs = buffer.getInt();
-								minClientRequests = buffer.getInt();
-								maxClientRequests = buffer.getInt();
+								maxClients.set(buffer.getInt());
+								minSendFrequencyMs.set(buffer.getInt());
+								maxSendFrequencyMs.set(buffer.getInt());
+								minClientRequests.set(buffer.getInt());
+								maxClientRequests.set(buffer.getInt());
 								System.out.println(
 										"Received client configuration update from NodeMonitor. New client settings:");
 								System.out.println("Max Clients: " + maxClients + " Min Send Frequency: "

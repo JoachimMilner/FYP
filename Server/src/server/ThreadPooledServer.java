@@ -6,6 +6,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
 
@@ -41,14 +42,14 @@ public class ThreadPooledServer implements Runnable {
 	 * The number of requests that have been received been received by all
 	 * server processing threads.
 	 */
-	private int totalRequestsReceived = 0;
+	private AtomicInteger totalRequestsReceived = new AtomicInteger(0);
 
 	/**
 	 * The number of responses that have been sent by all server processing
 	 * threads.
 	 * 
 	 */
-	private int totalResponsesSent = 0;
+	private AtomicInteger totalResponsesSent = new AtomicInteger(0);
 	
 	
 	/**
@@ -119,16 +120,16 @@ public class ThreadPooledServer implements Runnable {
 	 *         server threads.
 	 */
 	public int getTotalRequestsReceived() {
-		return totalRequestsReceived;
+		return totalRequestsReceived.get();
 	}
 
 	
 	/**
 	 * Each {@link RunnableRequestProcessor} instance calls this method whenever
-	 * they receive a client request. Synchronized for thread safety.
+	 * they receive a client request.
 	 */
-	public synchronized void incrementTotalRequestsReceived() {
-		totalRequestsReceived++;
+	public void incrementTotalRequestsReceived() {
+		totalRequestsReceived.incrementAndGet();
 	}
 
 	
@@ -137,16 +138,16 @@ public class ThreadPooledServer implements Runnable {
 	 *         threads.
 	 */
 	public int getTotalResponsesSent() {
-		return totalResponsesSent;
+		return totalResponsesSent.get();
 	}
 
 	
 	/**
 	 * Each {@link RunnableRequestProcessor} instance calls this method whenever
-	 * they send a response to a client. Synchronized for thread safety.
+	 * they send a response to a client.
 	 */
-	public synchronized void incrementTotalResponsesSent() {
-		totalResponsesSent++;
+	public void incrementTotalResponsesSent() {
+		totalResponsesSent.incrementAndGet();
 	}
 	
 	/**

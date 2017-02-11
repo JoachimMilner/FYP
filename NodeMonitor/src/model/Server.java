@@ -3,6 +3,7 @@ package model;
 import java.net.InetSocketAddress;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javafx.scene.chart.XYChart;
 
@@ -25,7 +26,7 @@ public class Server extends AbstractRemoteSystemComponent {
 	 * The number of new CPU load values for the JavaFX thread to retrieve from
 	 * the <code>cpuLoadValues</code> queue.
 	 */
-	private int newCPULoadValueCount = 0;
+	private AtomicInteger newCPULoadValueCount = new AtomicInteger(0);
 
 	/**
 	 * The XY Series of data points that are plotted on the UI graph.
@@ -59,14 +60,14 @@ public class Server extends AbstractRemoteSystemComponent {
 	 * the <code>cpuLoadValues</code> queue.
 	 */
 	public int getNewCPULoadValueCount() {
-		return newCPULoadValueCount;
+		return newCPULoadValueCount.get();
 	}
 
 	/**
 	 * Decrements the counter for the number of new CPU load values that have been received by the remote Server.
 	 */
 	public void decrementNewCPULoadValueCount() {
-		newCPULoadValueCount--;
+		newCPULoadValueCount.decrementAndGet();
 	}
 
 	/**
@@ -86,6 +87,6 @@ public class Server extends AbstractRemoteSystemComponent {
 	 */
 	public void pushCPULoadValue(CPULoadReading cpuLoadReading) {
 		cpuLoadValues.add(cpuLoadReading);
-		newCPULoadValueCount++;
+		newCPULoadValueCount.incrementAndGet();
 	}
 }
