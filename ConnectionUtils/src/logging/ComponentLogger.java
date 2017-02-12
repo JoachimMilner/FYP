@@ -175,7 +175,7 @@ public class ComponentLogger {
 		while (buffer.hasRemaining()) {
 			try {
 				socketChannel.write(buffer);
-			} catch (IOException e) {
+			} catch (IOException | NullPointerException e) {
 				// e.printStackTrace();
 			}
 		}

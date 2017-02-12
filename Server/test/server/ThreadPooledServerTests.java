@@ -26,16 +26,8 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testCreateThreadPooledServer_successful() {
-		ThreadPooledServer server = new ThreadPooledServer(1, 8000);
+		ThreadPooledServer server = new ThreadPooledServer(8000);
 		assertNotNull(server);
-	}
-	
-	/**
-	 * Tests creating an instance of the {@link ThreadPooledServer} class. 
-	 */
-	@Test(expected=IllegalArgumentException.class)
-	public void testCreateThreadPooledServer_threadPoolTooSmall() {
-		new ThreadPooledServer(0, 8000);
 	}
 	
 	/**
@@ -45,7 +37,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_socketCreation() throws IOException {
-		Thread serverThread = new Thread(new ThreadPooledServer(1, 8000));
+		Thread serverThread = new Thread(new ThreadPooledServer(8000));
 		serverThread.start();
 		SocketChannel mockClient = SocketChannel.open();
 		mockClient.connect(new InetSocketAddress("localhost", 8000));
@@ -62,7 +54,7 @@ public class ThreadPooledServerTests {
 	@Test
 	public void testThreadPooledServer_createNewThreads() throws IOException {
 		Set<Thread> threadSetDefault = Thread.getAllStackTraces().keySet();
-		Thread serverThread = new Thread(new ThreadPooledServer(1, 8000));
+		Thread serverThread = new Thread(new ThreadPooledServer(8000));
 		serverThread.start();
 		Set<Thread> threadSetServerInit = Thread.getAllStackTraces().keySet();
 		assertEquals(threadSetDefault.size() + 1, threadSetServerInit.size());
@@ -88,7 +80,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_getClientResponse() throws IOException {
-		Thread serverThread = new Thread(new ThreadPooledServer(1, 8000));
+		Thread serverThread = new Thread(new ThreadPooledServer(8000));
 		serverThread.start();
 		SocketChannel mockClient = SocketChannel.open();
 		mockClient.connect(new InetSocketAddress("localhost", 8000));
@@ -145,7 +137,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_updateTotalRequestsReceived() {
-		ThreadPooledServer threadPooledServer = new ThreadPooledServer(1, 8000);
+		ThreadPooledServer threadPooledServer = new ThreadPooledServer(8000);
 		assertEquals(0, threadPooledServer.getTotalRequestsReceived());
 		threadPooledServer.incrementTotalRequestsReceived();
 		assertEquals(1, threadPooledServer.getTotalRequestsReceived());
@@ -158,7 +150,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_updateTotalRequestsWithMockClient() throws IOException {
-		ThreadPooledServer threadPooledServer = new ThreadPooledServer(1, 8000);
+		ThreadPooledServer threadPooledServer = new ThreadPooledServer(8000);
 		Thread serverThread = new Thread(threadPooledServer);
 		serverThread.start();
 		assertEquals(0, threadPooledServer.getTotalRequestsReceived());
@@ -200,7 +192,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_updateTotalResponsesSent() {
-		ThreadPooledServer threadPooledServer = new ThreadPooledServer(1, 8000);
+		ThreadPooledServer threadPooledServer = new ThreadPooledServer(8000);
 		assertEquals(0, threadPooledServer.getTotalResponsesSent());
 		threadPooledServer.incrementTotalResponsesSent();
 		assertEquals(1, threadPooledServer.getTotalResponsesSent());
@@ -213,7 +205,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_updateTotalResponsesWithMockClient() throws IOException {
-		ThreadPooledServer threadPooledServer = new ThreadPooledServer(1, 8000);
+		ThreadPooledServer threadPooledServer = new ThreadPooledServer(8000);
 		Thread serverThread = new Thread(threadPooledServer);
 		serverThread.start();
 		assertEquals(0, threadPooledServer.getTotalResponsesSent());
@@ -253,7 +245,7 @@ public class ThreadPooledServerTests {
 	 */
 	@Test
 	public void testThreadPooledServer_initMBeanServer() {
-		ThreadPooledServer threadPooledServer = new ThreadPooledServer(1, 8000);
+		ThreadPooledServer threadPooledServer = new ThreadPooledServer(8000);
 		Thread serverThread = new Thread(threadPooledServer);
 		serverThread.start();
 		try {

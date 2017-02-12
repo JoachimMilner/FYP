@@ -22,12 +22,6 @@ import connectionUtils.*;
 public class ThreadPooledServer implements Runnable {
 
 	/**
-	 * The size of the thread pool to be created for handling received client
-	 * requests.
-	 */
-	private int threadPoolSize;
-
-	/**
 	 * The port to listen for incoming client requests on.
 	 */
 	private int connectPort;
@@ -69,11 +63,7 @@ public class ThreadPooledServer implements Runnable {
 	 *            the size of the thread pool that this ThreadPooledServer will
 	 *            create.
 	 */
-	public ThreadPooledServer(int threadPoolSize, int connectPort) {
-		if (threadPoolSize < 1)
-			throw new IllegalArgumentException("Thread pool size must be at least 1.");
-
-		this.threadPoolSize = threadPoolSize;
+	public ThreadPooledServer(int connectPort) {
 		this.connectPort = connectPort;
 	}
 
@@ -91,7 +81,7 @@ public class ThreadPooledServer implements Runnable {
 		mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(connectPort);
-		ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(threadPoolSize);
+		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
 		while (!Thread.currentThread().isInterrupted()) {
 			SocketChannel connectRequestSocket = null;
 			try {

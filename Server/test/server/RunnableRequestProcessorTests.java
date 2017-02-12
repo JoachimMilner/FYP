@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import connectionUtils.MessageType;
+import logging.ComponentLogger;
 
 /**
  * @author Joachim
@@ -88,7 +89,7 @@ public class RunnableRequestProcessorTests {
 	@Test
 	public void testCreateRunnableRequestProcessor_successful() throws IOException {
 		createAcceptedSocketChannel();
-		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000));
+		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(8000));
 		assertNotNull(requestProcessor);
 	}
 	
@@ -98,7 +99,7 @@ public class RunnableRequestProcessorTests {
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateRunnableRequestProcessor_nullSocket() {
-		new RunnableRequestProcessor(null, new ThreadPooledServer(1, 8000));
+		new RunnableRequestProcessor(null, new ThreadPooledServer(8000));
 	}
 	
 	/**
@@ -107,7 +108,7 @@ public class RunnableRequestProcessorTests {
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateRunnableRequestProcessor_disconnectedSocket() {
-		new RunnableRequestProcessor(mockClientSocketChannel, new ThreadPooledServer(1, 8000));
+		new RunnableRequestProcessor(mockClientSocketChannel, new ThreadPooledServer(8000));
 	}
 	
 	/**
@@ -126,7 +127,7 @@ public class RunnableRequestProcessorTests {
 	@Test
 	public void testRunnableRequestProcessor_run() throws IOException {
 		createAcceptedSocketChannel();
-		new Thread(new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000))).start();
+		new Thread(new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(8000))).start();
 		
 		// Send a request on the client's socket
 		ByteBuffer buffer = ByteBuffer.allocate(81);
@@ -273,7 +274,7 @@ public class RunnableRequestProcessorTests {
 	@Test
 	public void testRunnableRequestProcessor_getResponsesSent() throws IOException {
 		createAcceptedSocketChannel();
-		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000));
+		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(8000));
 		new Thread(requestProcessor).start();
 		assertEquals(0, requestProcessor.getResponsesSent());
 	}
@@ -285,7 +286,7 @@ public class RunnableRequestProcessorTests {
 	@Test
 	public void testRunnableRequestProcessor_getResponsesSentAfterOneRequest() throws IOException {
 		createAcceptedSocketChannel();
-		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000));
+		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(8000));
 		new Thread(requestProcessor).start();
 		
 		// Send a request on the client's socket
@@ -322,7 +323,7 @@ public class RunnableRequestProcessorTests {
 	@Test
 	public void testRunnableRequestProcessor_getResponsesSentRandomRequests() throws IOException {
 		createAcceptedSocketChannel();
-		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(1, 8000));
+		RunnableRequestProcessor requestProcessor = new RunnableRequestProcessor(acceptedSocketChannel, new ThreadPooledServer(8000));
 		new Thread(requestProcessor).start();
 		
 		// Send a random number of requests on the client's socket
@@ -364,8 +365,10 @@ public class RunnableRequestProcessorTests {
 	 */
 	@Test
 	public void testRunnableRequestProcessor_getServerCPULoad() throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		ComponentLogger.setMonitorAddress(new InetSocketAddress("", 0));
+		
 		createAcceptedSocketChannel();
-		ThreadPooledServer threadManager = new ThreadPooledServer(1, 8000); 
+		ThreadPooledServer threadManager = new ThreadPooledServer(8000); 
 		Field threadManagerMBSField = threadManager.getClass().getDeclaredField("mBeanServer");
 		threadManagerMBSField.setAccessible(true);
 		threadManagerMBSField.set(threadManager, ManagementFactory.getPlatformMBeanServer());
