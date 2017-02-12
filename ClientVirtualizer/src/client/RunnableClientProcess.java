@@ -12,6 +12,8 @@ import java.nio.charset.Charset;
 
 import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Joachim
@@ -40,10 +42,17 @@ public class RunnableClientProcess implements Runnable {
 	private VirtualClientManager clientManager;
 
 	/**
-	 * The socket that this virtual client will use to send and receive
-	 * messages.
+	 * All SocketChannels that have been or are in use by this client.
+	 * Previously used channels are stored here to ensure that any server
+	 * responses sent after the token expires can still be received.
 	 */
-	private SocketChannel socketChannel;
+	private List<SocketChannel> socketChannels = new ArrayList<>();
+
+	/**
+	 * The socket that this virtual client is currently using to send and
+	 * receive messages.
+	 */
+	private SocketChannel currentSocketChannel;
 
 	/**
 	 * The frequency that this client will send requests at in milliseconds.
@@ -55,11 +64,16 @@ public class RunnableClientProcess implements Runnable {
 	 * server.
 	 */
 	private int totalRequests;
-	
+
+	/**
+	 * 
+	 */
+	private int messagesReceived = 0;
+
 	/**
 	 * The token that is currently stored for this client. Contains the details
 	 * of the most recent remote server that was provided by the load balancer,
-	 * to connect and send requests to. 
+	 * to connect and send requests to.
 	 */
 	private ServerToken currentServerToken;
 
@@ -117,13 +131,14 @@ public class RunnableClientProcess implements Runnable {
 		// from LB.
 		requestHostNameResolution();
 		requestServerToken();
-		socketChannel = ConnectNIO.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
+		currentSocketChannel = ConnectNIO.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
+		socketChannels.add(currentSocketChannel);
 		int requestsSent = 0;
 		while (!Thread.currentThread().isInterrupted() && requestsSent < totalRequests) {
 			sendDataRequest();
 			requestsSent++;
 			checkForMessages();
-			
+
 			if (requestsSent < totalRequests) {
 				try {
 					Thread.sleep(sendFrequencyMs);
@@ -131,26 +146,37 @@ public class RunnableClientProcess implements Runnable {
 					Thread.currentThread().interrupt();
 				}
 			}
-			
+
 			if (System.currentTimeMillis() / 1000 >= currentServerToken.getTokenExpiry()) {
 				// Token has expired, get a new one.
+				// Keep old socket in memory to check there are no messages
+				// remaining
+				socketChannels.add(currentSocketChannel);
 				requestServerToken();
-				socketChannel = ConnectNIO.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
+				if (!currentSocketChannel.socket().getInetAddress().getHostAddress()
+						.equals(currentServerToken.getServerAddress().getAddress().getHostAddress())) {
+					currentSocketChannel = ConnectNIO
+							.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
+				}
 			}
 		}
-		clientManager.notifyThreadFinished();
-		// Keep client alive for a couple of seconds after sending all messages
-		// to check for replies.
-		for (int i = 0; i < 10; i++) {
+
+		// Keep client alive until all responses have been received.
+		while (messagesReceived < requestsSent) {
 			checkForMessages();
 			try {
-				Thread.sleep(100);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}
 		}
+
+		clientManager.notifyThreadFinished();
+
 		try {
-			socketChannel.close();
+			for (SocketChannel socketChannel : socketChannels) {
+				socketChannel.close();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -162,11 +188,12 @@ public class RunnableClientProcess implements Runnable {
 	 * response containing the load balancer's address.
 	 */
 	private void requestHostNameResolution() {
-		System.out.println("Connecting to name service to resolve load balancer address...");
+		// System.out.println("Connecting to name service to resolve load
+		// balancer address...");
 		boolean receivedResponse = false;
 
 		try (SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(nameServiceAddress);
-				Selector readSelector = Selector.open();) { 
+				Selector readSelector = Selector.open();) {
 			socketChannel.register(readSelector, SelectionKey.OP_READ);
 			ByteBuffer buffer = ByteBuffer.allocate(17);
 			while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
@@ -180,7 +207,8 @@ public class RunnableClientProcess implements Runnable {
 				// Listen for response
 				buffer.clear();
 				if (readSelector.select(1000) != 0) {
-					System.out.println("Received response for host name resolution");
+					// System.out.println("Received response for host name
+					// resolution");
 					socketChannel.read(buffer);
 					buffer.flip();
 					MessageType messageType = MessageType.values()[buffer.get()];
@@ -202,23 +230,25 @@ public class RunnableClientProcess implements Runnable {
 				}
 			}
 		} catch (IOException e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
-	
+
 	/**
-	 * Attempts to request the details of an available server to use from the load balancer,
-	 * assuming that the load balancer's address has been retrieved from the name service. 
-	 * Periodically requests unless the load balancer appears to be down, in which case the
-	 * the name service is contacted to resolve the LB address.
+	 * Attempts to request the details of an available server to use from the
+	 * load balancer, assuming that the load balancer's address has been
+	 * retrieved from the name service. Periodically requests unless the load
+	 * balancer appears to be down, in which case the the name service is
+	 * contacted to resolve the LB address.
 	 */
 	private void requestServerToken() {
-		System.out.println("Connecting to load balancer to request available server...");
+		// System.out.println("Connecting to load balancer to request available
+		// server...");
 		boolean receivedResponse = false;
-		int retryCount = 0;	
+		int retryCount = 0;
 		SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress);
-		
-		try (Selector readSelector = Selector.open();) { 
+
+		try (Selector readSelector = Selector.open();) {
 			socketChannel.register(readSelector, SelectionKey.OP_READ);
 			ByteBuffer buffer = ByteBuffer.allocate(28);
 			while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
@@ -232,7 +262,8 @@ public class RunnableClientProcess implements Runnable {
 				// Listen for response
 				buffer.clear();
 				if (readSelector.select(1000) != 0) {
-					System.out.println("Received server token from load balancer");
+					// System.out.println("Received server token from load
+					// balancer");
 					socketChannel.read(buffer);
 					buffer.flip();
 					MessageType messageType = MessageType.values()[buffer.get()];
@@ -256,7 +287,8 @@ public class RunnableClientProcess implements Runnable {
 					// failed to contact LB
 					retryCount++;
 					if (retryCount > 2) {
-						System.out.println("Failed to connect to load balancer 3 times, retrying address resolution...");
+						System.out
+								.println("Failed to connect to load balancer 3 times, retrying address resolution...");
 						requestHostNameResolution();
 						socketChannel.close();
 						socketChannel = ConnectNIO.getNonBlockingSocketChannel(nameServiceAddress);
@@ -291,7 +323,7 @@ public class RunnableClientProcess implements Runnable {
 		buffer.flip();
 		while (buffer.hasRemaining()) {
 			try {
-				socketChannel.write(buffer);
+				currentSocketChannel.write(buffer);
 			} catch (IOException e) {
 				Thread.currentThread().interrupt();
 				return;
@@ -303,77 +335,84 @@ public class RunnableClientProcess implements Runnable {
 	}
 
 	/**
-	 * Checks this virtual client's {@link SocketChannel} for messages and
+	 * Checks this virtual client's {@link SocketChannel}s for messages and
 	 * increments the {@link VirtualClientManager}'s
 	 * <code>totalResponsesReceived</code> value if a valid message is received.
 	 */
 	private void checkForMessages() {
-		boolean messageReceived = false;
-		ByteBuffer buffer = ByteBuffer.allocate(81);
-		try {
-			while (socketChannel.read(buffer) > 0) {
-				buffer.flip();
-				MessageType messageType = MessageType.values()[buffer.get()];
-				if (messageType.equals(MessageType.SERVER_RESPONSE)) {
-					int i = 0;
-					for (; i < 10; i++) {
-						try {
-							buffer.getLong();
-						} catch (BufferUnderflowException e) {
-							// Bad/Incomplete message received
-							e.printStackTrace();
-							break;
+		for (SocketChannel socketChannel : socketChannels) {
+			ByteBuffer buffer = ByteBuffer.allocate(81);
+			try {
+				while (socketChannel.read(buffer) > 0) {
+					buffer.flip();
+					MessageType messageType = MessageType.values()[buffer.get()];
+					if (messageType.equals(MessageType.SERVER_RESPONSE)) {
+						int i = 0;
+						for (; i < 10; i++) {
+							try {
+								buffer.getLong();
+							} catch (BufferUnderflowException e) {
+								// Bad/Incomplete message received
+								e.printStackTrace();
+								break;
+							}
+						}
+
+						if (i == 10) { // Messaged received
+							clientManager.incrementTotalResponsesReceived();
+							messagesReceived++;
 						}
 					}
-					if (i == 10) {
-						messageReceived = true;
-					}
 				}
+			} catch (IOException e) {
+				// e.printStackTrace();
 			}
-		} catch (IOException e) {
-			// e.printStackTrace();
-		}
-		if (messageReceived) {
-			clientManager.incrementTotalResponsesReceived();
 		}
 	}
-	
+
 	/**
 	 * @author Joachim
-	 * <p>Class used to model a server token received from the load balancer 
-	 * so it can be handled more easily within a {@link RunnableClientProcess}.</p>
+	 *         <p>
+	 * 		Class used to model a server token received from the load
+	 *         balancer so it can be handled more easily within a
+	 *         {@link RunnableClientProcess}.
+	 *         </p>
 	 *
 	 */
 	private class ServerToken {
-		
+
 		/**
-		 * The expiration timestamp of this server token, represented
-		 * in unix seconds.
+		 * The expiration timestamp of this server token, represented in unix
+		 * seconds.
 		 */
 		private long tokenExpiry;
-		
+
 		/**
 		 * The address representing the remote server to connect to.
 		 */
 		private InetSocketAddress serverAddress;
-		
+
 		/**
-		 * Constructs a new ServerToken object with the specified expiry and server address.
-		 * @param tokenExpiry the expiration of this token in unix seconds.
-		 * @param serverAddress the address of the remote server.
+		 * Constructs a new ServerToken object with the specified expiry and
+		 * server address.
+		 * 
+		 * @param tokenExpiry
+		 *            the expiration of this token in unix seconds.
+		 * @param serverAddress
+		 *            the address of the remote server.
 		 */
 		public ServerToken(long tokenExpiry, InetSocketAddress serverAddress) {
 			this.tokenExpiry = tokenExpiry;
 			this.serverAddress = serverAddress;
 		}
-		
+
 		/**
 		 * @return the expiration time of this server token.
 		 */
 		public long getTokenExpiry() {
 			return tokenExpiry;
 		}
-		
+
 		/**
 		 * @return the address of the remote server.
 		 */
