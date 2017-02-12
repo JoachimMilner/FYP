@@ -8,6 +8,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import controller.GUIController;
+import log.LoggerUtility;
 import logging.LogMessageType;
 import model.ClientVirtualizer;
 import model.LoadBalancer;
@@ -53,7 +54,7 @@ public class RunnableMessageProcessor implements Runnable {
 		// disconnects.
 		int componentID = 0;
 		String componentName = "";
-		while (socketChannel.isConnected()) {
+		while (socketChannel.isConnected() && !Thread.currentThread().isInterrupted()) {
 			try {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
 				int bytesRead = socketChannel.read(buffer);
@@ -209,8 +210,10 @@ public class RunnableMessageProcessor implements Runnable {
 						double cpuLoadReading = buffer.getDouble();
 						if (cpuLoadReading != 0) {
 							Server sendingServer = systemModel.getServerByID(componentID);
-							sendingServer.pushCPULoadValue(new CPULoadReading(cpuLoadReading, messageReceivedTime,
-									controller.getApplicationStartTime()));
+							CPULoadReading reading = new CPULoadReading(cpuLoadReading, messageReceivedTime,
+									controller.getApplicationStartTime());
+							sendingServer.pushCPULoadValue(reading);
+							LoggerUtility.logServerLoadReading(reading.getTimestampAsSecondsElapsed(), componentID, cpuLoadReading);
 						}
 						break;
 					case LOAD_BALANCER_PROMOTED:

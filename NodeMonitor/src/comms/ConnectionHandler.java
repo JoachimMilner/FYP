@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 
 import connectionUtils.ConnectNIO;
 import controller.GUIController;
+import log.LoggerUtility;
 import model.SystemModel;
 
 /**
@@ -46,8 +47,9 @@ public class ConnectionHandler implements Runnable {
 
 	@Override
 	public void run() {
-		controller.appendMainFeed("Initialising socket");
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(8000);
+		LoggerUtility.logInfo("Initialised server socket");
+		controller.appendMainFeed("Initialised server socket");
 		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
 		while (!Thread.currentThread().isInterrupted()) {
 			SocketChannel connectRequestSocket = null;
@@ -68,7 +70,7 @@ public class ConnectionHandler implements Runnable {
 			serverSocketChannel.close();
 		} catch (IOException e) {
 		}
-		threadPoolExecutor.shutdown();
+		threadPoolExecutor.shutdownNow();
 	}
 
 }

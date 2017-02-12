@@ -18,7 +18,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import log.Utilities;
+import log.LoggerUtility;
 import model.CPULoadReading;
 import model.Server;
 import model.SystemModel;
@@ -258,7 +258,7 @@ public class GUIController implements Initializable {
 	 *            the message to be appended
 	 */
 	public void appendMainFeed(String message) {
-		mainFeedTextArea.appendText(Utilities.getFormattedTimestamp() + " " + message + "\n");
+		mainFeedTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
 	}
 
 	/**
@@ -267,7 +267,7 @@ public class GUIController implements Initializable {
 	 * @param message
 	 */
 	public void appendNameServiceFeed(String message) {
-		nameServiceTextArea.appendText(Utilities.getFormattedTimestamp() + " " + message + "\n");
+		nameServiceTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
 	}
 
 	/**
@@ -341,5 +341,6 @@ public class GUIController implements Initializable {
 	public void shutdown() {
 		connectionHandlerThread.interrupt();
 		graphHandlerThread.interrupt();
+		LoggerUtility.cleanup();
 	}
 }
