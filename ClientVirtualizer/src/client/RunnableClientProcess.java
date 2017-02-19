@@ -151,12 +151,13 @@ public class RunnableClientProcess implements Runnable {
 				// Token has expired, get a new one.
 				// Keep old socket in memory to check there are no messages
 				// remaining
-				socketChannels.add(currentSocketChannel);
+				
 				requestServerToken();
 				if (!currentSocketChannel.socket().getInetAddress().getHostAddress()
 						.equals(currentServerToken.getServerAddress().getAddress().getHostAddress())) {
 					currentSocketChannel = ConnectNIO
 							.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
+					socketChannels.add(currentSocketChannel);
 				}
 			}
 		}
