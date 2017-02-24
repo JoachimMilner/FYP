@@ -65,6 +65,12 @@ public class VirtualClientManager {
 	 * The number of server responses received by all virtual clients.
 	 */
 	private AtomicInteger totalResponsesReceived = new AtomicInteger(0);
+	
+	/**
+	 * The total number of failed attempts of clients attempting to connect
+	 * to the load balancer.
+	 */
+	private AtomicInteger totalClientConnectFailures = new AtomicInteger(0);
 
 	/**
 	 * The static address for the name resolution service.
@@ -168,6 +174,14 @@ public class VirtualClientManager {
 	public void incrementTotalResponsesReceived() {
 		totalResponsesReceived.incrementAndGet();
 	}
+	
+	/**
+	 * Each {@link RunnableClientProcess} calls this method when they fail
+	 * to connect to the load balancer.
+	 */
+	public void incrementClientConnectFailures() {
+		totalClientConnectFailures.incrementAndGet();
+	}
 
 	/**
 	 * Each {@link RunnableClientProcess} calls this method when they have sent
@@ -217,7 +231,7 @@ public class VirtualClientManager {
 						}
 						startClientMonitor();
 					}
-					ComponentLogger.getInstance().log(LogMessageType.CLIENT_MESSAGE_COUNT, totalRequestsSent, totalResponsesReceived);
+					ComponentLogger.getInstance().log(LogMessageType.CLIENT_MESSAGE_COUNT, totalRequestsSent, totalResponsesReceived, totalClientConnectFailures);
 					/*
 					 * for (int i = 0; i < 20; i++) { System.out.println(" "); }
 					 * System.out.println("Total Live Virtual Clients: " +

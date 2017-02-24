@@ -285,6 +285,7 @@ public class RunnableClientProcess implements Runnable {
 					}
 				} else {
 					System.out.println("Failed to contact load balancer, retrying...");
+					clientManager.incrementClientConnectFailures();
 					// failed to contact LB
 					retryCount++;
 					if (retryCount > 2) {
