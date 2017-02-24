@@ -2,3 +2,4 @@
 .recommenders/
 commons-configuration2-2.1/
 commons-logging-1.2/
+NodeMonitor/logs/

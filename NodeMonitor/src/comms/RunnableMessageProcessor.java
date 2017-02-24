@@ -191,8 +191,10 @@ public class RunnableMessageProcessor implements Runnable {
 						buffer.getInt();
 						int requestsSent = buffer.getInt();
 						int responsesReceived = buffer.getInt();
+						int totalClientConnectFailures = buffer.getInt();
 						systemModel.getClientVirtualizer().setTotalRequestsSent(requestsSent);
 						systemModel.getClientVirtualizer().setTotalResponsesReceived(responsesReceived);
+						systemModel.getClientVirtualizer().setTotalClientConnectFailures(totalClientConnectFailures);
 						controller.refreshClientRequestResponseCount();
 						break;
 					case NAME_SERVICE_ADDR_REGISTERED:

@@ -76,6 +76,9 @@ public class GUIController implements Initializable {
 
 	@FXML
 	private Label responsesReceivedLabel;
+	
+	@FXML
+	private Label connectionFailuresLabel;
 
 	/**
 	 * The time in milliseconds that this process was started, used for
@@ -319,12 +322,12 @@ public class GUIController implements Initializable {
 			public void run() {
 				requestsSentLabel.setText(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
 				responsesReceivedLabel.setText(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");
+				connectionFailuresLabel.setText(systemModel.getClientVirtualizer().getTotalClientConnectFailures() + "");
 			}
 			
 		});
 
-/*		requestSentProperty.setValue(systemModel.getClientVirtualizer().getTotalRequestsSent() + "");
-		responsesReceivedProperty.setValue(systemModel.getClientVirtualizer().getTotalResponsesReceived() + "");*/
+
 	}
 
 	/**

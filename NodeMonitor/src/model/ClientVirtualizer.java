@@ -13,10 +13,6 @@ import logging.LogMessageType;
  *         </p>
  *
  */
-/**
- * @author Joachim
- *
- */
 public class ClientVirtualizer extends AbstractRemoteSystemComponent {
 
 	/**
@@ -29,6 +25,12 @@ public class ClientVirtualizer extends AbstractRemoteSystemComponent {
 	 * The total number of responses received by the ClientVirtualizer.
 	 */
 	private int totalResponsesReceived = 0;
+
+	/**
+	 * The total number of connection attempts to the load balancer that have
+	 * failed.
+	 */
+	private int totalClientConnectFailures = 0;
 
 	/**
 	 * Constructs a new ClientVirtualizer instance representing the
@@ -73,6 +75,23 @@ public class ClientVirtualizer extends AbstractRemoteSystemComponent {
 	 */
 	public void setTotalResponsesReceived(int totalResponsesReceived) {
 		this.totalResponsesReceived = totalResponsesReceived;
+	}
+
+	/**
+	 * @return the total number of connection attempts to the load balancer that
+	 *         have failed
+	 */
+	public int getTotalClientConnectFailures() {
+		return totalClientConnectFailures;
+	}
+
+	/**
+	 * @param totalClientConnectFailures
+	 *            the total number of connection attempts to the load balancer
+	 *            that have failed
+	 */
+	public void setTotalClientConnectFailures(int totalClientConnectFailures) {
+		this.totalClientConnectFailures = totalClientConnectFailures;
 	}
 
 	/**
