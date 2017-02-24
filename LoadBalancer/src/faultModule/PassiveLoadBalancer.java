@@ -6,6 +6,8 @@ import java.util.Set;
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
 import loadBalancer.AbstractLoadBalancer;
+import logging.ComponentLogger;
+import logging.LogMessageType;
 
 /**
  * @author Joachim
@@ -74,7 +76,8 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 */
 	@Override
 	public void run() {
-		
+		System.out.println("Initialising passive load balancer service on port " + acceptPort + "...");
+		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_PASSIVE);
 		
 
 	}

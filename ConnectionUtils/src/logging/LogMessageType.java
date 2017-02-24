@@ -76,16 +76,16 @@ public enum LogMessageType {
 	SERVER_CPU_LOAD(10),
 
 	/**
-	 * Message indicating that the sending load balancer process has elevated
-	 * its state from passive to active.
+	 * Message indicating that the sending load balancer process has entered the
+	 * active state.
 	 */
-	LOAD_BALANCER_PROMOTED(11),
+	LOAD_BALANCER_ENTERED_ACTIVE(11),
 
 	/**
-	 * Message indicating that the sending load balancer process has demoted its
-	 * state from active to passive.
+	 * Message indicating that the sending load balancer process has entered
+	 * the passive state.
 	 */
-	LOAD_BALANCER_DEMOTED(12),
+	LOAD_BALANCER_ENTERED_PASSIVE(12),
 
 	/**
 	 * Notification that the sending node has confirmed failure of the active

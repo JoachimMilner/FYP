@@ -69,7 +69,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	@Override
 	public void run() {
 		System.out.println("Initialising active load balancer service on port " + acceptPort + "...");
-		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMOTED);
+		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_ACTIVE);
 
 		notifyNameService();
 

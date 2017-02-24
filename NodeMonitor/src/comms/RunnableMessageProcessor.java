@@ -216,11 +216,11 @@ public class RunnableMessageProcessor implements Runnable {
 							LoggerUtility.logServerLoadReading(reading.getTimestampAsSecondsElapsed(), componentID, cpuLoadReading);
 						}
 						break;
-					case LOAD_BALANCER_PROMOTED:
+					case LOAD_BALANCER_ENTERED_ACTIVE:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " elevated to active state.");
 						break;
-					case LOAD_BALANCER_DEMOTED:
+					case LOAD_BALANCER_ENTERED_PASSIVE:
 						break;
 					case LOAD_BALANCER_FAILURE_DETECTED:
 						break;
