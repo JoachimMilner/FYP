@@ -119,7 +119,7 @@ public class ComponentLogger {
 			}
 			Selector readSelector = Selector.open();
 			socketChannel.register(readSelector, SelectionKey.OP_READ);
-			if (readSelector.select(10000) == 0) {
+			if (readSelector.select(5000) == 0) {
 				throw new SocketTimeoutException("Failed to register with NodeMonitor.");
 			}
 			buffer.clear();
