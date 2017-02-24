@@ -6,7 +6,6 @@ import java.nio.channels.SocketChannel;
 import java.util.Set;
 
 import commsModel.RemoteLoadBalancer;
-import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
 import loadBalancer.ActiveLoadBalancer;
 
@@ -64,11 +63,7 @@ public class HeartbeatBroadcaster implements Runnable {
 		while (!Thread.currentThread().isInterrupted()) {
 
 			for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-				if (remoteLoadBalancer.getSocketChannel() == null
-						|| !remoteLoadBalancer.getSocketChannel().isConnected()) {
-					remoteLoadBalancer
-							.setSocketChannel(ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress()));
-				}
+				remoteLoadBalancer.connect();
 				if (remoteLoadBalancer.getSocketChannel() != null
 						&& remoteLoadBalancer.getSocketChannel().isConnected()) {
 					sendHeartbeat(remoteLoadBalancer.getSocketChannel());

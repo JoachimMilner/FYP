@@ -1,11 +1,11 @@
 package commsModel;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import org.junit.Test;
@@ -169,6 +169,32 @@ public class RemoteLoadBalancerTests {
 		socketChannelField.setAccessible(true);
 
 		assertEquals(expectedSocketChannel, socketChannelField.get(remoteLoadBalancer));
+	}
+	
+	/**
+	 * Test the {@link RemoteLoadBalancer}'s <code>connect</code>
+	 * method. This method should ensure that only one TCP connection is ever active
+	 * between two load balancer nodes. 
+	 * @throws IOException 
+	 */
+	@Test
+	public void testRemoteLoadBalancer_connect() throws IOException {
+		ServerSocketChannel mockServerSocketChannel = ServerSocketChannel.open();
+		mockServerSocketChannel.bind(new InetSocketAddress(8000));
+		
+		RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress("localhost", 8000));
+		new Thread(new Runnable() {
+		
+			@Override
+			public void run() {
+				remoteLoadBalancer.connect();
+			}
+			
+		}).start();
+		
+		mockServerSocketChannel.accept();
+		
+		assertTrue(remoteLoadBalancer.getSocketChannel().isConnected());
 	}
 
 }

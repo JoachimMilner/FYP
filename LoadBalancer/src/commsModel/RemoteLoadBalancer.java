@@ -2,6 +2,8 @@ package commsModel;
 
 import java.net.InetSocketAddress;
 
+import connectionUtils.ConnectNIO;
+
 /**
  * @author Joachim
  *         <p>
@@ -73,5 +75,15 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	 */
 	public void setIsElectedBackup(boolean isElectedBackup) {
 		this.isElectedBackup = isElectedBackup;
+	}
+	
+	/**
+	 * Attempts to connect to the remote load balancer while ensuring
+	 * that only one connection is active between the local and remote node.
+	 */
+	public void connect() {
+		if (socketChannel == null || !socketChannel.isConnected()) {
+			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address);
+		}
 	}
 }
