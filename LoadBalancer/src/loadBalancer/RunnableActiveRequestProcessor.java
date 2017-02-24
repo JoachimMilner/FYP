@@ -18,7 +18,6 @@ import connectionUtils.MessageType;
  *         read data from the supplied {@link SocketChannel} and then process
  *         the message contents and send a response where appropriate.
  *         </p>
- *
  */
 public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 

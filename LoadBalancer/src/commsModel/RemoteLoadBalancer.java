@@ -78,8 +78,7 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	}
 	
 	/**
-	 * Attempts to connect to the remote load balancer while ensuring
-	 * that only one connection is active between the local and remote node.
+	 * Attempts to connect to the remote load balancer. Does nothing if already connected.
 	 */
 	public void connect() {
 		if (socketChannel == null || !socketChannel.isConnected()) {

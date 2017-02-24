@@ -12,8 +12,8 @@ import java.util.Set;
 import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
-import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
+import faultModule.PassiveLoadBalancer;
 
 /**
  * @author Joachim
@@ -45,6 +45,12 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 * The address of the name resolution service.
 	 */
 	protected InetSocketAddress nameServiceAddress;
+	
+	/**
+	 * Starts a thread that checks for messages from all other load balancer nodes 
+	 * in the system.
+	 */
+	protected abstract void startLoadBalancerMessageListener(Thread loadBalancerThread);
 
 	/**
 	 * This method is used to determine the initial state of this load balancer
@@ -145,10 +151,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 */
 	private static void requestState(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
 		try {
-			if (remoteLoadBalancer.getSocketChannel() == null || !remoteLoadBalancer.getSocketChannel().isConnected()) {
-				remoteLoadBalancer
-						.setSocketChannel(ConnectNIO.getNonBlockingSocketChannel(remoteLoadBalancer.getAddress()));
-			}
+			remoteLoadBalancer.connect();
 			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
 			ByteBuffer buffer = ByteBuffer.allocate(5);
 			buffer.put((byte) MessageType.STATE_REQUEST.getValue());

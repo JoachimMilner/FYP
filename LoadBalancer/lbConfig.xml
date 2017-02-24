@@ -51,15 +51,15 @@
 		5
 	</initialConnectTimeoutSecs>
 	<heartbeatIntervalSecs>
-	
+		1
 	</heartbeatIntervalSecs>
-	<heartbeatTimeoutMs>
-	
-	</heartbeatTimeoutMs>	
+	<heartbeatTimeoutSecs>
+		1
+	</heartbeatTimeoutSecs>	
 	<defaultServerTokenExpiry>
 		50
 	</defaultServerTokenExpiry>
-		<nodeMonitorPort>
+	<nodeMonitorPort>
 		8000
 	</nodeMonitorPort>
 	<nodeMonitorIP>

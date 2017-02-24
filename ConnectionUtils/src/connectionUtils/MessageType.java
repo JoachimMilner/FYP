@@ -99,7 +99,40 @@ public enum MessageType {
 	 * A message notifying the recipient that an election is currently in progress,
 	 * indicating that the recipient node should wait for the election to finish.
 	 */
-	ELECTION_IN_PROGRESS_NOTIFY(14);
+	ELECTION_IN_PROGRESS_NOTIFY(14),
+	
+	/**
+	 * A message notifying that the sending node has detected multiple active load balancers
+	 * in the network, and prompts an emergency election.
+	 */
+	MULTIPLE_ACTIVES_WARNING(15),
+	
+	/**
+	 * An election prompt either initialising an election or transporting the sending node's
+	 * election candidacy message.
+	 */
+	ELECTION_MESSAGE(16),
+	
+	/**
+	 * A message to all other nodes that the sending node has detected a failure.
+	 */
+	ACTIVE_HAS_FAILED(17),
+	
+	/**
+	 * A message in response to an <code>ACTIVE_HAS_FAILED</code> message indicating 
+	 * that the sending node has detected that the active is still alive. 
+	 */
+	ACTIVE_IS_ALIVE(18),
+	
+	/**
+	 * Used for emergency elections. <br/>
+	 * In the case of there being multiple actives present
+	 * in the system, this election will be used to carry the sending node's IP address (last octet)
+	 * to use as it's candidacy suitability. <br/>
+	 * In the case that both the active and the passive backup have failed, the remaining passive 
+	 * nodes will send their last stored average server latency value immediately.
+	 */
+	EMERGENCY_ELECTION_MESSAGE(19);
 	
 
 	/**

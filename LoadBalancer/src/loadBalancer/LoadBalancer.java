@@ -10,12 +10,27 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
+import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
+import faultModule.PassiveLoadBalancer;
 import logging.ComponentLogger;
 import logging.LogMessageType;
 
 public class LoadBalancer {
+	
+	// Configu variables stored here statically so they don't have to be re-read from the xml again.
+	private static int acceptPort = 0;
+	private static Set<Server> servers = new HashSet<>();
+	private static Set<RemoteLoadBalancer> remoteLoadBalancers = new HashSet<>();
+	private static InetSocketAddress nameServiceAddress = null;
+	private static int defaultServerTokenExpiry = 0;
+	private static int nodeMonitorPort = 0;
+	private static String nodeMonitorIP = "";
+	private static int initialConnectTimeoutSecs = 0;
+	private static int heartbeatIntervalSecs = 0;
+	private static int heartbeatTimeoutSecs = 0;
+	
 
 	public static void main(String[] args) {
 		LoadBalancer instance = new LoadBalancer();
@@ -24,14 +39,7 @@ public class LoadBalancer {
 	
 	private void launch(String[] args) {
 		Configurations configs = new Configurations();
-		
-		int acceptPort = 0;
-		Set<Server> servers = new HashSet<>();
-		Set<RemoteLoadBalancer> remoteLoadBalancers = new HashSet<>();
-		InetSocketAddress nameServiceAddress = null;
-		int defaultServerTokenExpiry = 0;
-		int nodeMonitorPort = 0;
-		String nodeMonitorIP = "";
+
 		try
 		{
 		    HierarchicalConfiguration<ImmutableNode> config = configs.xml("lbConfig.xml");
@@ -66,10 +74,17 @@ public class LoadBalancer {
 		    // NodeMonitor address
 		    nodeMonitorPort = config.getInt("nodeMonitorPort");
 		    nodeMonitorIP = config.getString("nodeMonitorIP");
+		    
+		    // Initial connection timeout
+		    initialConnectTimeoutSecs = config.getInt("initialConnectTimeoutSecs");
+		    
+		    // Heartbeat values
+		    heartbeatIntervalSecs = config.getInt("heartbeatIntervalSecs");
+		    heartbeatTimeoutSecs = config.getInt("heartbeatTimeoutSecs");
 		}
-		catch (ConfigurationException cex)
+		catch (ConfigurationException e)
 		{
-		    cex.printStackTrace();
+		    e.printStackTrace();
 		    return;
 		}
 		// Set Server class default token expiration value
@@ -79,7 +94,23 @@ public class LoadBalancer {
 		ComponentLogger.getInstance().registerWithNodeMonitor(LogMessageType.LOAD_BALANCER_REGISTER);
 		
 		// Call determine LB state
-		AbstractLoadBalancer loadBalancer = new ActiveLoadBalancer(acceptPort, remoteLoadBalancers, servers, nameServiceAddress);
-		new Thread(loadBalancer).start();
+		AbstractLoadBalancer loadBalancer = null;
+		LoadBalancerState loadBalancerState = AbstractLoadBalancer.coordinateState(remoteLoadBalancers, initialConnectTimeoutSecs);
+		if (loadBalancerState.equals(LoadBalancerState.ACTIVE)) {
+			loadBalancer = getNewActiveLoadBalancer();
+		} else if (loadBalancerState.equals(LoadBalancerState.PASSIVE)) {
+			loadBalancer = getNewPassiveLoadBalancer();
+		}
+		Thread loadBalancerThread = new Thread(loadBalancer);
+		loadBalancerThread.start();
+		loadBalancer.startLoadBalancerMessageListener(loadBalancerThread);
+	}
+	
+	public static ActiveLoadBalancer getNewActiveLoadBalancer() {
+		return new ActiveLoadBalancer(acceptPort, remoteLoadBalancers, servers, nameServiceAddress, heartbeatIntervalSecs);
+	}
+	
+	public static PassiveLoadBalancer getNewPassiveLoadBalancer() {
+		return new PassiveLoadBalancer(acceptPort, remoteLoadBalancers, servers, nameServiceAddress, heartbeatTimeoutSecs);
 	}
 }

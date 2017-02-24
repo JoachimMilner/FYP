@@ -81,5 +81,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		
 
 	}
+	
+	@Override
+	protected void startLoadBalancerMessageListener(Thread loadBalancerThread) {
+		
+	}
 
 }

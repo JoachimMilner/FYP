@@ -105,7 +105,7 @@ public class RunnableActiveRequestProcessorTests {
 	public void testCreateActiveRequestProcessor_successful() throws IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);
@@ -119,7 +119,7 @@ public class RunnableActiveRequestProcessorTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_nullSocket() {
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		new RunnableActiveRequestProcessor(null, activeLoadBalancer, serverManager);
 	}
@@ -132,7 +132,7 @@ public class RunnableActiveRequestProcessorTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_disconnectedSocket() {
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		new RunnableActiveRequestProcessor(mockClientSocketChannel, activeLoadBalancer, serverManager);
 	}
@@ -162,7 +162,7 @@ public class RunnableActiveRequestProcessorTests {
 	public void testCreateActiveRequestProcessor_nullServerManager() throws IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		new RunnableActiveRequestProcessor(acceptedSocketChannel, activeLoadBalancer, null);
 	}
 
@@ -179,7 +179,7 @@ public class RunnableActiveRequestProcessorTests {
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);
@@ -202,7 +202,7 @@ public class RunnableActiveRequestProcessorTests {
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);
@@ -225,7 +225,7 @@ public class RunnableActiveRequestProcessorTests {
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);
@@ -251,7 +251,7 @@ public class RunnableActiveRequestProcessorTests {
 			SecurityException, IllegalArgumentException, IllegalAccessException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		Set<Server> servers = TestUtils.getServerSet(1);
 		ServerManager serverManager = new ServerManager(servers);
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
@@ -324,7 +324,7 @@ public class RunnableActiveRequestProcessorTests {
 	public void testActiveRequestProcessor_respondToAliveRequest() throws IOException {
 		createAcceptedSocketChannel();
 		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000));
+				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
 				acceptedSocketChannel, activeLoadBalancer, serverManager);

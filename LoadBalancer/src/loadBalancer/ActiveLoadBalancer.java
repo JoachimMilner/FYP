@@ -2,6 +2,7 @@ package loadBalancer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -13,6 +14,7 @@ import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
 import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
+import faultModule.HeartbeatBroadcaster;
 import logging.ComponentLogger;
 import logging.LogMessageType;
 
@@ -31,6 +33,12 @@ import logging.LogMessageType;
 public class ActiveLoadBalancer extends AbstractLoadBalancer {
 
 	/**
+	 * The frequency at which to send heartbeat messages to the backup nodes.
+	 * To be passed to the {@link HeartbeatBroadcaster}
+	 */
+	private int heartbeatIntervalSecs;
+	
+	/**
 	 * Creates a new ActiveLoadBalancer object that acts as the primary load
 	 * balancer process in the system. The <code>run</code> method prompts this
 	 * object to start listening to requests and responding accordingly.
@@ -43,9 +51,11 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 *            the set of all backend servers in the system
 	 * @param nameServiceAddress
 	 *            the address of the name service
+	 * @param heartbeatIntervalSecs
+	 *            the frequency at which to send heartbeat messages to the backup nodes
 	 */
 	public ActiveLoadBalancer(int acceptPort, Set<RemoteLoadBalancer> remoteLoadBalancers, Set<Server> servers,
-			InetSocketAddress nameServiceAddress) {
+			InetSocketAddress nameServiceAddress, int heartbeatIntervalSecs) {
 		if (remoteLoadBalancers == null || remoteLoadBalancers.isEmpty())
 			throw new IllegalArgumentException("Remote load balancer set cannot be null or empty.");
 		if (servers == null || servers.isEmpty())
@@ -57,6 +67,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		this.remoteLoadBalancers = remoteLoadBalancers;
 		this.servers = servers;
 		this.nameServiceAddress = nameServiceAddress;
+		this.heartbeatIntervalSecs = heartbeatIntervalSecs;
 	}
 
 	/*
@@ -125,6 +136,37 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			socketChannel.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	protected void startLoadBalancerMessageListener(Thread loadBalancerThread) {
+		while (!Thread.currentThread().isInterrupted()) {
+			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+				ByteBuffer buffer = ByteBuffer.allocate(100);
+				try {
+					SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
+					while (socketChannel.read(buffer) > 0) {
+						buffer.flip();
+						MessageType messageType = MessageType.values()[buffer.get()];
+						switch (messageType) {
+						case ALIVE_REQUEST:
+							buffer.clear();
+							buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
+							buffer.flip();
+							while (buffer.hasRemaining()){
+								socketChannel.write(buffer);
+							}
+							break;
+						case 					
+						default:
+							break;
+						}
+					}
+				} catch (IOException e) {
+					// e.printStackTrace();
+				}
+			}
 		}
 	}
 
