@@ -29,6 +29,15 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	private boolean isElectedBackup = false;
 
 	/**
+	 * The currently stored value for this node's candidacy. If this is a
+	 * passive remote load balancer, the value stored will be its last known
+	 * average server latency value. If this is an active node, the value will
+	 * contain last octet of the node's IP address to be used to resolve a
+	 * multiple-active conflict in the system.
+	 */
+	private Double candidacyValue;
+
+	/**
 	 * Creates a new RemoteLoadBalancer object instance that hold relevant
 	 * properties and provides an abstraction to the specified remote process.
 	 * 
@@ -71,14 +80,30 @@ public class RemoteLoadBalancer extends AbstractRemote {
 
 	/**
 	 * @param isElectedBackup
-	 *            whether this node is the elected backup. 
+	 *            whether this node is the elected backup.
 	 */
 	public void setIsElectedBackup(boolean isElectedBackup) {
 		this.isElectedBackup = isElectedBackup;
 	}
-	
+
 	/**
-	 * Attempts to connect to the remote load balancer. Does nothing if already connected.
+	 * @return the most up to date candidacy value for this node (can be null).
+	 */
+	public Double getCandidacyValue() {
+		return candidacyValue;
+	}
+
+	/**
+	 * @param candidacyValue
+	 *            the new candidacy value for this node (can be null).
+	 */
+	public void setCandidacyValue(Double candidacyValue) {
+		this.candidacyValue = candidacyValue;
+	}
+
+	/**
+	 * Attempts to connect to the remote load balancer. Does nothing if already
+	 * connected.
 	 */
 	public void connect() {
 		if (socketChannel == null || !socketChannel.isConnected()) {

@@ -54,7 +54,7 @@
 		1
 	</heartbeatIntervalSecs>
 	<heartbeatTimeoutSecs>
-		1
+		2
 	</heartbeatTimeoutSecs>	
 	<defaultServerTokenExpiry>
 		50

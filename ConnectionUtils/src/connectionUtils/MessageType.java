@@ -125,12 +125,12 @@ public enum MessageType {
 	ACTIVE_IS_ALIVE(18),
 	
 	/**
-	 * Used for emergency elections. <br/>
-	 * In the case of there being multiple actives present
+	 * Used for emergency elections.
+	 * <p>In the case of there being multiple actives present
 	 * in the system, this election will be used to carry the sending node's IP address (last octet)
-	 * to use as it's candidacy suitability. <br/>
-	 * In the case that both the active and the passive backup have failed, the remaining passive 
-	 * nodes will send their last stored average server latency value immediately.
+	 * to use as it's candidacy suitability.</p>
+	 * <p>In the case that both the active and the passive backup have failed, the remaining passive 
+	 * nodes will send their last stored average server latency value immediately.</p>
 	 */
 	EMERGENCY_ELECTION_MESSAGE(19);
 	
