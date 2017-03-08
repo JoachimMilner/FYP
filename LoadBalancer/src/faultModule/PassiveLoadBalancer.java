@@ -124,7 +124,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 		// Set current active load balancer for easy accessibility
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
+			if (remoteLoadBalancer.getState() != null && remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
 				currentActive = remoteLoadBalancer;
 				break;
 			}
