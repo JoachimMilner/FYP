@@ -18,8 +18,6 @@ public class ConnectNIO {
 	 * 
 	 * @param connectAddress
 	 *            the remote address to connect to
-	 * @param connectPort
-	 *            the remote port to connect to
 	 * @return a non-blocking {@link SocketChannel} that is connected to the
 	 *         remote address, or null if a connection error occurs.
 	 */
@@ -30,6 +28,36 @@ public class ConnectNIO {
 			socketChannel.configureBlocking(false);
 			socketChannel.connect(connectAddress);
 			while (!socketChannel.finishConnect()) {
+			}
+		} catch (IOException e) {
+			//e.printStackTrace();
+		}
+		return socketChannel;
+	}
+	
+	/**
+	 * Creates a non-blocking {@link SocketChannel} using the given IP address
+	 * and connection port. Overloaded method with timeout value.
+	 * 
+	 * @param connectAddress
+	 *            the remote address to connect to
+	 * @param timeoutMillis
+	 *            the duration, in milliseconds, to timeout after attempting to connect
+	 * @return a non-blocking {@link SocketChannel} that is connected to the
+	 *         remote address, or null if a connection error occurs.
+	 */
+	public static SocketChannel getNonBlockingSocketChannel(InetSocketAddress connectAddress, int timeoutMillis) {
+		SocketChannel socketChannel = null;
+		try {
+			socketChannel = SocketChannel.open();
+			socketChannel.configureBlocking(false);
+			socketChannel.connect(connectAddress);
+			long connectAttemptStart = System.currentTimeMillis();
+			long timeoutEpoch = connectAttemptStart + timeoutMillis;
+			while (!socketChannel.finishConnect()) {
+				if (System.currentTimeMillis() > timeoutEpoch) {
+					break;
+				}
 			}
 		} catch (IOException e) {
 			//e.printStackTrace();
