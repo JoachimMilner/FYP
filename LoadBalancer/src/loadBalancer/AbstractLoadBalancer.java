@@ -122,7 +122,8 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				}
 			}
 			int totalResponses = activeCount + passiveCount;
-
+			System.out.println("actives:" + activeCount);
+			System.out.println("passives:" + passiveCount);
 			if (electionInProgress) {
 				try {
 					Thread.sleep(2000);
@@ -173,7 +174,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				socketChannel.read(buffer);
 				buffer.flip();
 				MessageType messageType = MessageType.values()[buffer.get()];
-				//System.out.println(messageType);
+				System.out.println(messageType.name());
 				switch (messageType) {
 				case ACTIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);

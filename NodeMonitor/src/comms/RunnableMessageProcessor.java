@@ -226,12 +226,12 @@ public class RunnableMessageProcessor implements Runnable {
 								if (lb.getState() == null) {
 									activeInfoString = " entered ";
 								} else {
-									activeInfoString = " elevated ";
+									activeInfoString = " elevated to ";
 								}
 								break;
 							}
 						}
-						controller.appendMainFeed("LoadBalancer " + componentID + activeInfoString + "to active state.");
+						controller.appendMainFeed("LoadBalancer " + componentID + activeInfoString + "active state.");
 						break;
 					case LOAD_BALANCER_ENTERED_PASSIVE:
 						componentID = buffer.getInt();
@@ -241,12 +241,12 @@ public class RunnableMessageProcessor implements Runnable {
 								if (lb.getState() == null) {
 									passiveInfoString = " entered ";
 								} else {
-									passiveInfoString = " elevated ";
+									passiveInfoString = " demoted to ";
 								}
 								break;
 							}
 						}
-						controller.appendMainFeed("LoadBalancer " + componentID +  passiveInfoString + "to active state.");
+						controller.appendMainFeed("LoadBalancer " + componentID +  passiveInfoString + "passive state.");
 						break;
 					case LOAD_BALANCER_FAILURE_DETECTED:
 						componentID = buffer.getInt();

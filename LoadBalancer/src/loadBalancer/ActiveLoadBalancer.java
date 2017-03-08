@@ -57,10 +57,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 * ignored.
 	 */
 	private boolean inResolutionState = false;
-	
+
 	/**
-	 * Thread that the load balancer message listener is running on. 
-	 * Kept as a global variable so it can be interrupted easily. 
+	 * Thread that the load balancer message listener is running on. Kept as a
+	 * global variable so it can be interrupted easily.
 	 */
 	private Thread loadBalancerMessageListenerThread;
 
@@ -116,8 +116,9 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		ServerManager serverManager = new ServerManager(servers);
 		Thread serverManagerThread = new Thread(serverManager);
 		serverManagerThread.start();
-		
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(remoteLoadBalancers, heartbeatIntervalSecs);
+
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(remoteLoadBalancers,
+				heartbeatIntervalSecs);
 		Thread heartbeatBroadcasterThread = new Thread(heartbeatBroadcaster);
 		heartbeatBroadcasterThread.start();
 
@@ -133,8 +134,19 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			}
 			if (connectRequestSocket != null) {
 				System.out.println("Received connection request.");
-				threadPoolExecutor
-						.execute(new RunnableActiveRequestProcessor(connectRequestSocket, this, serverManager));
+				boolean isLoadBalancerNode = false;
+				String connectingIP = connectRequestSocket.socket().getInetAddress().getHostAddress();
+				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+					if (remoteLoadBalancer.getAddress().getAddress().getHostAddress().equals(connectingIP)) {
+						remoteLoadBalancer.setSocketChannel(connectRequestSocket);
+						isLoadBalancerNode = true;
+						break;
+					}
+				}
+				if (!isLoadBalancerNode) {
+					threadPoolExecutor
+							.execute(new RunnableActiveRequestProcessor(connectRequestSocket, this, serverManager));
+				}
 			}
 		}
 		System.out.println("Active load balancer shutting down...");
@@ -221,7 +233,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 									}
 								}
 								new Thread(new Runnable() {
-									
+
 									@Override
 									public void run() {
 										try {
@@ -230,15 +242,17 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 												notifyNameService();
 											} else {
 												loadBalancerThread.interrupt();
-												PassiveLoadBalancer passiveLoadBalancer = LoadBalancer.getNewPassiveLoadBalancer();
+												PassiveLoadBalancer passiveLoadBalancer = LoadBalancer
+														.getNewPassiveLoadBalancer();
 												Thread loadBalancerThread = new Thread(passiveLoadBalancer);
 												loadBalancerThread.start();
-												passiveLoadBalancer.startLoadBalancerMessageListener(loadBalancerThread);
+												passiveLoadBalancer
+														.startLoadBalancerMessageListener(loadBalancerThread);
 											}
 										} catch (IOException e) {
 										}
 									}
-									
+
 								}).start();
 							}
 							break;
@@ -272,7 +286,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 */
 	private boolean performEmergencyElection(List<RemoteLoadBalancer> otherActives) throws IOException {
 		long electionStartTime = System.currentTimeMillis();
-		
+
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		// Use last octet of IP address for election message value
@@ -306,15 +320,16 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			// Received election messages from all other actives or timed out
 			if (electionMessagesReceived == otherActives.size()
 					|| System.currentTimeMillis() - electionStartTime > 5000) {
-				// Create a fake RemoteLoadbalancer object representing self so we can sort the nodes.
+				// Create a fake RemoteLoadbalancer object representing self so
+				// we can sort the nodes.
 				RemoteLoadBalancer self = new RemoteLoadBalancer(new InetSocketAddress(0));
 				self.setCandidacyValue((double) ownCandidacyValue);
 				otherActives.add(self);
 				Collections.sort(otherActives, new Comparator<RemoteLoadBalancer>() {
-				    @Override
-				    public int compare(RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) {
-				        return Double.compare(rlb1.getCandidacyValue(), rlb2.getCandidacyValue());
-				    }
+					@Override
+					public int compare(RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) {
+						return Double.compare(rlb1.getCandidacyValue(), rlb2.getCandidacyValue());
+					}
 				});
 				if (!otherActives.get(0).equals(self)) {
 					isStillActive = false;
@@ -323,7 +338,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 				}
 				for (int i = 1; i < otherActives.size(); i++) {
 					otherActives.get(i).setState(LoadBalancerState.PASSIVE);
-					
+
 				}
 				isResolved = true;
 			}

@@ -147,7 +147,13 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			}
 			if (connectRequestSocket != null) {
 				System.out.println("Received connection request.");
-				
+				String connectingIP = connectRequestSocket.socket().getInetAddress().getHostAddress();
+				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+					if (remoteLoadBalancer.getAddress().getAddress().getHostAddress().equals(connectingIP)) {
+						remoteLoadBalancer.setSocketChannel(connectRequestSocket);
+						break;
+					}
+				}
 			}
 		}
 		System.out.println("Passive load balancer shutting down...");
