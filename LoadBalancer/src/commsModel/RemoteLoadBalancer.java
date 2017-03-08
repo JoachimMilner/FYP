@@ -107,7 +107,7 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	 */
 	public void connect() {
 		if (socketChannel == null || !socketChannel.isConnected()) {
-			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address);
+			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address, 1000);
 		}
 	}
 }
