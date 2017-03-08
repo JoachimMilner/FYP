@@ -2,6 +2,7 @@ package loadBalancer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -178,6 +179,17 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				buffer.flip();
 				MessageType messageType = MessageType.values()[buffer.get()];
 				System.out.println(messageType.name());
+				if (messageType.equals(MessageType.ALIVE_CONFIRM)) {
+					buffer.clear();
+					socketChannel.read(buffer);
+					buffer.flip();
+					try {
+						messageType = MessageType.values()[buffer.get()];
+					} catch (BufferUnderflowException e) {
+						
+					}
+					System.out.println(messageType.name());
+				}
 				switch (messageType) {
 				case ACTIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
