@@ -88,22 +88,34 @@ public enum LogMessageType {
 	LOAD_BALANCER_ENTERED_PASSIVE(12),
 
 	/**
-	 * Notification that the sending node has confirmed failure of the active
+	 * Notification that the sending node has detected failure of the active
 	 * load balancer.
 	 */
 	LOAD_BALANCER_FAILURE_DETECTED(13),
+	
+	/**
+	 * Notification that a previous failure detection of the active load balancer
+	 * has been dismissed by another passive node.
+	 */
+	LOAD_BALANCER_FAILURE_DETECTION_DISMISSED(14),
+	
+	/**
+	 * Notification that the sending node has confirmed failure of the active
+	 * load balancer.
+	 */
+	LOAD_BALANCER_FAILURE_CONFIRMED(15),
 
 	/**
 	 * Sent after an election has been performed, containing the address of the
 	 * passive load balancer that has won the election.
 	 */
-	LOAD_BALANCER_ELECTION_RESULT(14),
+	LOAD_BALANCER_ELECTION_RESULT(16),
 
 	/**
 	 * Message indicating that the sending node has detected multiple active
 	 * load balancers in the system.
 	 */
-	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(15);
+	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(17);
 
 	/**
 	 * Numerical value attributed to each enum that will be set as the first

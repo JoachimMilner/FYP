@@ -220,11 +220,41 @@ public class RunnableMessageProcessor implements Runnable {
 						break;
 					case LOAD_BALANCER_ENTERED_ACTIVE:
 						componentID = buffer.getInt();
-						controller.appendMainFeed("LoadBalancer " + componentID + " elevated to active state.");
+						String activeInfoString = "";
+						for (LoadBalancer lb : systemModel.getLoadBalancers()) {
+							if (lb.getComponentID() == componentID) {
+								if (lb.getState() == null) {
+									activeInfoString = " entered ";
+								} else {
+									activeInfoString = " elevated ";
+								}
+								break;
+							}
+						}
+						controller.appendMainFeed("LoadBalancer " + componentID + activeInfoString + "to active state.");
 						break;
 					case LOAD_BALANCER_ENTERED_PASSIVE:
+						componentID = buffer.getInt();
+						String passiveInfoString = "";
+						for (LoadBalancer lb : systemModel.getLoadBalancers()) {
+							if (lb.getComponentID() == componentID) {
+								if (lb.getState() == null) {
+									passiveInfoString = " entered ";
+								} else {
+									passiveInfoString = " elevated ";
+								}
+								break;
+							}
+						}
+						controller.appendMainFeed("LoadBalancer " + componentID +  passiveInfoString + "to active state.");
 						break;
 					case LOAD_BALANCER_FAILURE_DETECTED:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " detected failure of the active.");
+						break;
+					case LOAD_BALANCER_FAILURE_DETECTION_DISMISSED:
+						break;
+					case LOAD_BALANCER_FAILURE_CONFIRMED:
 						break;
 					case LOAD_BALANCER_ELECTION_RESULT:
 						break;

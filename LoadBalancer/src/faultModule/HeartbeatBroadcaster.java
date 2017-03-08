@@ -70,7 +70,7 @@ public class HeartbeatBroadcaster implements Runnable {
 				}
 			}
 
-			try {
+/*			try {
 				Thread checkForMessageThread = new Thread(new Runnable() {
 
 					@Override
@@ -96,6 +96,11 @@ public class HeartbeatBroadcaster implements Runnable {
 				checkForMessageThread.interrupt();
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
+			}*/
+			try {
+				Thread.sleep(heartbeatIntervalSecs * 1000);
+			} catch (Exception e) {
+				
 			}
 		}
 
@@ -137,7 +142,7 @@ public class HeartbeatBroadcaster implements Runnable {
 	 * @param socketChannel
 	 *            the SocketChannel on which to check for messages.
 	 */
-	private void checkForMessages(SocketChannel socketChannel) {
+/*	private void checkForMessages(SocketChannel socketChannel) {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
 		try {
 			while (socketChannel.read(buffer) > 0) {
@@ -155,5 +160,5 @@ public class HeartbeatBroadcaster implements Runnable {
 		} catch (IOException e) {
 			// e.printStackTrace();
 		}
-	}
+	}*/
 }

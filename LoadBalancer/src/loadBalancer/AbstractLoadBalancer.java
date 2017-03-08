@@ -131,6 +131,8 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				}
 			} else if (activeCount == 1) {
 				determinedState = LoadBalancerState.PASSIVE;
+			} else if (activeCount > 1) {
+				// Force emergency election
 			} else if (totalResponses == 0) {
 				determinedState = LoadBalancerState.ACTIVE;
 			}

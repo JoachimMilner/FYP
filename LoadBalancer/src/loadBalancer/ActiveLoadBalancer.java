@@ -25,6 +25,7 @@ import commsModel.Server;
 import connectionUtils.ConnectNIO;
 import connectionUtils.MessageType;
 import faultModule.HeartbeatBroadcaster;
+import faultModule.PassiveLoadBalancer;
 import logging.ComponentLogger;
 import logging.LogMessageType;
 
@@ -115,6 +116,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		ServerManager serverManager = new ServerManager(servers);
 		Thread serverManagerThread = new Thread(serverManager);
 		serverManagerThread.start();
+		
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(remoteLoadBalancers, heartbeatIntervalSecs);
+		Thread heartbeatBroadcasterThread = new Thread(heartbeatBroadcaster);
+		heartbeatBroadcasterThread.start();
 
 		while (!Thread.currentThread().isInterrupted()) {
 			SocketChannel connectRequestSocket = null;
@@ -135,6 +140,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		System.out.println("Active load balancer shutting down...");
 
 		serverManagerThread.interrupt();
+		heartbeatBroadcasterThread.interrupt();
 		loadBalancerMessageListenerThread.interrupt();
 		try {
 			serverSocketChannel.close();
@@ -167,7 +173,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	}
 
 	@Override
-	protected void startLoadBalancerMessageListener(Thread loadBalancerThread) {
+	public void startLoadBalancerMessageListener(Thread loadBalancerThread) {
 		while (!Thread.currentThread().isInterrupted()) {
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
@@ -177,7 +183,17 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 						buffer.flip();
 						MessageType messageType = MessageType.values()[buffer.get()];
 						switch (messageType) {
+						case STATE_REQUEST:
+							System.out.println("Received state request");
+							buffer.clear();
+							buffer.put((byte) MessageType.ACTIVE_NOTIFY.getValue());
+							buffer.flip();
+							while (buffer.hasRemaining()) {
+								socketChannel.write(buffer);
+							}
+							break;
 						case ALIVE_REQUEST:
+							System.out.println("Received alive request");
 							buffer.clear();
 							buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
 							buffer.flip();
@@ -214,7 +230,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 												notifyNameService();
 											} else {
 												loadBalancerThread.interrupt();
-												new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+												PassiveLoadBalancer passiveLoadBalancer = LoadBalancer.getNewPassiveLoadBalancer();
+												Thread loadBalancerThread = new Thread(passiveLoadBalancer);
+												loadBalancerThread.start();
+												passiveLoadBalancer.startLoadBalancerMessageListener(loadBalancerThread);
 											}
 										} catch (IOException e) {
 										}
@@ -253,6 +272,8 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 */
 	private boolean performEmergencyElection(List<RemoteLoadBalancer> otherActives) throws IOException {
 		long electionStartTime = System.currentTimeMillis();
+		
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		// Use last octet of IP address for election message value
 		int ownCandidacyValue = Integer.parseInt(InetAddress.getLocalHost().getHostAddress().split(".")[3]);
@@ -272,7 +293,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			writeSelector.close();
 		}
 
-		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		boolean isStillActive = true;
 		boolean isResolved = false;
 
