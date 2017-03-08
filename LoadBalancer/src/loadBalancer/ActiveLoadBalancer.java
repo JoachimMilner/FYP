@@ -191,6 +191,9 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
 				try {
 					SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
+					if (socketChannel == null || !socketChannel.isConnected()) {
+						continue;
+					}
 					while (socketChannel.read(buffer) > 0) {
 						buffer.flip();
 						MessageType messageType = MessageType.values()[buffer.get()];

@@ -156,7 +156,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 		try {
 			remoteLoadBalancer.connect();
 			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
-			if (socketChannel == null) {
+			if (socketChannel == null || !socketChannel.isConnected()) {
 				return;
 			}
 			ByteBuffer buffer = ByteBuffer.allocate(5);
