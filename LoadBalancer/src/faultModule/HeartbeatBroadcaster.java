@@ -54,8 +54,7 @@ public class HeartbeatBroadcaster implements Runnable {
 	 * 
 	 * @see java.lang.Runnable#run() Begins sending ALIVE_CONFIRM messages at
 	 * the specified heartbeat interval rate to all other load balancer nodes in
-	 * the system. Also listens for ALIVE_REQUEST messages and responds with an
-	 * ALIVE_CONFIRM if one is received.
+	 * the system.
 	 */
 	@Override
 	public void run() {
@@ -64,7 +63,7 @@ public class HeartbeatBroadcaster implements Runnable {
 
 			for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				if (remoteLoadBalancer.isConnected()) {
-					sendHeartbeat(remoteLoadBalancer.getSocketChannel());
+					sendHeartbeat(remoteLoadBalancer);
 				}
 			}
 			try {
@@ -77,21 +76,23 @@ public class HeartbeatBroadcaster implements Runnable {
 
 	/**
 	 * Sends an <code>ALIVE_CONFIRM</code> message (i.e. a heartbeat) to the
-	 * specified {@link SocketChannel}.
+	 * specified {@link RemoteLoadBalancer}.
 	 * 
-	 * @param socketChannel
-	 *            the SocketChannel on which to send the heartbeat message
+	 * @param remoteLoadBalancer
+	 *            the RemoteLoadbalancer to send the heartbeat message to
 	 */
-	private void sendHeartbeat(SocketChannel socketChannel) {
+	private void sendHeartbeat(RemoteLoadBalancer remoteLoadBalancer) {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
 		buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
 		buffer.flip();
 		try {
 			while (buffer.hasRemaining()) {
-				socketChannel.write(buffer);
+				remoteLoadBalancer.getSocketChannel().write(buffer);
 			}
 		} catch (IOException e) {
-
+			if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+				remoteLoadBalancer.setSocketChannel(null);
+			}
 		}
 
 	}

@@ -98,20 +98,22 @@ public class Server extends AbstractRemote {
 		ByteBuffer buffer = ByteBuffer.allocate(9);
 		buffer.put((byte) MessageType.SERVER_CPU_REQUEST.getValue());
 		buffer.flip();
-		while (buffer.hasRemaining()) {
-			try {
+
+		try {
+			while (buffer.hasRemaining()) {
 				socketChannel.write(buffer);
-			} catch (IOException e) {
-				//e.printStackTrace();
 			}
+		} catch (IOException e) {
+			return;
 		}
+
 		buffer.clear();
 
 		try {
 			socketChannel.socket().setSoTimeout(1000);
 			socketChannel.read(buffer);
 		} catch (IOException e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 			if (e.getClass().equals(SocketTimeoutException.class)) {
 				isAlive = false;
 				try {
