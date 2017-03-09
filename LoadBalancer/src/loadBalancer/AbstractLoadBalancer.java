@@ -155,7 +155,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 */
 	private static void requestState(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
 		try {
-			if (!remoteLoadBalancer.connect(connectTimeoutSecs)) {
+			if (!remoteLoadBalancer.connect(connectTimeoutSecs * 1000)) {
 				return;
 			}
 			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
