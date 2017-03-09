@@ -187,7 +187,7 @@ public class RemoteLoadBalancerTests {
 		
 			@Override
 			public void run() {
-				remoteLoadBalancer.connect();
+				remoteLoadBalancer.connect(0);
 			}
 			
 		}).start();

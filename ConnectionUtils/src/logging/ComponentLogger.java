@@ -172,12 +172,14 @@ public class ComponentLogger {
 			}
 		}
 		buffer.flip();
-		while (buffer.hasRemaining()) {
-			try {
+
+		try {
+			while (buffer.hasRemaining()) {
 				socketChannel.write(buffer);
-			} catch (IOException | NullPointerException e) {
-				// e.printStackTrace();
 			}
+		} catch (IOException | NullPointerException e) {
+			// e.printStackTrace();
+
 		}
 	}
 }

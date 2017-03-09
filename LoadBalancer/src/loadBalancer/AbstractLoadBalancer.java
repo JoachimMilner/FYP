@@ -155,11 +155,10 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 */
 	private static void requestState(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
 		try {
-			remoteLoadBalancer.connect();
-			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
-			if (socketChannel == null || !socketChannel.isConnected()) {
+			if (!remoteLoadBalancer.connect(connectTimeoutSecs)) {
 				return;
 			}
+			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
 			ByteBuffer buffer = ByteBuffer.allocate(5);
 			buffer.put((byte) MessageType.STATE_REQUEST.getValue());
 			buffer.flip();
@@ -179,18 +178,10 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				buffer.flip();
 				MessageType messageType = MessageType.values()[buffer.get()];
 				System.out.println(messageType.name());
-				if (messageType.equals(MessageType.ALIVE_CONFIRM)) {
-					buffer.clear();
-					socketChannel.read(buffer);
-					buffer.flip();
-					try {
-						messageType = MessageType.values()[buffer.get()];
-					} catch (BufferUnderflowException e) {
-						
-					}
-					System.out.println(messageType.name());
-				}
 				switch (messageType) {
+				// ALIVE_CONFIRM is also a valid state notification as only an active node is capable 
+				// of sending this message. 
+				case ALIVE_CONFIRM:
 				case ACTIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 					break;

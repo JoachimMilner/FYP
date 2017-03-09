@@ -14,7 +14,8 @@ public class ConnectNIO {
 
 	/**
 	 * Creates a non-blocking {@link SocketChannel} using the given IP address
-	 * and connection port.
+	 * and connection port. Contains default timeout value of 5 seconds to avoid
+	 * an accidental infinite loop.
 	 * 
 	 * @param connectAddress
 	 *            the remote address to connect to
@@ -27,7 +28,12 @@ public class ConnectNIO {
 			socketChannel = SocketChannel.open();
 			socketChannel.configureBlocking(false);
 			socketChannel.connect(connectAddress);
+			long connectAttemptStart = System.currentTimeMillis();
+			long timeoutEpoch = connectAttemptStart + 5000;
 			while (!socketChannel.finishConnect()) {
+				if (System.currentTimeMillis() > timeoutEpoch) {
+					break;
+				}
 			}
 		} catch (IOException e) {
 			//e.printStackTrace();

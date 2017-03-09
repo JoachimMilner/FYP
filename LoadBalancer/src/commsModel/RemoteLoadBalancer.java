@@ -102,12 +102,25 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	}
 
 	/**
-	 * Attempts to connect to the remote load balancer. Does nothing if already
-	 * connected.
+	 * Attempts to connect to the remote load balancer with a given timeout. 
+	 * Does nothing if already connected.
+	 * @return true if this object's SocketChannel is now connected, otherwise false.
 	 */
-	public void connect() {
+	public boolean connect(int timeoutMillis) {
 		if (socketChannel == null || !socketChannel.isConnected()) {
-			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address, 1000);
+			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address, timeoutMillis);
+			if (socketChannel != null && socketChannel.isConnected()) {
+				return true;
+			}
+			return false;
 		}
+		return true;
+	}
+	
+	/**
+	 * @return Convenience method for checking if this RemoteLoadBalancer is currently connected.
+	 */
+	public boolean isConnected() {
+		return socketChannel != null && socketChannel.isConnected();
 	}
 }

@@ -63,52 +63,16 @@ public class HeartbeatBroadcaster implements Runnable {
 		while (!Thread.currentThread().isInterrupted()) {
 
 			for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-				remoteLoadBalancer.connect();
-				if (remoteLoadBalancer.getSocketChannel() != null
-						&& remoteLoadBalancer.getSocketChannel().isConnected()) {
+				if (remoteLoadBalancer.isConnected()) {
 					sendHeartbeat(remoteLoadBalancer.getSocketChannel());
 				}
 			}
-
-/*			try {
-				Thread checkForMessageThread = new Thread(new Runnable() {
-
-					@Override
-					public void run() {
-						while (!Thread.currentThread().isInterrupted()) {
-							for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-								if (remoteLoadBalancer.getSocketChannel() != null
-										&& remoteLoadBalancer.getSocketChannel().isConnected()) {
-									checkForMessages(remoteLoadBalancer.getSocketChannel());
-								}
-							}
-							try {
-								Thread.sleep(heartbeatIntervalSecs * 100);
-							} catch (InterruptedException e) {
-								// e.printStackTrace();
-							}
-						}
-					}
-
-				});
-				checkForMessageThread.start();
-				Thread.sleep(heartbeatIntervalSecs * 1000);
-				checkForMessageThread.interrupt();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}*/
 			try {
 				Thread.sleep(heartbeatIntervalSecs * 1000);
 			} catch (Exception e) {
-				
+
 			}
 		}
-
-		/*
-		 * for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-		 * try { remoteLoadBalancer.getSocketChannel().close(); } catch
-		 * (IOException e) { e.printStackTrace(); } }
-		 */
 	}
 
 	/**
@@ -122,43 +86,13 @@ public class HeartbeatBroadcaster implements Runnable {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
 		buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
 		buffer.flip();
-		while (buffer.hasRemaining()) {
-			try {
-				socketChannel.write(buffer);
-			} catch (IOException e) {
-				// e.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * Listens for messages on the specified {@link SocketChannel}, and responds
-	 * to an <code>ALIVE_REQUEST</code> message with a
-	 * <code>ALIVE_CONFIRM</code> message. Since this class uses not blocking
-	 * sockets to communicate with other nodes, this method will return straight
-	 * away if no messages are found in the buffer. Therefore, this method
-	 * should be called periodically from this class's <code>run</code> method.
-	 * 
-	 * @param socketChannel
-	 *            the SocketChannel on which to check for messages.
-	 */
-/*	private void checkForMessages(SocketChannel socketChannel) {
-		ByteBuffer buffer = ByteBuffer.allocate(1);
 		try {
-			while (socketChannel.read(buffer) > 0) {
-				buffer.flip();
-				MessageType messageType = MessageType.values()[buffer.get()];
-				if (messageType.equals(MessageType.ALIVE_REQUEST)) {
-					buffer.clear();
-					buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
-					buffer.flip();
-					while (buffer.hasRemaining()) {
-						socketChannel.write(buffer);
-					}
-				}
+			while (buffer.hasRemaining()) {
+				socketChannel.write(buffer);
 			}
 		} catch (IOException e) {
-			// e.printStackTrace();
+
 		}
-	}*/
+
+	}
 }
