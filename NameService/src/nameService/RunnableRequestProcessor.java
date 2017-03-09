@@ -97,7 +97,7 @@ public class RunnableRequestProcessor implements Runnable {
 							socketChannel.write(buffer);
 						}
 						//socketChannel.write(encoder.encode(CharBuffer.wrap(addressResolutionService.getHostAddress())));
-						System.out.println("Received host address request from client.");
+						//System.out.println("Received host address request from client.");
 						break;
 					default:
 						// Received a bad request
