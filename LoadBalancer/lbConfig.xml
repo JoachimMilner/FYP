@@ -47,15 +47,12 @@
 			8003
 		</port>
 	</nameServiceAddress>
-	<initialConnectTimeoutSecs>
-		5
-	</initialConnectTimeoutSecs>
-	<heartbeatIntervalSecs>
-		1
-	</heartbeatIntervalSecs>
-	<heartbeatTimeoutSecs>
-		2
-	</heartbeatTimeoutSecs>	
+	<heartbeatIntervalMillis>
+		1000
+	</heartbeatIntervalMillis>
+	<heartbeatTimeoutMillis>
+		2000
+	</heartbeatTimeoutMillis>	
 	<defaultServerTokenExpiry>
 		50
 	</defaultServerTokenExpiry>

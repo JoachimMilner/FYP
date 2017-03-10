@@ -1,26 +1,5 @@
 package loadBalancer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Set;
-
-import org.junit.Test;
-
-import commsModel.LoadBalancerState;
-import commsModel.RemoteLoadBalancer;
-import connectionUtils.MessageType;
-import testUtils.TestUtils;
-
 /**
  * @author Joachim
  *         <p>
@@ -42,7 +21,7 @@ public class AbstractLoadBalancerTests {
 	 * while the other return passive. The <code>coordinateState</code> method
 	 * should therefore return <code>PASSIVE</code>.
 	 */
-	@Test
+/*	@Test
 	public void testAbstractLoadBalancer_coordinateStateOneActiveRemote() {
 		Set<RemoteLoadBalancer> remoteLoadBalancers = TestUtils.getRemoteLoadBalancerSet(3);
 
@@ -136,13 +115,13 @@ public class AbstractLoadBalancerTests {
 		assertEquals(LoadBalancerState.PASSIVE, loadBalancerState);
 	}
 
-	/**
+	*//**
 	 * Test the {@link AbstractLoadBalancer}'s <code>coordinateState</code>
 	 * method. </br>
 	 * In this test case, the remote nodes are unresponsive and a connection
 	 * cannot be established, so the method should return <code>ACTIVE</code> in
 	 * order to elevate the node to the active state.
-	 */
+	 *//*
 	@Test
 	public void testAbstractLoadBalancer_coordinateStateNoResponses() {
 		Set<RemoteLoadBalancer> remoteLoadBalancers = TestUtils.getRemoteLoadBalancerSet(4);
@@ -152,7 +131,7 @@ public class AbstractLoadBalancerTests {
 		assertEquals(LoadBalancerState.ACTIVE, loadBalancerState);
 	}
 
-	/**
+	*//**
 	 * Test the {@link AbstractLoadBalancer}'s <code>coordinateState</code>
 	 * method. </br>
 	 * In this test case, the passive nodes in the system are currently
@@ -160,7 +139,7 @@ public class AbstractLoadBalancerTests {
 	 * wait before periodically re-requesting the state of the other nodes,
 	 * until it is notified that the election is finished.
 	 * @throws IOException 
-	 */
+	 *//*
 	@Test
 	public void testAbstractLoadBalancer_coordinateStateElectionInProgress() throws IOException {
 		Set<RemoteLoadBalancer> remoteLoadBalancers = TestUtils.getRemoteLoadBalancerSet(3);
@@ -268,5 +247,5 @@ public class AbstractLoadBalancerTests {
 		}
 
 		assertEquals(LoadBalancerState.PASSIVE, loadBalancerState);
-	}
+	}*/
 }

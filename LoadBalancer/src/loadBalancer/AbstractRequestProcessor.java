@@ -22,13 +22,6 @@ public abstract class AbstractRequestProcessor implements Runnable {
 
 	
 	/**
-	 * The load balancer object that created this request processor. Allows this
-	 * object to relay information back to a centralised location.
-	 */
-	protected AbstractLoadBalancer loadBalancer;
-
-	
-	/**
 	 * Abstract method to be implemented by concrete classes to handle the
 	 * incoming request types that the class will process.
 	 */

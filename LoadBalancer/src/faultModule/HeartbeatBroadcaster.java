@@ -2,7 +2,6 @@ package faultModule;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.Set;
 
 import commsModel.RemoteLoadBalancer;
@@ -28,25 +27,25 @@ public class HeartbeatBroadcaster implements Runnable {
 	private Set<RemoteLoadBalancer> remoteLoadBalancers;
 
 	/**
-	 * The interval, in seconds, that this HeartbeatBroadcaster will send
+	 * The interval, in milliseconds, that this HeartbeatBroadcaster will send
 	 * <code>ALIVE_CONFIRM</code> messages at.
 	 */
-	private int heartbeatIntervalSecs;
+	private int heartbeatIntervalMillis;
 
 	/**
 	 * Creates a new HeartbeatBroadcaster instance that, when started in a
 	 * thread, will periodically send <code>ALIVE_CONFIRM</code> messages to all
 	 * remote load balancers in the <code>remoteLoadBalancers</code> set, at the
-	 * specified <code>hearbeatIntervalSecs</code>.
+	 * specified <code>hearbeatIntervalMillis</code>.
 	 */
-	public HeartbeatBroadcaster(Set<RemoteLoadBalancer> remoteLoadBalancers, int heartbeatIntervalSecs) {
+	public HeartbeatBroadcaster(Set<RemoteLoadBalancer> remoteLoadBalancers, int heartbeatIntervalMillis) {
 		if (remoteLoadBalancers == null || remoteLoadBalancers.isEmpty())
 			throw new IllegalArgumentException("Remote load balancer set cannot be null or empty.");
-		if (heartbeatIntervalSecs < 1)
-			throw new IllegalArgumentException("Heartbeat interval must be at least 1 second.");
+		if (heartbeatIntervalMillis < 1)
+			throw new IllegalArgumentException("Heartbeat interval must be at least 1 millisecond.");
 
 		this.remoteLoadBalancers = remoteLoadBalancers;
-		this.heartbeatIntervalSecs = heartbeatIntervalSecs;
+		this.heartbeatIntervalMillis = heartbeatIntervalMillis;
 	}
 
 	/*
@@ -67,7 +66,7 @@ public class HeartbeatBroadcaster implements Runnable {
 				}
 			}
 			try {
-				Thread.sleep(heartbeatIntervalSecs * 1000);
+				Thread.sleep(heartbeatIntervalMillis);
 			} catch (Exception e) {
 
 			}
@@ -83,7 +82,7 @@ public class HeartbeatBroadcaster implements Runnable {
 	 */
 	private void sendHeartbeat(RemoteLoadBalancer remoteLoadBalancer) {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
-		buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
+		buffer.put((byte) MessageType.ACTIVE_ALIVE_CONFIRM.getValue());
 		buffer.flip();
 		try {
 			while (buffer.hasRemaining()) {

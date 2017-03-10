@@ -54,75 +54,78 @@ public enum MessageType {
 	SERVER_CPU_NOTIFY(6),
 	
 	
-	////////// NODE ALIVE MESSAGES //////////
-	/**
-	 * A request to a node to determine if it is alive/responsive.
-	 */
-	ALIVE_REQUEST(7),
-	
-	/**
-	 * Response from a node to indicate that it is alive.
-	 */
-	ALIVE_CONFIRM(8),
-	
-	
 	////////// CLIENT-LOAD BALANCER MESSAGES //////////
 	/**
 	 * A request to the primary load balancer for the connection details of an available server. 
 	 */
-	AVAILABLE_SERVER_REQUEST(9),
+	AVAILABLE_SERVER_REQUEST(7),
 	
 	/**
 	 * A server token message containing the address of an available server to use. 
 	 */
-	SERVER_TOKEN(10),
+	SERVER_TOKEN(8),
 	
 	
 	////////// ACTIVE-PASSIVE COORDINATION MESSAGES //////////
 	/**
+	 * A request to a node to determine if it is alive/responsive.
+	 */
+	ALIVE_REQUEST(9),
+	
+	/**
+	 * Response from the active load balancer to indicate that it is alive (used as heartbeat).
+	 */
+	ACTIVE_ALIVE_CONFIRM(10),
+	
+	/**
+	 * Response from the elected backup to indicate that it is alive (used as heartbeat).
+	 */
+	BACKUP_ALIVE_CONFIRM(11),
+	
+	/**
 	 * A request to the recipient node for it's current load balancer state (active/passive).
 	 */
-	STATE_REQUEST(11),
+	STATE_REQUEST(12),
 	
 	/**
 	 * A message notifying that the sending node is the active load balancer.
 	 */
-	ACTIVE_NOTIFY(12),
+	ACTIVE_NOTIFY(13),
 	
 	/**
 	 * A message notifying that the sending node is a passive load balancer, to be
 	 * accompanied by it's current election ordinality. 
 	 */
-	PASSIVE_NOTIFY(13),
+	PASSIVE_NOTIFY(14),
 	
 	/**
 	 * A message notifying the recipient that an election is currently in progress,
 	 * indicating that the recipient node should wait for the election to finish.
 	 */
-	ELECTION_IN_PROGRESS_NOTIFY(14),
+	ELECTION_IN_PROGRESS_NOTIFY(15),
 	
 	/**
 	 * A message notifying that the sending node has detected multiple active load balancers
 	 * in the network, and prompts an emergency election.
 	 */
-	MULTIPLE_ACTIVES_WARNING(15),
+	MULTIPLE_ACTIVES_WARNING(16),
 	
 	/**
 	 * An election prompt either initialising an election or transporting the sending node's
 	 * election candidacy message.
 	 */
-	ELECTION_MESSAGE(16),
+	ELECTION_MESSAGE(17),
 	
 	/**
 	 * A message to all other nodes that the sending node has detected a failure.
 	 */
-	ACTIVE_HAS_FAILED(17),
+	ACTIVE_HAS_FAILED(18),
 	
 	/**
 	 * A message in response to an <code>ACTIVE_HAS_FAILED</code> message indicating 
 	 * that the sending node has detected that the active is still alive. 
 	 */
-	ACTIVE_IS_ALIVE(18),
+	ACTIVE_IS_ALIVE(19),
 	
 	/**
 	 * Used for emergency elections.
@@ -132,7 +135,7 @@ public enum MessageType {
 	 * <p>In the case that both the active and the passive backup have failed, the remaining passive 
 	 * nodes will send their last stored average server latency value immediately.</p>
 	 */
-	EMERGENCY_ELECTION_MESSAGE(19);
+	EMERGENCY_ELECTION_MESSAGE(20);
 	
 
 	/**

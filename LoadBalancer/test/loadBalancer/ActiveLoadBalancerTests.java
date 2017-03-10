@@ -36,7 +36,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test
 	public void testCreateActiveLoadBalancer_successful() {
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		assertNotNull(activeLoadBalancer);
 	}
@@ -48,7 +48,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveLoadBalancer_nullRemoteLBSet() {
-		new ActiveLoadBalancer(8000, null, TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
+		new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), null, TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 	}
 
 	/**
@@ -58,7 +58,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveLoadBalancer_nullServerSet() {
-		new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1), null,
+		new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1), null,
 				new InetSocketAddress("localhost", 8000), 1);
 	}
 
@@ -68,7 +68,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveLoadBalancer_emptyRemoteLBSet() {
-		new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(0), TestUtils.getServerSet(1),
+		new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(0), TestUtils.getServerSet(1),
 				new InetSocketAddress("localhost", 8000), 1);
 	}
 
@@ -78,7 +78,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveLoadBalancer_emptyServerSet() {
-		new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1), TestUtils.getServerSet(0),
+		new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1), TestUtils.getServerSet(0),
 				new InetSocketAddress("localhost", 8000), 1);
 	}
 
@@ -89,25 +89,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveLoadBalancer_nullNameServiceAddress() {
-		new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1), TestUtils.getServerSet(1), null, 1);
-	}
-
-	/**
-	 * Tests that the <code>acceptPort</code> property of the
-	 * {@link ActiveLoadBalancer} is set correctly in the class constructor. Use
-	 * reflection to check the value after the constructor is called.
-	 */
-	@Test
-	public void testActiveLoadBalancerConstructor_portIsSet()
-			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-		int expectedAcceptPort = 8000;
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(expectedAcceptPort,
-				TestUtils.getRemoteLoadBalancerSet(1), TestUtils.getServerSet(1),
-				new InetSocketAddress("localhost", 8000), 1);
-
-		Field portField = activeLoadBalancer.getClass().getSuperclass().getDeclaredField("acceptPort");
-		portField.setAccessible(true);
-		assertEquals(expectedAcceptPort, portField.get(activeLoadBalancer));
+		new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1), TestUtils.getServerSet(1), null, 1);
 	}
 
 	/**
@@ -119,7 +101,7 @@ public class ActiveLoadBalancerTests {
 	public void testActiveLoadBalancerConstructor_remoteLBsAreSet()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Set<RemoteLoadBalancer> expectedRemoteLoadBalancers = TestUtils.getRemoteLoadBalancerSet(1);
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, expectedRemoteLoadBalancers,
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), expectedRemoteLoadBalancers,
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 
 		Field remoteLBField = activeLoadBalancer.getClass().getSuperclass().getDeclaredField("remoteLoadBalancers");
@@ -136,7 +118,7 @@ public class ActiveLoadBalancerTests {
 	public void testActiveLoadBalancerConstructor_serversAreSet()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Set<Server> expectedServers = TestUtils.getServerSet(1);
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1),
 				expectedServers, new InetSocketAddress("localhost", 8000), 1);
 
 		Field serversField = activeLoadBalancer.getClass().getSuperclass().getDeclaredField("servers");
@@ -153,7 +135,7 @@ public class ActiveLoadBalancerTests {
 	public void testActiveLoadBalancerConstructor_nameServiceAddressIsSet()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		InetSocketAddress expectedNameServiceAddress = new InetSocketAddress("localhost", 8000);
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), expectedNameServiceAddress, 1);
 
 		Field nameServiceAddressField = activeLoadBalancer.getClass().getSuperclass().getDeclaredField("nameServiceAddress");
@@ -168,7 +150,7 @@ public class ActiveLoadBalancerTests {
 	 */
 	@Test
 	public void testActiveLoadBalancer_socketCreation() throws IOException {
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8000, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1),
 				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8004), 1);
 		Thread activeLoadBalancerThread = new Thread(activeLoadBalancer);
 		ServerSocketChannel nameServiceSocketChannel = getMockNameServiceSocketChannel();
@@ -200,7 +182,7 @@ public class ActiveLoadBalancerTests {
 	public void testActiveLoadBalancer_createNewThreads() throws IOException {
 		Set<Thread> threadSetDefault = Thread.getAllStackTraces().keySet();
 		Set<Server> servers = TestUtils.getServerSet(1);
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8001, TestUtils.getRemoteLoadBalancerSet(1),
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8001, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1),
 				servers, new InetSocketAddress("localhost", 8004), 1);
 		ServerSocketChannel nameServiceSocketChannel = getMockNameServiceSocketChannel();
 		TestUtils.mockServerSockets(servers);
@@ -249,7 +231,7 @@ public class ActiveLoadBalancerTests {
 	@Test
 	public void testActiveLoadBalancer_notifyNameService() throws IOException {
 		Set<Server> servers = TestUtils.getServerSet(1);
-		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8001, TestUtils.getRemoteLoadBalancerSet(1),
+		AbstractLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(new LoadBalancerConnectionHandler(8001, TestUtils.getRemoteLoadBalancerSet(1)), TestUtils.getRemoteLoadBalancerSet(1),
 				servers, new InetSocketAddress("localhost", 8004), 1);
 		ServerSocketChannel nameServiceSocketChannel = getMockNameServiceSocketChannel();
 		TestUtils.mockServerSockets(servers);

@@ -131,7 +131,7 @@ public class HeartbeatBroadcasterTests {
 		
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];
-		assertEquals(MessageType.ALIVE_CONFIRM, messageType);
+		assertEquals(MessageType.ACTIVE_ALIVE_CONFIRM, messageType);
 		buffer.clear();
 		
 		bytesRead = acceptedSocketChannel.read(buffer);
@@ -139,7 +139,7 @@ public class HeartbeatBroadcasterTests {
 		
 		buffer.flip();
 		messageType = MessageType.values()[buffer.get()];
-		assertEquals(MessageType.ALIVE_CONFIRM, messageType);
+		assertEquals(MessageType.ACTIVE_ALIVE_CONFIRM, messageType);
 		
 		mockRemoteSocketChannel.close();
 		acceptedSocketChannel.close();
@@ -186,7 +186,7 @@ public class HeartbeatBroadcasterTests {
 							
 							buffer.flip();
 							MessageType messageType = MessageType.values()[buffer.get()];
-							assertEquals(MessageType.ALIVE_CONFIRM, messageType);
+							assertEquals(MessageType.ACTIVE_ALIVE_CONFIRM, messageType);
 							buffer.clear();
 						}
 
@@ -241,7 +241,7 @@ public class HeartbeatBroadcasterTests {
 		
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];
-		assertEquals(MessageType.ALIVE_CONFIRM, messageType);
+		assertEquals(MessageType.ACTIVE_ALIVE_CONFIRM, messageType);
 		buffer.clear();
 		
 		buffer.put((byte) MessageType.ALIVE_REQUEST.getValue());
@@ -264,7 +264,7 @@ public class HeartbeatBroadcasterTests {
 		
 		buffer.flip();
 		messageType = MessageType.values()[buffer.get()];
-		assertEquals(MessageType.ALIVE_CONFIRM, messageType);
+		assertEquals(MessageType.ACTIVE_ALIVE_CONFIRM, messageType);
 		
 		mockRemoteSocketChannel.close();
 		acceptedSocketChannel.close();

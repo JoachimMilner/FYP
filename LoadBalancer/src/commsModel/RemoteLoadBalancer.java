@@ -15,9 +15,9 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	/**
 	 * The active/passive state of the remote load balancer process that this
 	 * object represents. That is, whether the remote is the primary load
-	 * balancer or a backup.
+	 * balancer or a backup. Passive by default.
 	 */
-	private LoadBalancerState state;
+	private LoadBalancerState state = LoadBalancerState.PASSIVE;
 
 	/**
 	 * Boolean value indicating whether this node has been elected as the backup

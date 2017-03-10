@@ -1,20 +1,10 @@
 package loadBalancer;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
-import connectionUtils.MessageType;
-import faultModule.PassiveLoadBalancer;
 
 /**
  * @author Joachim
@@ -25,12 +15,12 @@ import faultModule.PassiveLoadBalancer;
  *
  */
 public abstract class AbstractLoadBalancer implements Runnable {
-
+	
 	/**
-	 * The port that this load balancer will listen for incoming TCP connections
-	 * on.
+	 * The process that handles incoming connection requests for this load balancer.
+	 * Passed between the active and passive states during program operation.
 	 */
-	protected int acceptPort;
+	protected LoadBalancerConnectionHandler connectionHandler;
 
 	/**
 	 * A set of all other load balancer nodes in the system.
@@ -41,17 +31,19 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 * A set of the back end servers in the system.
 	 */
 	protected Set<Server> servers;
-
-	/**
-	 * The address of the name resolution service.
-	 */
-	protected InetSocketAddress nameServiceAddress;
 	
 	/**
-	 * Starts a thread that checks for messages from all other load balancer nodes 
+	 * Flag used to stop the current running load balancer process. 
+	 * An atomic boolean is used so the value can be accessed within 
+	 * anonymous runnable classes at runtime. 
+	 */
+	protected final AtomicBoolean terminateThread = new AtomicBoolean(false);
+	
+	/**
+	 * Indefinitely checks for messages from all other load balancer nodes 
 	 * in the system.
 	 */
-	protected abstract void startLoadBalancerMessageListener(Thread loadBalancerThread);
+	protected abstract void listenForLoadBalancerMessages();
 
 	/**
 	 * This method is used to determine the initial state of this load balancer
@@ -73,7 +65,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 *         {@link ActiveLoadBalancer}, or PASSIVE if it should initialise as
 	 *         a {@link PassiveLoadBalancer}.
 	 */
-	public static LoadBalancerState coordinateState(Set<RemoteLoadBalancer> remoteLoadBalancers,
+/*	public static LoadBalancerState coordinateState(Set<RemoteLoadBalancer> remoteLoadBalancers,
 			int connectTimeoutSecs) {
 		LoadBalancerState determinedState = null;
 		int numberOfRemotes = remoteLoadBalancers.size();
@@ -141,7 +133,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 
 		}
 		return determinedState;
-	}
+	}*/
 
 	/**
 	 * Attempts to retrieve the state of the specified
@@ -153,7 +145,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 	 * @param connectTimeoutSecs
 	 *            the duration in seconds to wait for a response
 	 */
-	private static void requestState(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
+/*	private static void requestState(RemoteLoadBalancer remoteLoadBalancer, int connectTimeoutSecs) {
 		try {
 			if (!remoteLoadBalancer.connect(connectTimeoutSecs * 1000)) {
 				return;
@@ -177,7 +169,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 				switch (messageType) {
 				// ALIVE_CONFIRM is also a valid state notification as only an active node is capable 
 				// of sending this message. 
-				case ALIVE_CONFIRM:
+				case ACTIVE_ALIVE_CONFIRM:
 				case ACTIVE_NOTIFY:
 					remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 					break;
@@ -198,5 +190,5 @@ public abstract class AbstractLoadBalancer implements Runnable {
 		} catch (IOException e) {
 			// e.printStackTrace();
 		}
-	}
+	}*/
 }

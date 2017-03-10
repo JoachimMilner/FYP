@@ -104,11 +104,9 @@ public class RunnableActiveRequestProcessorTests {
 	@Test
 	public void testCreateActiveRequestProcessor_successful() throws IOException {
 		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
-				acceptedSocketChannel, activeLoadBalancer, serverManager);
+				acceptedSocketChannel, serverManager);
 		assertNotNull(activeRequestProcessor);
 	}
 
@@ -118,10 +116,8 @@ public class RunnableActiveRequestProcessorTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_nullSocket() {
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		new RunnableActiveRequestProcessor(null, activeLoadBalancer, serverManager);
+		new RunnableActiveRequestProcessor(null, serverManager);
 	}
 
 	/**
@@ -131,24 +127,8 @@ public class RunnableActiveRequestProcessorTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_disconnectedSocket() {
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		new RunnableActiveRequestProcessor(mockClientSocketChannel, activeLoadBalancer, serverManager);
-	}
-
-	/**
-	 * Test instantiation of a {@link RunnableActiveRequestProcessor} with a
-	 * null {@link ActiveLoadBalancer}. Should throw an
-	 * <code>IllegalArgumentException</code>.
-	 * 
-	 * @throws IOException
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void testCreateActiveRequestProcessor_nullActiveLB() throws IOException {
-		createAcceptedSocketChannel();
-		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		new RunnableActiveRequestProcessor(acceptedSocketChannel, null, serverManager);
+		new RunnableActiveRequestProcessor(mockClientSocketChannel, serverManager);
 	}
 
 	/**
@@ -161,9 +141,7 @@ public class RunnableActiveRequestProcessorTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_nullServerManager() throws IOException {
 		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
-		new RunnableActiveRequestProcessor(acceptedSocketChannel, activeLoadBalancer, null);
+		new RunnableActiveRequestProcessor(acceptedSocketChannel, null);
 	}
 
 	/**
@@ -178,38 +156,13 @@ public class RunnableActiveRequestProcessorTests {
 	public void testActiveRequestProcessorConstructor_socketChannelIsSet() throws NoSuchFieldException,
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
-				acceptedSocketChannel, activeLoadBalancer, serverManager);
+				acceptedSocketChannel, serverManager);
 
 		Field socketChannelField = activeRequestProcessor.getClass().getSuperclass().getDeclaredField("socketChannel");
 		socketChannelField.setAccessible(true);
 		assertEquals(acceptedSocketChannel, socketChannelField.get(activeRequestProcessor));
-	}
-
-	/**
-	 * Tests that the <code>loadBalancer</code> property of the
-	 * {@link RunnableActiveRequestProcessor} is set correctly in the class
-	 * constructor. Use reflection to check the value after the constructor is
-	 * called.
-	 * 
-	 * @throws IOException
-	 */
-	@Test
-	public void testActiveRequestProcessorConstructor_loadBalancerIsSet() throws NoSuchFieldException,
-			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
-		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
-		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
-				acceptedSocketChannel, activeLoadBalancer, serverManager);
-
-		Field loadBalancerField = activeRequestProcessor.getClass().getSuperclass().getDeclaredField("loadBalancer");
-		loadBalancerField.setAccessible(true);
-		assertEquals(activeLoadBalancer, loadBalancerField.get(activeRequestProcessor));
 	}
 
 	/**
@@ -224,11 +177,9 @@ public class RunnableActiveRequestProcessorTests {
 	public void testActiveRequestProcessorConstructor_serverManagerIsSet() throws NoSuchFieldException,
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
-				acceptedSocketChannel, activeLoadBalancer, serverManager);
+				acceptedSocketChannel, serverManager);
 
 		Field serverManagerField = activeRequestProcessor.getClass().getDeclaredField("serverManager");
 		serverManagerField.setAccessible(true);
@@ -250,12 +201,10 @@ public class RunnableActiveRequestProcessorTests {
 	public void testActiveRequestProcessor_processClientRequest() throws IOException, NoSuchFieldException,
 			SecurityException, IllegalArgumentException, IllegalAccessException {
 		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		Set<Server> servers = TestUtils.getServerSet(1);
 		ServerManager serverManager = new ServerManager(servers);
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
-				acceptedSocketChannel, activeLoadBalancer, serverManager);
+				acceptedSocketChannel, serverManager);
 
 		// Set CPU load
 		Field serverCPULoadField = servers.iterator().next().getClass().getDeclaredField("cpuLoad");
@@ -323,11 +272,9 @@ public class RunnableActiveRequestProcessorTests {
 	@Test
 	public void testActiveRequestProcessor_respondToAliveRequest() throws IOException {
 		createAcceptedSocketChannel();
-		ActiveLoadBalancer activeLoadBalancer = new ActiveLoadBalancer(8000, TestUtils.getRemoteLoadBalancerSet(1),
-				TestUtils.getServerSet(1), new InetSocketAddress("localhost", 8000), 1);
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
 		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
-				acceptedSocketChannel, activeLoadBalancer, serverManager);
+				acceptedSocketChannel, serverManager);
 		
 		Thread requestProcessorThread = new Thread(activeRequestProcessor);
 		requestProcessorThread.start();
@@ -354,7 +301,7 @@ public class RunnableActiveRequestProcessorTests {
 		buffer.flip();
 		
 		MessageType messageType = MessageType.values()[buffer.get()];
-		assertEquals(MessageType.ALIVE_CONFIRM, messageType);
+		assertEquals(MessageType.ACTIVE_ALIVE_CONFIRM, messageType);
 		
 		selector.close();
 		requestProcessorThread.interrupt();

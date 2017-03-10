@@ -34,17 +34,13 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 	 * @param activeLoadBalancer
 	 * @param serverManager
 	 */
-	public RunnableActiveRequestProcessor(SocketChannel socketChannel, ActiveLoadBalancer activeLoadBalancer,
-			ServerManager serverManager) {
+	public RunnableActiveRequestProcessor(SocketChannel socketChannel, ServerManager serverManager) {
 		if (socketChannel == null || !socketChannel.isConnected())
 			throw new IllegalArgumentException("Null or disconnected SocketChannel.");
-		if (activeLoadBalancer == null)
-			throw new IllegalArgumentException("ActiveLoadBalancer cannot be null.");
 		if (serverManager == null)
 			throw new IllegalArgumentException("ServerManager cannot be null.");
 
 		this.socketChannel = socketChannel;
-		this.loadBalancer = activeLoadBalancer;
 		this.serverManager = serverManager;
 	}
 
@@ -89,14 +85,6 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 				buffer.put(encoder.encode(CharBuffer.wrap(server.getAddress().getHostString())));
 				buffer.flip();
 				while (buffer.hasRemaining()) {
-					socketChannel.write(buffer);
-				}
-				break;
-			case ALIVE_REQUEST:
-				buffer = ByteBuffer.allocate(1);
-				buffer.put((byte) MessageType.ALIVE_CONFIRM.getValue());
-				buffer.flip();
-				while (buffer.hasRemaining()){
 					socketChannel.write(buffer);
 				}
 				break;
