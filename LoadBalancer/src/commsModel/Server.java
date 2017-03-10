@@ -2,8 +2,9 @@ package commsModel;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -110,20 +111,17 @@ public class Server extends AbstractRemote {
 		buffer.clear();
 
 		try {
-			socketChannel.socket().setSoTimeout(1000);
-			socketChannel.read(buffer);
-		} catch (IOException e) {
-			// e.printStackTrace();
-			if (e.getClass().equals(SocketTimeoutException.class)) {
-				isAlive = false;
-				try {
-					socketChannel.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+			Selector readSelector = Selector.open();
+			socketChannel.register(readSelector, SelectionKey.OP_READ);
+			if (readSelector.select(1000) == 0) {
+				return;
+			} else {
+				socketChannel.read(buffer);
 			}
+		} catch (IOException e) {
 			return;
 		}
+
 		buffer.flip();
 		MessageType messageType = MessageType.values()[buffer.get()];
 		if (!messageType.equals(MessageType.SERVER_CPU_NOTIFY)) {
@@ -134,13 +132,7 @@ public class Server extends AbstractRemote {
 			while (cpuLoadRecords.size() > 20) {
 				cpuLoadRecords.pollLast();
 			}
-			isAlive = true;
 			// System.out.println("Test " + address.getPort() + " " + cpuLoad);
-		}
-		try {
-			socketChannel.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 

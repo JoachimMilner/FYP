@@ -1,9 +1,9 @@
 package loadBalancer;
 
+import java.io.IOException;
 import java.util.Set;
 
 import commsModel.Server;
-import connectionUtils.ConnectNIO;
 
 /**
  * @author Joachim
@@ -51,14 +51,10 @@ public class ServerManager implements Runnable {
 				new Thread(new Runnable() {
 					
 					@Override
-					public void run() {			
-						if (server.getSocketChannel() == null || !server.getSocketChannel().isConnected()) {
-							server.setSocketChannel(ConnectNIO.getBlockingSocketChannel(server.getAddress()));
-						}
-						if (server.getSocketChannel() != null && server.getSocketChannel().isConnected()) {
+					public void run() {	
+						// Give a very short timeout to server connect as we are assuming servers are robust and reliable
+						if (server.connect(5)) {
 							server.updateServerState();
-						} else {
-							server.setIsAlive(false);
 						}
 					}
 
@@ -71,7 +67,7 @@ public class ServerManager implements Runnable {
 				Thread.currentThread().interrupt();
 			}
 		}
-
+		disconnectServers();
 	}
 
 	/**
@@ -86,7 +82,7 @@ public class ServerManager implements Runnable {
 		Server availableServer = null;
 		boolean foundLiveServer = false;
 		for (Server server : servers) {
-			if (server.isAlive()) {
+			if (server.isConnected()) {
 				if (!foundLiveServer) {
 					availableServer = server;
 					foundLiveServer = true;
@@ -99,5 +95,18 @@ public class ServerManager implements Runnable {
 			availableServer.calculateTokenExpiry();
 		}
 		return availableServer;
+	}
+	
+	/**
+	 * Closes all socket channels that are connected to servers.
+	 */
+	private void disconnectServers() {
+		for (Server server : servers) {
+			try {
+				server.getSocketChannel().close();
+			} catch (IOException e) {
+				
+			}
+		}
 	}
 }

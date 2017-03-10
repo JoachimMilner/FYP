@@ -2,8 +2,6 @@ package commsModel;
 
 import java.net.InetSocketAddress;
 
-import connectionUtils.ConnectNIO;
-
 /**
  * @author Joachim
  *         <p>
@@ -99,28 +97,5 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	 */
 	public void setCandidacyValue(Double candidacyValue) {
 		this.candidacyValue = candidacyValue;
-	}
-
-	/**
-	 * Attempts to connect to the remote load balancer with a given timeout. 
-	 * Does nothing if already connected.
-	 * @return true if this object's SocketChannel is now connected, otherwise false.
-	 */
-	public boolean connect(int timeoutMillis) {
-		if (socketChannel == null || !socketChannel.isConnected()) {
-			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address, timeoutMillis);
-			if (socketChannel != null && socketChannel.isConnected()) {
-				return true;
-			}
-			return false;
-		}
-		return true;
-	}
-	
-	/**
-	 * @return Convenience method for checking if this RemoteLoadBalancer is currently connected.
-	 */
-	public boolean isConnected() {
-		return socketChannel != null && socketChannel.isConnected();
 	}
 }

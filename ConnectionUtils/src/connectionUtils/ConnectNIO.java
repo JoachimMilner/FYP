@@ -14,7 +14,7 @@ public class ConnectNIO {
 
 	/**
 	 * Creates a non-blocking {@link SocketChannel} using the given IP address
-	 * and connection port. Contains default timeout value of 5 seconds to avoid
+	 * and connection port. Uses a default timeout value of 5 seconds to avoid
 	 * an accidental infinite loop.
 	 * 
 	 * @param connectAddress

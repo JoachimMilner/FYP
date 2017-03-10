@@ -3,6 +3,8 @@ package commsModel;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
+import connectionUtils.ConnectNIO;
+
 /**
  * @author Joachim
  *         <p>
@@ -19,14 +21,7 @@ public abstract class AbstractRemote {
 	 */
 	protected InetSocketAddress address;
 
-	
-	/**
-	 * Boolean value indicating whether this remote process is responsive. Set
-	 * to false on object instantiation and then updated by the concrete
-	 * implementation of this class.
-	 */
-	protected boolean isAlive = false;
-	
+
 	/**
 	 * The SocketChannel that is currently held for the connection to this
 	 * remote node. Used to make communication with this node more
@@ -40,22 +35,6 @@ public abstract class AbstractRemote {
 	 */
 	public InetSocketAddress getAddress() {
 		return address;
-	}
-	
-	
-	/**
-	 * @param isAlive the alive state of this remote process.
-	 */
-	public void setIsAlive(boolean isAlive) {
-		this.isAlive = isAlive;
-	}
-	
-
-	/**
-	 * @return true if this remote process is alive or false if it is down or unresponsive.
-	 */
-	public boolean isAlive() {
-		return isAlive;
 	}
 	
 	/**
@@ -74,7 +53,29 @@ public abstract class AbstractRemote {
 	public void setSocketChannel(SocketChannel socketChannel) {
 		this.socketChannel = socketChannel;
 	}
-
+	
+	/**
+	 * Attempts to connect to the remote node with a given timeout. 
+	 * Does nothing if already connected.
+	 * @return true if this object's SocketChannel is now connected, otherwise false.
+	 */
+	public boolean connect(int timeoutMillis) {
+		if (socketChannel == null || !socketChannel.isConnected()) {
+			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address, timeoutMillis);
+			if (socketChannel != null && socketChannel.isConnected()) {
+				return true;
+			}
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * @return Convenience method for checking if this remote node is currently connected.
+	 */
+	public boolean isConnected() {
+		return socketChannel != null && socketChannel.isConnected();
+	}
 
 	@Override
 	public int hashCode() {

@@ -65,36 +65,6 @@ public class ServerTests {
 	}
 
 	/**
-	 * Test the {@link Server} object's <code>setIsAlive</code> method. Should
-	 * set the <code>isAlive</code> field to the passed parameter.
-	 * 
-	 * @throws SecurityException
-	 * @throws NoSuchFieldException
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
-	 */
-	@Test
-	public void testServer_setIsAlive()
-			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-		Server server = new Server(new InetSocketAddress("localhost", 8000));
-		server.setIsAlive(true);
-
-		Field isAliveField = server.getClass().getSuperclass().getDeclaredField("isAlive");
-		isAliveField.setAccessible(true);
-		assertTrue((boolean) isAliveField.get(server));
-	}
-
-	/**
-	 * Test the {@link Server} object's <code>isAlive</code> method. Should
-	 * return false as soon as the object has been instantiated.
-	 */
-	@Test
-	public void testServer_isAliveAfterInstantiation() {
-		Server server = new Server(new InetSocketAddress("localhost", 8000));
-		assertFalse(server.isAlive());
-	}
-
-	/**
 	 * Test the {@link Server} object's <code>isAlive</code> method.
 	 * <code>isAlive</code> should return true after this
 	 * </code>updateServerState</code> is called and the remote (mocked) server
@@ -161,7 +131,7 @@ public class ServerTests {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		assertTrue(server.isAlive());
+		assertTrue(server.isConnected());
 		acceptSelector.close();
 		readSelector.close();
 		mockServerSocketChannel.close();

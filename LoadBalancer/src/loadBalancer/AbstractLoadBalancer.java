@@ -168,11 +168,7 @@ public abstract class AbstractLoadBalancer implements Runnable {
 
 			Selector readSelector = Selector.open();
 			socketChannel.register(readSelector, SelectionKey.OP_READ);
-			if (readSelector.select(connectTimeoutSecs * 1000) == 0) {
-				// This remote is either down, unresponsive, or has not yet been
-				// started.
-				remoteLoadBalancer.setIsAlive(false);
-			} else {
+			if (readSelector.select(connectTimeoutSecs * 1000) != 0) {
 				buffer.clear();
 				socketChannel.read(buffer);
 				buffer.flip();
