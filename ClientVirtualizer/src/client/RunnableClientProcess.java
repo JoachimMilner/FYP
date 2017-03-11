@@ -126,9 +126,6 @@ public class RunnableClientProcess implements Runnable {
 	 */
 	@Override
 	public void run() {
-		// TODO
-		// Get load balancer address from name service then get server details
-		// from LB.
 		requestHostNameResolution();
 		requestServerToken();
 		currentSocketChannel = ConnectNIO.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
@@ -151,7 +148,7 @@ public class RunnableClientProcess implements Runnable {
 				// Token has expired, get a new one.
 				// Keep old socket in memory to check there are no messages
 				// remaining
-				
+
 				requestServerToken();
 				if (!currentSocketChannel.socket().getInetAddress().getHostAddress()
 						.equals(currentServerToken.getServerAddress().getAddress().getHostAddress())) {
@@ -247,64 +244,68 @@ public class RunnableClientProcess implements Runnable {
 		// server...");
 		boolean receivedResponse = false;
 		int retryCount = 0;
-		SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress);
-
-		try (Selector readSelector = Selector.open();) {
-			socketChannel.register(readSelector, SelectionKey.OP_READ);
-			ByteBuffer buffer = ByteBuffer.allocate(28);
-			while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
-				// Request available server details
-				buffer.put((byte) MessageType.AVAILABLE_SERVER_REQUEST.getValue());
-				buffer.flip();
-				while (buffer.hasRemaining()) {
-					socketChannel.write(buffer);
-				}
-
-				// Listen for response
-				buffer.clear();
-				if (readSelector.select(1000) != 0) {
-					// System.out.println("Received server token from load
-					// balancer");
-					socketChannel.read(buffer);
+		
+		
+		ByteBuffer buffer = ByteBuffer.allocate(28);
+		while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
+			try (Selector readSelector = Selector.open();
+					SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress, 5);) {
+				boolean connected = socketChannel != null && socketChannel.isConnected();
+				
+				if (connected) {
+					socketChannel.register(readSelector, SelectionKey.OP_READ);
+					// Request available server details
+					buffer.put((byte) MessageType.AVAILABLE_SERVER_REQUEST.getValue());
 					buffer.flip();
-					MessageType messageType = MessageType.values()[buffer.get()];
+					while (buffer.hasRemaining()) {
+						socketChannel.write(buffer);
+					}
+					
+					// Listen for response
+					buffer.clear();
+					if (readSelector.select(1000) != 0) {
+						// System.out.println("Received server token from load
+						// balancer");
+						socketChannel.read(buffer);
+						buffer.flip();
+						MessageType messageType = MessageType.values()[buffer.get()];
 
-					long tokenExpiry = 0;
-					int serverPort = 0;
-					String serverIP = "";
+						long tokenExpiry = 0;
+						int serverPort = 0;
+						String serverIP = "";
 
-					tokenExpiry = buffer.getLong();
-					serverPort = buffer.getInt();
-					CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
-					serverIP = charBuffer.toString();
+						tokenExpiry = buffer.getLong();
+						serverPort = buffer.getInt();
+						CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
+						serverIP = charBuffer.toString();
 
-					if (messageType.equals(MessageType.SERVER_TOKEN) && tokenExpiry != 0 && serverPort != 0
-							&& !serverIP.equals("")) {
-						currentServerToken = new ServerToken(tokenExpiry, new InetSocketAddress(serverIP, serverPort));
-						receivedResponse = true;
+						if (messageType.equals(MessageType.SERVER_TOKEN) && tokenExpiry != 0 && serverPort != 0
+								&& !serverIP.equals("")) {
+							currentServerToken = new ServerToken(tokenExpiry, new InetSocketAddress(serverIP, serverPort));
+							receivedResponse = true;
+						}
 					}
 				} else {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+					}
+				}
+				
+				if (!receivedResponse) {
 					System.out.println("Failed to contact load balancer, retrying...");
 					clientManager.incrementClientConnectFailures();
 					// failed to contact LB
 					retryCount++;
-					if (retryCount > 2) {
+					if (retryCount % 3 == 0) {
 						System.out
 								.println("Failed to connect to load balancer 3 times, retrying address resolution...");
 						requestHostNameResolution();
-						socketChannel.close();
-						socketChannel = ConnectNIO.getNonBlockingSocketChannel(nameServiceAddress);
 					}
+					buffer.clear();
 				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				socketChannel.close();
 			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			} 
 		}
 	}
 
@@ -332,8 +333,6 @@ public class RunnableClientProcess implements Runnable {
 			}
 		}
 		clientManager.incrementTotalRequestsSent();
-		// System.out.println("Virtual Client (ID:" +
-		// Thread.currentThread().getId() + ") sent request to server.");
 	}
 
 	/**
@@ -375,7 +374,7 @@ public class RunnableClientProcess implements Runnable {
 	/**
 	 * @author Joachim
 	 *         <p>
-	 * 		Class used to model a server token received from the load
+	 *         Class used to model a server token received from the load
 	 *         balancer so it can be handled more easily within a
 	 *         {@link RunnableClientProcess}.
 	 *         </p>
