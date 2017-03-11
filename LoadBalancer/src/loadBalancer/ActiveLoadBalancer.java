@@ -234,7 +234,9 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 						}
 					}
 				} catch (IOException e) {
-					// e.printStackTrace();
+					if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+						remoteLoadBalancer.setSocketChannel(null);
+					}
 				}
 			}
 			try {

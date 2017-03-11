@@ -73,6 +73,10 @@ public class LoadBalancerConnectionHandler implements Runnable {
 				String connectingIP = connectRequestSocket.socket().getInetAddress().getHostAddress();
 				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 					if (remoteLoadBalancer.getAddress().getAddress().getHostAddress().equals(connectingIP) && !remoteLoadBalancer.isConnected()) {
+						try {
+							connectRequestSocket.configureBlocking(false);
+						} catch (IOException e) {							
+						}
 						remoteLoadBalancer.setSocketChannel(connectRequestSocket);
 						isLoadBalancerNode = true;
 						break;

@@ -126,6 +126,7 @@ public class SystemModel {
 		for (Iterator<LoadBalancer> iterator = loadBalancers.iterator(); iterator.hasNext();) {
 			LoadBalancer loadBalancer = iterator.next();
 			if (socketChannel.equals(loadBalancer.getSocketChannel())) {
+				loadBalancer.setState(null);
 				//iterator.remove();
 				return true;
 			}

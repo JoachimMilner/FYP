@@ -205,7 +205,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						}
 					}
 				} catch (IOException e) {
-					// e.printStackTrace();
+					if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+						remoteLoadBalancer.setSocketChannel(null);
+					}
 				}
 			}
 		}
@@ -223,7 +225,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				if (currentActive == null) {
 					// No active was present - elevate own state.
 					ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_NO_ACTIVE_DETECTED);
-					System.out.println("Detected absense of an active node.");
+					System.out.println("Detected absence of an active node.");
 					new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 					terminateThread.set(true);
 					return;
