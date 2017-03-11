@@ -12,6 +12,7 @@ import log.LoggerUtility;
 import logging.LogMessageType;
 import model.ClientVirtualizer;
 import model.LoadBalancer;
+import model.LoadBalancer.LoadBalancerState;
 import model.NameService;
 import model.Server;
 import model.CPULoadReading;
@@ -228,6 +229,7 @@ public class RunnableMessageProcessor implements Runnable {
 								} else {
 									activeInfoString = " elevated to ";
 								}
+								lb.setState(LoadBalancerState.ACTIVE);
 								break;
 							}
 						}
@@ -243,6 +245,7 @@ public class RunnableMessageProcessor implements Runnable {
 								} else {
 									passiveInfoString = " demoted to ";
 								}
+								lb.setState(LoadBalancerState.PASSIVE);
 								break;
 							}
 						}
@@ -251,6 +254,10 @@ public class RunnableMessageProcessor implements Runnable {
 					case LOAD_BALANCER_FAILURE_DETECTED:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected failure of the active.");
+						break;
+					case LOAD_BALANCER_NO_ACTIVE_DETECTED:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " detected absence of an active node.");
 						break;
 					case LOAD_BALANCER_FAILURE_DETECTION_DISMISSED:
 						break;

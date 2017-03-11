@@ -115,7 +115,13 @@ public enum LogMessageType {
 	 * Message indicating that the sending node has detected multiple active
 	 * load balancers in the system.
 	 */
-	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(17);
+	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(17),
+	
+	/**
+	 * Message indicating that the sending node has detected the absence of an active
+	 * load balancer and subsequently promoted itself. 
+	 */
+	LOAD_BALANCER_NO_ACTIVE_DETECTED(18);
 
 	/**
 	 * Numerical value attributed to each enum that will be set as the first

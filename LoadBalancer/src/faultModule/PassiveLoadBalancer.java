@@ -221,8 +221,12 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			@Override
 			public void run() {
 				if (currentActive == null) {
+					// No active was present - elevate own state.
+					ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_NO_ACTIVE_DETECTED);
+					System.out.println("Detected absense of an active node.");
 					new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 					terminateThread.set(true);
+					return;
 				}
 				ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_FAILURE_DETECTED);
 				System.out.println("Active load balancer failure detected.");
