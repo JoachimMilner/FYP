@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
 import connectionUtils.MessageType;
 import testUtils.TestUtils;
@@ -35,7 +36,7 @@ public class HeartbeatBroadcasterTests {
 	 */
 	@Test
 	public void testCreateHeartbeatBroadcaster_successful() {
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 3);
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 3, LoadBalancerState.ACTIVE);
 		assertNotNull(heartbeatBroadcaster);
 	}
 
@@ -46,7 +47,7 @@ public class HeartbeatBroadcasterTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateHeartbeatBroadcaster_nullNodeSet() {
-		new HeartbeatBroadcaster(null, 3);
+		new HeartbeatBroadcaster(null, 3, LoadBalancerState.ACTIVE);
 	}
 
 	/**
@@ -56,7 +57,7 @@ public class HeartbeatBroadcasterTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateHeartbeatBroadcaster_emptyNodeSet() {
-		new HeartbeatBroadcaster(new HashSet<RemoteLoadBalancer>(), 3);
+		new HeartbeatBroadcaster(new HashSet<RemoteLoadBalancer>(), 3, LoadBalancerState.ACTIVE);
 	}
 	
 	/**
@@ -66,7 +67,7 @@ public class HeartbeatBroadcasterTests {
 	 */
 	@Test(expected=IllegalArgumentException.class)
 	public void testCreateHeartbeatBroadcaster_invalidHBInterval() {
-		new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 0);
+		new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 0, LoadBalancerState.ACTIVE);
 	}
 	
 	/**
@@ -78,7 +79,7 @@ public class HeartbeatBroadcasterTests {
 	public void testHeartbeatBroadcasterConstructor_remoteLBsAreSet()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Set<RemoteLoadBalancer> expectedLBSet = TestUtils.getRemoteLoadBalancerSet(1);
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(expectedLBSet, 3);
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(expectedLBSet, 3, LoadBalancerState.ACTIVE);
 
 		Field remoteLBField = heartbeatBroadcaster.getClass().getDeclaredField("remoteLoadBalancers");
 		remoteLBField.setAccessible(true);
@@ -94,9 +95,9 @@ public class HeartbeatBroadcasterTests {
 	public void testHeartbeatBroadcasterConstructor_heartbeatIntervalIsSet()
 			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		int expectedHeartbeatInterval = 5;
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), expectedHeartbeatInterval);
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), expectedHeartbeatInterval, LoadBalancerState.ACTIVE);
 
-		Field heartbeatIntervalField = heartbeatBroadcaster.getClass().getDeclaredField("heartbeatIntervalSecs");
+		Field heartbeatIntervalField = heartbeatBroadcaster.getClass().getDeclaredField("heartbeatIntervalMillis");
 		heartbeatIntervalField.setAccessible(true);
 		assertEquals(expectedHeartbeatInterval, heartbeatIntervalField.get(heartbeatBroadcaster));
 	}
@@ -112,7 +113,7 @@ public class HeartbeatBroadcasterTests {
 		mockRemoteSocketChannel.socket().bind(new InetSocketAddress(8000));
 		mockRemoteSocketChannel.configureBlocking(false);
 		
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 1);
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 1, LoadBalancerState.ACTIVE);
 		Thread hbThread = new Thread(heartbeatBroadcaster);
 		hbThread.start();
 		
@@ -152,7 +153,7 @@ public class HeartbeatBroadcasterTests {
 	 */
 	@Test
 	public void testHeartbeatBroadcaster_broadcastToMultipleRemotes() throws IOException {
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(3), 1);
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(3), 1, LoadBalancerState.ACTIVE);
 		Thread hbThread = new Thread(heartbeatBroadcaster);
 		hbThread.start();
 		
@@ -223,7 +224,7 @@ public class HeartbeatBroadcasterTests {
 		mockRemoteSocketChannel.socket().bind(new InetSocketAddress(8000));
 		mockRemoteSocketChannel.configureBlocking(false);
 		
-		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 10);
+		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(TestUtils.getRemoteLoadBalancerSet(1), 10, LoadBalancerState.ACTIVE);
 		Thread hbThread = new Thread(heartbeatBroadcaster);
 		hbThread.start();
 		

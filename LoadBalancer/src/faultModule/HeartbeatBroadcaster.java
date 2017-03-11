@@ -4,41 +4,49 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
 import connectionUtils.MessageType;
-import loadBalancer.ActiveLoadBalancer;
+import loadBalancer.AbstractLoadBalancer;
 
 /**
  * @author Joachim
  *         <p>
- *         Runnable class to be used by an {@link ActiveLoadBalancer} to
- *         periodically broadcast an <code>ALIVE_CONFIRM</code> message to all
- *         other (passive) load balancer nodes, as well as responding to
- *         <code>ALIVE_REQUEST</code> messages.
+ *         Runnable class to be used by an {@link AbstractLoadBalancer} to
+ *         periodically broadcast a heart message to all other (passive) load
+ *         balancer nodes.
  *         </p>
  *
  */
 public class HeartbeatBroadcaster implements Runnable {
 
 	/**
-	 * A set containing all other (passive) load balancer nodes that exist in
-	 * the system.
+	 * A set containing all other load balancer nodes that exist in the system.
 	 */
 	private Set<RemoteLoadBalancer> remoteLoadBalancers;
 
 	/**
 	 * The interval, in milliseconds, that this HeartbeatBroadcaster will send
-	 * <code>ALIVE_CONFIRM</code> messages at.
+	 * heartbeat messages at.
 	 */
 	private int heartbeatIntervalMillis;
 
 	/**
-	 * Creates a new HeartbeatBroadcaster instance that, when started in a
-	 * thread, will periodically send <code>ALIVE_CONFIRM</code> messages to all
-	 * remote load balancers in the <code>remoteLoadBalancers</code> set, at the
-	 * specified <code>hearbeatIntervalMillis</code>.
+	 * The state of the load balancer that is initialising this
+	 * HeartbeatBroadcaster that subsequently determines whether the broadcast
+	 * message is <code>ACTIVE_ALIVE_CONFIRM</code> or
+	 * <code>BACKUP_ALIVE_CONFIRM</code>.
 	 */
-	public HeartbeatBroadcaster(Set<RemoteLoadBalancer> remoteLoadBalancers, int heartbeatIntervalMillis) {
+	private LoadBalancerState broadcastState;
+
+	/**
+	 * Creates a new HeartbeatBroadcaster instance that, when started in a
+	 * thread, will periodically send heartbeat messages to all remote load
+	 * balancers in the <code>remoteLoadBalancers</code> set, at the specified
+	 * <code>hearbeatIntervalMillis</code>.
+	 */
+	public HeartbeatBroadcaster(Set<RemoteLoadBalancer> remoteLoadBalancers, int heartbeatIntervalMillis,
+			LoadBalancerState broadcastState) {
 		if (remoteLoadBalancers == null || remoteLoadBalancers.isEmpty())
 			throw new IllegalArgumentException("Remote load balancer set cannot be null or empty.");
 		if (heartbeatIntervalMillis < 1)
@@ -46,23 +54,27 @@ public class HeartbeatBroadcaster implements Runnable {
 
 		this.remoteLoadBalancers = remoteLoadBalancers;
 		this.heartbeatIntervalMillis = heartbeatIntervalMillis;
+		this.broadcastState = broadcastState;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Runnable#run() Begins sending ALIVE_CONFIRM messages at
-	 * the specified heartbeat interval rate to all other load balancer nodes in
-	 * the system.
+	 * @see java.lang.Runnable#run() Begins sending ACTIVE_ALIVE_CONFIRM or
+	 * BACKUP_ALIVE_CONFIRM messages at the specified heartbeat interval rate to
+	 * all other load balancer nodes in the system.
 	 */
 	@Override
 	public void run() {
+		MessageType broadcastMessage = broadcastState.equals(LoadBalancerState.ACTIVE)
+				? MessageType.ACTIVE_ALIVE_CONFIRM : MessageType.BACKUP_ALIVE_CONFIRM;
 
 		while (!Thread.currentThread().isInterrupted()) {
 
-			for (final RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-				if (remoteLoadBalancer.isConnected()) {
-					sendHeartbeat(remoteLoadBalancer);
+			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+				if (remoteLoadBalancer.isConnected()
+						&& remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
+					sendHeartbeat(remoteLoadBalancer, broadcastMessage);
 				}
 			}
 			try {
@@ -74,15 +86,17 @@ public class HeartbeatBroadcaster implements Runnable {
 	}
 
 	/**
-	 * Sends an <code>ALIVE_CONFIRM</code> message (i.e. a heartbeat) to the
-	 * specified {@link RemoteLoadBalancer}.
+	 * Sends an the specified heartbeat message to the specified
+	 * {@link RemoteLoadBalancer}.
 	 * 
 	 * @param remoteLoadBalancer
 	 *            the RemoteLoadbalancer to send the heartbeat message to
+	 * @param broadcastMessage
+	 *            the message type to send - active or passive.
 	 */
-	private void sendHeartbeat(RemoteLoadBalancer remoteLoadBalancer) {
+	private void sendHeartbeat(RemoteLoadBalancer remoteLoadBalancer, MessageType broadcastMessage) {
 		ByteBuffer buffer = ByteBuffer.allocate(1);
-		buffer.put((byte) MessageType.ACTIVE_ALIVE_CONFIRM.getValue());
+		buffer.put((byte) broadcastMessage.getValue());
 		buffer.flip();
 		try {
 			while (buffer.hasRemaining()) {

@@ -118,7 +118,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		notifyNameService();
 		
 		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(remoteLoadBalancers,
-				heartbeatIntervalMillis);
+				heartbeatIntervalMillis, LoadBalancerState.ACTIVE);
 		Thread heartbeatBroadcasterThread = new Thread(heartbeatBroadcaster);
 		heartbeatBroadcasterThread.start();
 		
