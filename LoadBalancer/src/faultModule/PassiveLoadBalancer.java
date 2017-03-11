@@ -1,6 +1,7 @@
 package faultModule;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
@@ -41,13 +42,13 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * for the active and backup node.
 	 */
 	private int defaultTimeoutMillis;
-	
+
 	/**
 	 * The default timeout duration that this object will use when monitoring
 	 * the active load balancer's heartbeat.
 	 */
 	private int activeTimeoutMillis;
-	
+
 	/**
 	 * The default timeout duration that this object will use when monitoring
 	 * the elected backup load balancer's heartbeat.
@@ -60,7 +61,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private boolean isElectedBackup = false;
 
 	/**
-	 * Flag indicating whether an election is currently in progress.
+	 * Flag used to indicate that the system is currently in an
+	 * election-in-progress state and should handle election messages
+	 * accordingly.
 	 */
 	private boolean electionInProgress = false;
 
@@ -76,10 +79,21 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private Timer activeHeartbeatTimer;
 
 	/**
-	 * The most recently calculated value for this node's average latency to the
-	 * servers. Used as the election ID for this process.
+	 * The timer used to schedule periodic calculation of this load balancer's
+	 * average latency to the servers.
 	 */
-	private int averageServerLatency;
+	private Timer serverLatencyProcessorTimer;
+
+	/**
+	 * The timer used to monitor the backup (passive) load balancer's heartbeat.
+	 */
+	private Timer backupHeartbeatTimer;
+
+	/**
+	 * The most recently calculated value for this node's average latency to the
+	 * servers. Used as the election ID for this load balancer.
+	 */
+	private double averageServerLatency;
 
 	/**
 	 * Flag indicating that failure of the active load balancer has been
@@ -89,7 +103,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 	/**
 	 * Flag indicating that this passive node is expecting an
-	 * <code>ALIVE_CONFIRM</code> message from the active load balancer.
+	 * <code>ACTIVE_ALIVE_CONFIRM</code> message from the active load balancer.
 	 */
 	private boolean expectingAliveConfirmation = false;
 
@@ -139,27 +153,32 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	public void run() {
 		System.out.println("Initialising passive load balancer service...");
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_PASSIVE);
-		
+
 		connectionHandler.setPassive();
-		
+
 		// Add a random time period between 0 and defaultTimeoutMillis to the
 		// current value to address concurrency issues.
 		activeTimeoutMillis = defaultTimeoutMillis + ThreadLocalRandom.current().nextInt(defaultTimeoutMillis);
-		backupTimeoutMillis = defaultTimeoutMillis * 5;
+		backupTimeoutMillis = defaultTimeoutMillis * 5 + ThreadLocalRandom.current().nextInt(defaultTimeoutMillis);
 
-		// Initialise heartbeat monitor
+		// Initialise heartbeat monitors & start average server latency
+		// calculator scheduler
 		startActiveHeartbeatTimer();
+		startServerLatencyProcessorTimer();
 
 		listenForLoadBalancerMessages();
 
 		System.out.println("Passive load balancer terminating...");
 
 		activeHeartbeatTimer.cancel();
+		serverLatencyProcessorTimer.cancel();
 	}
 
 	@Override
 	public void listenForLoadBalancerMessages() {
 		while (!terminateThread.get()) {
+			int activeCount = 0;
+			int backupCount = 0;
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
 				try {
@@ -187,9 +206,13 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 							}
 							resetActiveHeartbeatTimer();
+							if (expectingAliveConfirmation) {
+								receivedAliveConfirmation = true;
+							}
 							break;
 						case BACKUP_ALIVE_CONFIRM:
-							
+							remoteLoadBalancer.setIsElectedBackup(true);
+							resetBackupHeartbeatTimer();
 							break;
 						case ACTIVE_HAS_FAILED:
 
@@ -198,16 +221,25 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 							break;
 						case ELECTION_MESSAGE:
-
+							remoteLoadBalancer.setCandidacyValue(buffer.getDouble());
+							if (!electionInProgress) {
+								initiateElection();
+							}
 							break;
 						default:
 							break;
 						}
 					}
 				} catch (IOException e) {
-					if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+					if (e != null
+							& e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
 						remoteLoadBalancer.setSocketChannel(null);
 					}
+				}
+				if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
+					activeCount++;
+				} else if (remoteLoadBalancer.isElectedBackup()) {
+					backupCount++;
 				}
 			}
 		}
@@ -230,10 +262,12 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					terminateThread.set(true);
 					return;
 				}
+
+				// Suspected failure - attempt to contact active
 				ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_FAILURE_DETECTED);
 				System.out.println("Active load balancer failure detected.");
 				Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-				// Suspected failure - ping active
+
 				boolean isConnected = false;
 				for (int i = 0; i < 10; i++) {
 					if (currentActive.connect(0)) {
@@ -241,14 +275,13 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						break;
 					}
 					try {
-						Thread.sleep(activeTimeoutMillis / 10);
+						Thread.sleep(activeTimeoutMillis / 100);
 					} catch (InterruptedException e) {
 
 					}
 				}
 				if (!isConnected) {
 					activeFailureDetected = true;
-
 				} else {
 					ByteBuffer buffer = ByteBuffer.allocate(1);
 					buffer.put((byte) MessageType.ALIVE_REQUEST.getValue());
@@ -257,11 +290,11 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						while (buffer.hasRemaining()) {
 							currentActive.getSocketChannel().write(buffer);
 						}
+						expectingAliveConfirmation = true;
 					} catch (IOException e) {
 						// e.printStackTrace();
 					}
 				}
-
 			}
 
 		};
@@ -276,5 +309,119 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private void resetActiveHeartbeatTimer() {
 		activeHeartbeatTimer.cancel();
 		startActiveHeartbeatTimer();
+	}
+
+	/**
+	 * Instantiates the <code>serverLatencyProcessorTimer</code> to periodically
+	 * run a {@link TimerTask} that calculates this load balancer's average ping
+	 * time to the servers on the network (at 3x the timeout duration for the
+	 * backup load balancer).
+	 */
+	private void startServerLatencyProcessorTimer() {
+		TimerTask timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				double totalLatency = 0;
+				for (Server server : servers) {
+					long pingStart = System.currentTimeMillis();
+					try {
+						InetAddress.getByName(server.getAddress().getHostName()).isReachable(1000);
+					} catch (IOException e) {
+					}
+					long pingTime = System.currentTimeMillis() - pingStart;
+					totalLatency += pingTime;
+				}
+				averageServerLatency = totalLatency / servers.size();
+			}
+		};
+		serverLatencyProcessorTimer = new Timer();
+		serverLatencyProcessorTimer.scheduleAtFixedRate(timerTask, 0, backupTimeoutMillis * 3);
+	}
+
+	/**
+	 * Starts a timer that will prompt an election for a passive backup when the
+	 * timeout value is reached.
+	 */
+	private void startBackupHeartbeatTimer() {
+		TimerTask timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				if (!electionInProgress) {
+					initiateElection();
+				}
+			}
+		};
+
+		backupHeartbeatTimer = new Timer();
+		backupHeartbeatTimer.schedule(timerTask, backupTimeoutMillis);
+	}
+
+	/**
+	 * Resets the timer used to monitor the live-state of the elected backup
+	 * load balancer. Should be called whenever a heartbeat is received.
+	 */
+	private void resetBackupHeartbeatTimer() {
+		backupHeartbeatTimer.cancel();
+		startBackupHeartbeatTimer();
+	}
+
+	/**
+	 * Initiates a pre-election by broadcasting this load balancer's average
+	 * latency to the set of system servers and setting this node to the
+	 * election-in-progress state. Then starts a timer task that will
+	 * identify the new backup at the end of the timer. 
+	 */
+	private void initiateElection() {
+		electionInProgress = true;
+		// Broadcast election ordinality
+		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+			if (remoteLoadBalancer.isConnected() && remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
+				ByteBuffer buffer = ByteBuffer.allocate(9);
+				buffer.put((byte) MessageType.ELECTION_MESSAGE.getValue());
+				buffer.putDouble(averageServerLatency);
+				buffer.flip();
+				try {
+					while (buffer.hasRemaining()) {
+						remoteLoadBalancer.getSocketChannel().write(buffer);
+					}
+				} catch (IOException e) {
+				}
+			}
+		}
+
+		TimerTask timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				RemoteLoadBalancer lowestLatencyCandidate = null;
+				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+					if (remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)
+							&& remoteLoadBalancer.getCandidacyValue() != null) {
+						if (lowestLatencyCandidate == null
+								&& remoteLoadBalancer.getCandidacyValue() < averageServerLatency) {
+							lowestLatencyCandidate = remoteLoadBalancer;
+						} else if (lowestLatencyCandidate != null && remoteLoadBalancer
+								.getCandidacyValue() < lowestLatencyCandidate.getCandidacyValue()) {
+							lowestLatencyCandidate = remoteLoadBalancer;
+						} else {
+							remoteLoadBalancer.setIsElectedBackup(false);
+						}
+					}
+				}
+				// Didn't get a lowest latency election message so assume this load balancer is now the backup
+				if (lowestLatencyCandidate == null) {
+					isElectedBackup = true;
+				} else {
+					isElectedBackup = false;
+				}
+				// Clear candidacy values for future elections
+				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+					remoteLoadBalancer.setCandidacyValue(null);
+				}
+				electionInProgress = false;
+			}
+		};
+
+		Timer electionTimer = new Timer();
+		electionTimer.schedule(timerTask, defaultTimeoutMillis);
 	}
 }

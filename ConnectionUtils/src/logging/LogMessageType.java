@@ -106,10 +106,10 @@ public enum LogMessageType {
 	LOAD_BALANCER_FAILURE_CONFIRMED(15),
 
 	/**
-	 * Sent after an election has been performed, containing the address of the
-	 * passive load balancer that has won the election.
+	 * Sent after an election has been performed to indicate that the sending node
+	 * is now the elected backup. 
 	 */
-	LOAD_BALANCER_ELECTION_RESULT(16),
+	LOAD_BALANCER_ELECTED_AS_BACKUP(16),
 
 	/**
 	 * Message indicating that the sending node has detected multiple active

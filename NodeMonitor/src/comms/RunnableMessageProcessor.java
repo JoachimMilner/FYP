@@ -263,7 +263,7 @@ public class RunnableMessageProcessor implements Runnable {
 						break;
 					case LOAD_BALANCER_FAILURE_CONFIRMED:
 						break;
-					case LOAD_BALANCER_ELECTION_RESULT:
+					case LOAD_BALANCER_ELECTED_AS_BACKUP:
 						break;
 					case LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED:
 						break;
