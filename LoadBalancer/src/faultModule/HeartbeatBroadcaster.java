@@ -40,6 +40,11 @@ public class HeartbeatBroadcaster implements Runnable {
 	private LoadBalancerState broadcastState;
 
 	/**
+	 * Flag used to terminate this HeartbeatBroadcaster thread.
+	 */
+	private boolean isTerminated = false;
+	
+	/**
 	 * Creates a new HeartbeatBroadcaster instance that, when started in a
 	 * thread, will periodically send heartbeat messages to all remote load
 	 * balancers in the <code>remoteLoadBalancers</code> set, at the specified
@@ -69,7 +74,7 @@ public class HeartbeatBroadcaster implements Runnable {
 		MessageType broadcastMessage = broadcastState.equals(LoadBalancerState.ACTIVE)
 				? MessageType.ACTIVE_ALIVE_CONFIRM : MessageType.BACKUP_ALIVE_CONFIRM;
 
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!isTerminated) {
 
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				if (remoteLoadBalancer.isConnected()
@@ -83,6 +88,10 @@ public class HeartbeatBroadcaster implements Runnable {
 
 			}
 		}
+	}
+	
+	public void cancel() {
+		isTerminated = true;
 	}
 
 	/**
@@ -107,6 +116,5 @@ public class HeartbeatBroadcaster implements Runnable {
 				remoteLoadBalancer.setSocketChannel(null);
 			}
 		}
-
 	}
 }

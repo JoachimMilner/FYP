@@ -60,12 +60,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	private boolean inResolutionState = false;
 
 	/**
-	 * Thread that the load balancer message listener is running on. Kept as a
-	 * global variable so it can be interrupted easily.
-	 */
-	private Thread loadBalancerMessageListenerThread;
-
-	/**
 	 * Creates a new ActiveLoadBalancer object that acts as the primary load
 	 * balancer process in the system. The <code>run</code> method prompts this
 	 * object to start listening to requests and responding accordingly.
@@ -111,24 +105,21 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_ACTIVE);
 		
 		ServerManager serverManager = new ServerManager(servers);
-		Thread serverManagerThread = new Thread(serverManager);
-		serverManagerThread.start();
+		new Thread(serverManager).start();
 
 		connectionHandler.setActive(serverManager);
 		notifyNameService();
 		
 		HeartbeatBroadcaster heartbeatBroadcaster = new HeartbeatBroadcaster(remoteLoadBalancers,
 				heartbeatIntervalMillis, LoadBalancerState.ACTIVE);
-		Thread heartbeatBroadcasterThread = new Thread(heartbeatBroadcaster);
-		heartbeatBroadcasterThread.start();
+		new Thread(heartbeatBroadcaster).start();
 		
 		listenForLoadBalancerMessages();
 
 		System.out.println("Active load balancer terminating...");
 
-		serverManagerThread.interrupt();
-		heartbeatBroadcasterThread.interrupt();
-		loadBalancerMessageListenerThread.interrupt();
+		serverManager.cancel();
+		heartbeatBroadcaster.cancel();
 	}
 
 	/**

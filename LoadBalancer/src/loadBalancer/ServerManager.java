@@ -21,6 +21,11 @@ public class ServerManager implements Runnable {
 	 * The remote servers that this object manages.
 	 */
 	private Set<Server> servers;
+	
+	/**
+	 * Flag used to terminate this ServerManager thread.
+	 */
+	private boolean isTerminated = false;
 
 	/**
 	 * Creates a new ServerManager object containing the specified Set of
@@ -45,7 +50,7 @@ public class ServerManager implements Runnable {
 	@Override
 	public void run() {
 
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!isTerminated) {
 			// Final declaration used for < Java 8 compatibility
 			for (final Server server : servers) {
 				new Thread(new Runnable() {
@@ -70,6 +75,10 @@ public class ServerManager implements Runnable {
 		disconnectServers();
 	}
 
+	public void cancel() {
+		isTerminated = true;
+	}
+	
 	/**
 	 * This method selects the {@Server} with the lowest CPU load that is
 	 * currently known to be in a live state. It then calls
