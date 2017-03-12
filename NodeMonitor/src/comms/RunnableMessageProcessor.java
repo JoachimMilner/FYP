@@ -251,9 +251,13 @@ public class RunnableMessageProcessor implements Runnable {
 						}
 						controller.appendMainFeed("LoadBalancer " + componentID +  passiveInfoString + "passive state.");
 						break;
-					case LOAD_BALANCER_FAILURE_DETECTED:
+					case LOAD_BALANCER_ACTIVE_FAILURE_DETECTED:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected failure of the active.");
+						break;
+					case LOAD_BALANCER_BACKUP_FAILURE_DETECTED:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " detected failure or absence of a backup.");
 						break;
 					case LOAD_BALANCER_NO_ACTIVE_DETECTED:
 						componentID = buffer.getInt();
@@ -264,8 +268,12 @@ public class RunnableMessageProcessor implements Runnable {
 					case LOAD_BALANCER_FAILURE_CONFIRMED:
 						break;
 					case LOAD_BALANCER_ELECTED_AS_BACKUP:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " elected as backup..");
 						break;
 					case LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " detected multiple actives and initiated an emergency election.");
 						break;
 					default:
 						// Received a bad request

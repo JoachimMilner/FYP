@@ -91,37 +91,49 @@ public enum LogMessageType {
 	 * Notification that the sending node has detected failure of the active
 	 * load balancer.
 	 */
-	LOAD_BALANCER_FAILURE_DETECTED(13),
+	LOAD_BALANCER_ACTIVE_FAILURE_DETECTED(13),
+	
+	/**
+	 * Notification that the sending node has detected failure of the backup 
+	 * load balancer.
+	 */
+	LOAD_BALANCER_BACKUP_FAILURE_DETECTED(14),
 	
 	/**
 	 * Notification that a previous failure detection of the active load balancer
 	 * has been dismissed by another passive node.
 	 */
-	LOAD_BALANCER_FAILURE_DETECTION_DISMISSED(14),
+	LOAD_BALANCER_FAILURE_DETECTION_DISMISSED(15),
 	
 	/**
 	 * Notification that the sending node has confirmed failure of the active
 	 * load balancer.
 	 */
-	LOAD_BALANCER_FAILURE_CONFIRMED(15),
+	LOAD_BALANCER_FAILURE_CONFIRMED(16),
 
 	/**
 	 * Sent after an election has been performed to indicate that the sending node
 	 * is now the elected backup. 
 	 */
-	LOAD_BALANCER_ELECTED_AS_BACKUP(16),
+	LOAD_BALANCER_ELECTED_AS_BACKUP(17),
 
 	/**
 	 * Message indicating that the sending node has detected multiple active
 	 * load balancers in the system.
 	 */
-	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(17),
+	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(18),
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of an active
 	 * load balancer and subsequently promoted itself. 
 	 */
-	LOAD_BALANCER_NO_ACTIVE_DETECTED(18);
+	LOAD_BALANCER_NO_ACTIVE_DETECTED(19);
+	
+	/**
+	 * Message indicating that the sending node has detected the absence of a backup
+	 * load balancer and subsequently initiated a pre-election.
+	 */
+	//LOAD_BALANCER_NO_BACKUP_DETECTED(20);
 
 	/**
 	 * Numerical value attributed to each enum that will be set as the first
