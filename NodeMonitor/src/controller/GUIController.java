@@ -261,7 +261,12 @@ public class GUIController implements Initializable {
 	 *            the message to be appended
 	 */
 	public void appendMainFeed(String message) {
-		mainFeedTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				mainFeedTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
+			}
+		});
 	}
 
 	/**
@@ -270,7 +275,12 @@ public class GUIController implements Initializable {
 	 * @param message
 	 */
 	public void appendNameServiceFeed(String message) {
-		nameServiceTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				nameServiceTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
+				}
+		});
 	}
 
 	/**
