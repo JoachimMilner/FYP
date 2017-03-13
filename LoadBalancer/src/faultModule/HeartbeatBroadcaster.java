@@ -75,7 +75,6 @@ public class HeartbeatBroadcaster implements Runnable {
 				? MessageType.ACTIVE_ALIVE_CONFIRM : MessageType.BACKUP_ALIVE_CONFIRM;
 
 		while (!isTerminated) {
-
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				if (remoteLoadBalancer.isConnected()
 						&& remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
