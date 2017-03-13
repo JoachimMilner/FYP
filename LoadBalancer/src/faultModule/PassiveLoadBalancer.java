@@ -489,7 +489,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private void initiatePreElection() {
 		preElectionInProgress = true;
 		backupHeartbeatTimer.cancel();
-		reElectionTimer.cancel();
+		if (reElectionTimer != null) {
+			reElectionTimer.cancel();
+		}
 		// Broadcast election ordinality
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.isConnected() && remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
