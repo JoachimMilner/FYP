@@ -106,6 +106,11 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * The timer used to monitor the backup (passive) load balancer's heartbeat.
 	 */
 	private Timer backupHeartbeatTimer;
+	
+	/**
+	 * Timer used to schedule a re-election when this node is the elected backup. 
+	 */
+	private Timer reElectionTimer;
 
 	/**
 	 * The most recently calculated value for this node's average latency to the
@@ -196,6 +201,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		activeHeartbeatTimer.cancel();
 		serverLatencyProcessorTimer.cancel();
 		backupHeartbeatTimer.cancel();
+		reElectionTimer.cancel();
 	}
 
 	@Override
@@ -441,6 +447,23 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		backupHeartbeatTimer.cancel();
 		startBackupHeartbeatTimer();
 	}
+	
+	/**
+	 * 
+	 */
+	private void startReElectionTimer() {
+		TimerTask timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMPTED_RE_ELECTION);
+				System.out.println("Prompting for a re-election");
+				initiatePreElection();
+			}
+		};
+		
+		reElectionTimer = new Timer();
+		reElectionTimer.schedule(timerTask, backupTimeoutMillis * 5);
+	}
 
 	/**
 	 * Initiates a pre-election by broadcasting this load balancer's average
@@ -451,6 +474,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private void initiatePreElection() {
 		preElectionInProgress = true;
 		backupHeartbeatTimer.cancel();
+		reElectionTimer.cancel();
 		// Broadcast election ordinality
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.isConnected() && remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
@@ -498,14 +522,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					new Thread(backupHeartbeatBroadcaster).start();
 					
 					// Start timer for next pre-election
-					new Timer().schedule(new TimerTask() {
-						@Override
-						public void run() {
-							ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMPTED_RE_ELECTION);
-							System.out.println("Prompting for a re-election");
-							initiatePreElection();
-						}
-					}, backupTimeoutMillis * 5);
+					startReElectionTimer();
 					
 					ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ELECTED_AS_BACKUP);
 					System.out.println("Elected as backup");
