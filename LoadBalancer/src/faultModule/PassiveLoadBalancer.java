@@ -255,6 +255,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						case ELECTION_MESSAGE:
 							remoteLoadBalancer.setCandidacyValue(buffer.getDouble());
 							if (!preElectionInProgress) {
+								System.out.println("Initiated pre-election");
 								initiatePreElection();
 							}
 							break;
@@ -278,6 +279,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				initiateEmergencyElection();
 			}
 			if (backupCount > 1) {
+				System.out.println("Initiated pre-election");
 				initiatePreElection();
 			}
 		}
@@ -447,7 +449,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * the new backup at the end of the timer.
 	 */
 	private void initiatePreElection() {
-		System.out.println("Initiated pre-election");
 		preElectionInProgress = true;
 		backupHeartbeatTimer.cancel();
 		// Broadcast election ordinality
@@ -500,6 +501,8 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					new Timer().schedule(new TimerTask() {
 						@Override
 						public void run() {
+							ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMPTED_RE_ELECTION);
+							System.out.println("Prompting for a re-election");
 							initiatePreElection();
 						}
 					}, backupTimeoutMillis * 5);

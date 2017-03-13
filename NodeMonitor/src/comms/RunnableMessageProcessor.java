@@ -269,7 +269,11 @@ public class RunnableMessageProcessor implements Runnable {
 						break;
 					case LOAD_BALANCER_ELECTED_AS_BACKUP:
 						componentID = buffer.getInt();
-						controller.appendMainFeed("LoadBalancer " + componentID + " elected as backup..");
+						controller.appendMainFeed("LoadBalancer " + componentID + " elected as backup.");
+						break;
+					case LOAD_BALANCER_PROMPTED_RE_ELECTION:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " called for a re-election.");
 						break;
 					case LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED:
 						componentID = buffer.getInt();

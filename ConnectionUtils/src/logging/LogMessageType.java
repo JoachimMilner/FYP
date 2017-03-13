@@ -116,24 +116,29 @@ public enum LogMessageType {
 	 * is now the elected backup. 
 	 */
 	LOAD_BALANCER_ELECTED_AS_BACKUP(17),
+	
+	/**
+	 * Message indicating that the current passive backup has initiated a re-election.
+	 */
+	LOAD_BALANCER_PROMPTED_RE_ELECTION(18),
 
 	/**
 	 * Message indicating that the sending node has detected multiple active
 	 * load balancers in the system.
 	 */
-	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(18),
+	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(19),
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of an active
 	 * load balancer and subsequently promoted itself. 
 	 */
-	LOAD_BALANCER_NO_ACTIVE_DETECTED(19);
+	LOAD_BALANCER_NO_ACTIVE_DETECTED(21);
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of a backup
 	 * load balancer and subsequently initiated a pre-election.
 	 */
-	//LOAD_BALANCER_NO_BACKUP_DETECTED(20);
+	//LOAD_BALANCER_NO_BACKUP_DETECTED(21);
 
 	/**
 	 * Numerical value attributed to each enum that will be set as the first
