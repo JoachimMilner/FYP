@@ -195,13 +195,28 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 		System.out.println("Passive load balancer terminating...");
 
+		shutdownThreads();
+	}
+	
+	/**
+	 * Cancels all timers and threads if not already done.
+	 */
+	private void shutdownThreads() {
 		if (backupHeartbeatBroadcaster != null) {
 			backupHeartbeatBroadcaster.cancel();
 		}
-		activeHeartbeatTimer.cancel();
-		serverLatencyProcessorTimer.cancel();
-		backupHeartbeatTimer.cancel();
-		reElectionTimer.cancel();
+		if (activeHeartbeatTimer != null) {
+			activeHeartbeatTimer.cancel();
+		}
+		if (serverLatencyProcessorTimer != null) {
+			serverLatencyProcessorTimer.cancel();
+		}
+		if (backupHeartbeatTimer != null) {
+			backupHeartbeatTimer.cancel();
+		}
+		if (reElectionTimer != null) {
+			reElectionTimer.cancel();
+		}
 	}
 
 	@Override
