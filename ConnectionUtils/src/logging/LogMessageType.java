@@ -132,7 +132,7 @@ public enum LogMessageType {
 	 * Message indicating that the sending node has detected the absence of an active
 	 * load balancer and subsequently promoted itself. 
 	 */
-	LOAD_BALANCER_NO_ACTIVE_DETECTED(21);
+	LOAD_BALANCER_NO_ACTIVE_DETECTED(20);
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of a backup
