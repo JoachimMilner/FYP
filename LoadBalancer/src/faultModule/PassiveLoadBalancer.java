@@ -299,7 +299,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			if (!emergencyElectionInProgress && activeCount > 1) {
 				initiateEmergencyElection();
 			}
-			if (backupCount > 1) {
+			if (!preElectionInProgress && backupCount > 1) {
 				System.out.println("Initiated pre-election");
 				initiatePreElection();
 			}
@@ -523,10 +523,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						} else if (lowestLatencyCandidate != null && remoteLoadBalancer
 								.getCandidacyValue() < lowestLatencyCandidate.getCandidacyValue()) {
 							lowestLatencyCandidate = remoteLoadBalancer;
-						} else {
-							remoteLoadBalancer.setIsElectedBackup(false);
-						}
+						}					
 					}
+					remoteLoadBalancer.setIsElectedBackup(false);
 				}
 
 				// Didn't get a lowest latency election message so assume this
