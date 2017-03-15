@@ -3,7 +3,11 @@ package faultModule;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -582,8 +586,25 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		System.out.println("Detected multiple actives - initiating emergency election.");
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
-				ByteBuffer buffer = ByteBuffer.allocate(1);
+				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+				ByteBuffer buffer = ByteBuffer.allocate(15 * remoteLoadBalancers.size() + 1);
 				buffer.put((byte) MessageType.MULTIPLE_ACTIVES_WARNING.getValue());
+				// Send addresses of other actives
+				String otherActiveAddresses = "";
+				int iteration = 0;
+				for (RemoteLoadBalancer rlb : remoteLoadBalancers) {
+					if (rlb.getState().equals(LoadBalancerState.ACTIVE) && !rlb.equals(remoteLoadBalancer)) {
+						if (iteration > 0) {
+							otherActiveAddresses += "|";
+						}
+						otherActiveAddresses += rlb.getAddress().getAddress().getHostAddress();
+						iteration++;
+					}
+				}
+				try {
+					buffer.put(encoder.encode(CharBuffer.wrap(otherActiveAddresses)));
+				} catch (CharacterCodingException e) {
+				}
 				buffer.flip();
 				try {
 					remoteLoadBalancer.getSocketChannel().write(buffer);

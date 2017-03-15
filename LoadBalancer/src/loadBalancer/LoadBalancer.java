@@ -38,6 +38,7 @@ public class LoadBalancer {
 	private void launch(String[] args) {
 		Configurations configs = new Configurations();
 		int acceptPort = 0;
+		boolean forceStartAsActive = false;
 		try {
 			HierarchicalConfiguration<ImmutableNode> config = configs.xml("lbConfig.xml");
 
@@ -76,6 +77,9 @@ public class LoadBalancer {
 			// Heartbeat values
 			heartbeatIntervalMillis = config.getInt("heartbeatIntervalMillis");
 			heartbeatTimeoutMillis = config.getInt("heartbeatTimeoutMillis");
+			
+			// Check for active force start
+			forceStartAsActive = config.getBoolean("startAsActive");
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 			return;
@@ -85,11 +89,16 @@ public class LoadBalancer {
 
 		ComponentLogger.setMonitorAddress(new InetSocketAddress(nodeMonitorIP, nodeMonitorPort));
 		ComponentLogger.getInstance().registerWithNodeMonitor(LogMessageType.LOAD_BALANCER_REGISTER);
-
+		
 		connectionHandler = new LoadBalancerConnectionHandler(acceptPort, remoteLoadBalancers);
 		new Thread(connectionHandler).start();
 
-		Thread loadBalancerThread = new Thread(getNewPassiveLoadBalancer());
+		Thread loadBalancerThread;
+		if (forceStartAsActive) {
+			loadBalancerThread = new Thread(getNewActiveLoadBalancer());
+		} else {
+			loadBalancerThread = new Thread(getNewPassiveLoadBalancer());
+		}
 		loadBalancerThread.start();
 	}
 

@@ -62,4 +62,7 @@
 	<nodeMonitorIP>
 		localhost
 	</nodeMonitorIP>
+	<startAsActive>
+		false
+	</startAsActive>
 </configuration>
