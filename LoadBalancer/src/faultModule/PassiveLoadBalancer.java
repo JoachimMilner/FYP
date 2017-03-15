@@ -261,11 +261,13 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 							}
 							break;
 						case BACKUP_ALIVE_CONFIRM:
-							if (!remoteLoadBalancer.isElectedBackup()) {
-								System.out.println("Identified backup at:" + remoteLoadBalancer.getAddress().getHostString());
+							if (!preElectionInProgress) {
+								if (!remoteLoadBalancer.isElectedBackup()) {
+									System.out.println("Identified backup at:" + remoteLoadBalancer.getAddress().getHostString());
+								}
+								remoteLoadBalancer.setIsElectedBackup(true);
+								resetBackupHeartbeatTimer();
 							}
-							remoteLoadBalancer.setIsElectedBackup(true);
-							resetBackupHeartbeatTimer();
 							break;
 						case ACTIVE_HAS_FAILED:
 
@@ -492,7 +494,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		if (reElectionTimer != null) {
 			reElectionTimer.cancel();
 		}
-		// Broadcast election ordinality
+		if (backupHeartbeatBroadcaster != null) {
+			backupHeartbeatBroadcaster.cancel();
+		}
+		// Broadcast election ordinality a reset isElectedFlag for all nodes
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.isConnected() && remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
 				ByteBuffer buffer = ByteBuffer.allocate(9);
@@ -506,6 +511,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				} catch (IOException e) {
 				}
 			}
+			remoteLoadBalancer.setIsElectedBackup(false);
 		}
 
 		// TimerTask created that will determine the election results after the
@@ -525,7 +531,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 							lowestLatencyCandidate = remoteLoadBalancer;
 						}					
 					}
-					remoteLoadBalancer.setIsElectedBackup(false);
 				}
 
 				// Didn't get a lowest latency election message so assume this
@@ -545,9 +550,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				} else {
 					lowestLatencyCandidate.setIsElectedBackup(true);
 					isElectedBackup = false;
-					if (backupHeartbeatBroadcaster != null) {
-						backupHeartbeatBroadcaster.cancel();
-					}
 					resetBackupHeartbeatTimer();
 				}
 

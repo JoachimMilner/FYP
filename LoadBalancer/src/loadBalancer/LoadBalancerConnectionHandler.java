@@ -52,7 +52,7 @@ public class LoadBalancerConnectionHandler implements Runnable {
 		
 		// Initially attempt to form a connection to all load balancers
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-			remoteLoadBalancer.connect(0);
+			remoteLoadBalancer.connect(100);
 		}
 		
 		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
