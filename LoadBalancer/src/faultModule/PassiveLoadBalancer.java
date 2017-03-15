@@ -251,8 +251,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 								System.out.println("Identified active at:" + remoteLoadBalancer.getAddress().getHostString());
 								currentActive = remoteLoadBalancer;
 							}
-							resetActiveHeartbeatTimer();
-
+							if (remoteLoadBalancer.equals(currentActive)) {
+								resetActiveHeartbeatTimer();
+							}
 							if (expectingAliveConfirmation) {
 								if (remoteLoadBalancer.equals(currentActive)) {
 									receivedAliveConfirmation = true;
