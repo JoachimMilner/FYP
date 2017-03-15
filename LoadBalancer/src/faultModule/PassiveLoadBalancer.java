@@ -276,7 +276,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						case ELECTION_MESSAGE:
 							remoteLoadBalancer.setCandidacyValue(buffer.getDouble());
 							if (!preElectionInProgress) {
-								System.out.println("Initiated pre-election");
+								System.out.println("Initiated pre-election after receiving election message");
 								initiatePreElection();
 							}
 							break;
@@ -300,7 +300,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				initiateEmergencyElection();
 			}
 			if (!preElectionInProgress && backupCount > 1) {
-				System.out.println("Initiated pre-election");
+				System.out.println("Detected multiple backups - Initiated pre-election");
 				initiatePreElection();
 			}
 		}

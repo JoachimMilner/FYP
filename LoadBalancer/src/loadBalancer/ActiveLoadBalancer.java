@@ -252,7 +252,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		// Use last octet of IP address for election message value
-		int ownCandidacyValue = Integer.parseInt(InetAddress.getLocalHost().getHostAddress().split(".")[3]);
+		int ownCandidacyValue = Integer.parseInt(InetAddress.getLocalHost().getHostAddress().split("\\.")[3]);
 		for (RemoteLoadBalancer remoteLoadBalancer : otherActives) {
 			ByteBuffer buffer = ByteBuffer.allocate(9);
 			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
