@@ -345,6 +345,8 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				}
 				if (!isConnected) {
 					// activeFailureDetected = true;
+					currentActive.setState(LoadBalancerState.PASSIVE);
+					currentActive.setSocketChannel(null);
 					if (isElectedBackup) {
 						new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 						terminateThread.set(true);
@@ -368,9 +370,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					new Timer().schedule(new TimerTask() {
 						@Override
 						public void run() {
-							if (receivedAliveConfirmation) {
-
-							} else {
+							if (!receivedAliveConfirmation) {
+								currentActive.setState(LoadBalancerState.PASSIVE);
+								currentActive.setSocketChannel(null);
 								if (isElectedBackup) {
 									new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 									terminateThread.set(true);
@@ -551,6 +553,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					lowestLatencyCandidate.setIsElectedBackup(true);
 					isElectedBackup = false;
 					resetBackupHeartbeatTimer();
+					System.out.println("Election winner:" + lowestLatencyCandidate.getAddress().getHostString());
 				}
 
 				// Clear candidacy values for future elections
