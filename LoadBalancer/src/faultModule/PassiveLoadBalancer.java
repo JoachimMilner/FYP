@@ -613,48 +613,54 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				}
 			}
 		}*/
-		List<RemoteLoadBalancer> activeList = new ArrayList<>();
-		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
-				activeList.add(remoteLoadBalancer);
-			}
-		}
-		
-		Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
-			int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);
-			int rlb2CandidacyValue = Integer.parseInt(rlb2.getAddress().getAddress().getHostAddress().split("\\.")[3]);
-			return rlb2CandidacyValue - rlb1CandidacyValue;
-		});
-		
-		for (int i = 0; i < activeList.size(); i++) {
-			ByteBuffer buffer = ByteBuffer.allocate(2);
-			buffer.put((byte) MessageType.EMERGENCY_ELECTION_MESSAGE.getValue());
-			if (i == 0) {
-				buffer.put((byte) 1);
-			} else {
-				buffer.put((byte) 0);
-			}
-			buffer.flip();
-			try {
-				while(buffer.hasRemaining()) {
-					activeList.get(i).getSocketChannel().write(buffer);
-				}
-			} catch (IOException e) {
-			}
-		}
-
+		// Set timer to wait duration of one timeout in case there are more than 2 actives
 		new Timer().schedule(new TimerTask() {
 			@Override
 			public void run() {
-				// Clear remote load balancer states so we don't initiate
-				// another election
+				List<RemoteLoadBalancer> activeList = new ArrayList<>();
 				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-					remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
+					if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
+						activeList.add(remoteLoadBalancer);
+					}
 				}
-				currentActive = null;
+				
+				Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
+					int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);
+					int rlb2CandidacyValue = Integer.parseInt(rlb2.getAddress().getAddress().getHostAddress().split("\\.")[3]);
+					return rlb2CandidacyValue - rlb1CandidacyValue;
+				});
+				
+				for (int i = 0; i < activeList.size(); i++) {
+					ByteBuffer buffer = ByteBuffer.allocate(2);
+					buffer.put((byte) MessageType.EMERGENCY_ELECTION_MESSAGE.getValue());
+					if (i == 0) {
+						buffer.put((byte) 1);
+					} else {
+						buffer.put((byte) 0);
+					}
+					buffer.flip();
+					try {
+						while(buffer.hasRemaining()) {
+							activeList.get(i).getSocketChannel().write(buffer);
+						}
+					} catch (IOException e) {
+					}
+				}
 
-				// End emergency election period
-				emergencyElectionInProgress = false;
+				new Timer().schedule(new TimerTask() {
+					@Override
+					public void run() {
+						// Clear remote load balancer states so we don't initiate
+						// another election
+						for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+							remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
+						}
+						currentActive = null;
+
+						// End emergency election period
+						emergencyElectionInProgress = false;
+					}
+				}, defaultTimeoutMillis);	
 			}
 		}, defaultTimeoutMillis);
 	}
