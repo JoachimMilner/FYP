@@ -625,11 +625,14 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			@Override
 			public void run() {
 				List<RemoteLoadBalancer> activeList = new ArrayList<>();
+				String debug = "";
 				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 					if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
 						activeList.add(remoteLoadBalancer);
+						debug += "*" + remoteLoadBalancer.getAddress().getAddress().getHostAddress() + "*";
 					}
 				}
+				System.out.println("Actives identified: " + debug);
 				
 				Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
 					int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);

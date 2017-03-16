@@ -215,8 +215,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 								inResolutionState = true;
 								boolean remainAsActive = buffer.get() != 0;
 								if (remainAsActive) {
+									System.out.println("Received emergency election message - remaining as active");
 									notifyNameService();
 								} else {
+									System.out.println("Received emergency election message - demoting to passive state");
 									new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
 									terminateThread.set(true);
 								}
