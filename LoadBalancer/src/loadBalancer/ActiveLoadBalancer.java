@@ -217,8 +217,27 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 							}
 							break;
 						case EMERGENCY_ELECTION_MESSAGE:
-							double candidacyValue = buffer.getDouble();
-							remoteLoadBalancer.setCandidacyValue(candidacyValue);
+/*							double candidacyValue = buffer.getDouble();
+							remoteLoadBalancer.setCandidacyValue(candidacyValue);*/
+							if (!inResolutionState) {
+								inResolutionState = true;
+								boolean remainAsActive = buffer.get() != 0;
+								if (remainAsActive) {
+									notifyNameService();
+									
+									// Maintain resolution state for a second so we don't keep receiving 
+									// emergency election messages and notifying name service.
+									new Timer().schedule(new java.util.TimerTask() {
+										@Override
+										public void run() {
+											inResolutionState = false;
+										}
+									}, 1000);
+								} else {
+									new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+									terminateThread.set(true);
+								}
+							}
 							break;
 						default:
 							break;
@@ -230,10 +249,12 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 					}
 				}
 			}
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-
+			if (!terminateThread.get()) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+	
+				}
 			}
 		}
 	}

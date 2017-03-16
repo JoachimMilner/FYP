@@ -3,11 +3,10 @@ package faultModule;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -509,7 +508,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			if (remoteLoadBalancer.isConnected() && remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
 				ByteBuffer buffer = ByteBuffer.allocate(9);
 				buffer.put((byte) MessageType.ELECTION_MESSAGE.getValue());
-				buffer.putDouble(averageServerLatency);
+				buffer.putDouble(averageServerLatency);	
 				buffer.flip();
 				try {
 					while (buffer.hasRemaining()) {
@@ -584,7 +583,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		emergencyElectionInProgress = true;
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED);
 		System.out.println("Detected multiple actives - initiating emergency election.");
-		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+/*		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
 				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
 				ByteBuffer buffer = ByteBuffer.allocate(15 * remoteLoadBalancers.size() + 1);
@@ -610,6 +609,35 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					remoteLoadBalancer.getSocketChannel().write(buffer);
 				} catch (IOException e) {
 				}
+			}
+		}*/
+		List<RemoteLoadBalancer> activeList = new ArrayList<>();
+		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
+				activeList.add(remoteLoadBalancer);
+			}
+		}
+		
+		Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
+			int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);
+			int rlb2CandidacyValue = Integer.parseInt(rlb2.getAddress().getAddress().getHostAddress().split("\\.")[3]);
+			return rlb1CandidacyValue - rlb2CandidacyValue;
+		});
+		
+		for (int i = 0; i < activeList.size(); i++) {
+			ByteBuffer buffer = ByteBuffer.allocate(2);
+			buffer.put((byte) MessageType.EMERGENCY_ELECTION_MESSAGE.getValue());
+			if (i == 0) {
+				buffer.put((byte) 1);
+			} else {
+				buffer.put((byte) 0);
+			}
+			buffer.flip();
+			try {
+				while(buffer.hasRemaining()) {
+					activeList.get(i).getSocketChannel().write(buffer);
+				}
+			} catch (IOException e) {
 			}
 		}
 
