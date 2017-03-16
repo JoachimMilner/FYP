@@ -218,8 +218,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 									System.out.println("Received emergency election message - remaining as active");
 									notifyNameService();
 								} else {
-									System.out.println("Received emergency election message - demoting to passive state");
-									new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+									System.out.println("Received emergency election message - demoting to passive state");								
 									terminateThread.set(true);
 								}
 								// Maintain resolution state for 2 seconds so we don't keep receiving 
@@ -227,10 +226,15 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 								new Timer().schedule(new java.util.TimerTask() {
 									@Override
 									public void run() {
+										// Reset RLB values as node starts as fresh passive
 										for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 											remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
+											remoteLoadBalancer.setIsElectedBackup(false);
 										}
 										inResolutionState = false;
+										if (!remainAsActive) {
+											new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+										}
 									}
 								}, 2000);
 							}
@@ -247,7 +251,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			}
 			if (!terminateThread.get()) {
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(500);
 				} catch (InterruptedException e) {
 	
 				}
