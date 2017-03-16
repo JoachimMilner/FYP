@@ -50,14 +50,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 */
 	private int heartbeatIntervalMillis;
 
-	/**
-	 * Flag indicating whether this active load balancer is in a resolution
-	 * state. That is, the node has been alerted that the system is in a
-	 * multiple-active state and is attempting to resolve this with the other
-	 * actives. When this flag is set, any other multiple-active messages are
-	 * ignored.
-	 */
-	private boolean inResolutionState = false;
 
 	/**
 	 * Creates a new ActiveLoadBalancer object that acts as the primary load
@@ -146,7 +138,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	}
 
 	@Override
-	public void listenForLoadBalancerMessages() {
+	protected void listenForLoadBalancerMessages() {
 		while (!terminateThread.get()) {
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
@@ -224,19 +216,21 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 								boolean remainAsActive = buffer.get() != 0;
 								if (remainAsActive) {
 									notifyNameService();
-									
-									// Maintain resolution state for a second so we don't keep receiving 
-									// emergency election messages and notifying name service.
-									new Timer().schedule(new java.util.TimerTask() {
-										@Override
-										public void run() {
-											inResolutionState = false;
-										}
-									}, 1000);
 								} else {
 									new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
 									terminateThread.set(true);
 								}
+								// Maintain resolution state for 2 seconds so we don't keep receiving 
+								// emergency election messages and notifying name service. 
+								new Timer().schedule(new java.util.TimerTask() {
+									@Override
+									public void run() {
+										for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+											remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
+										}
+										inResolutionState = false;
+									}
+								}, 2000);
 							}
 							break;
 						default:

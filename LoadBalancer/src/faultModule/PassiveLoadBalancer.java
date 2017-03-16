@@ -223,7 +223,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	}
 
 	@Override
-	public void listenForLoadBalancerMessages() {
+	protected void listenForLoadBalancerMessages() {
 		while (!terminateThread.get()) {
 			int activeCount = 0;
 			int backupCount = 0;
@@ -249,7 +249,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 							}
 							break;
 						case ACTIVE_ALIVE_CONFIRM:
-							remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
+							if (!inResolutionState) {
+								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
+							}
 							if (currentActive == null) {
 								System.out.println("Identified active at:" + remoteLoadBalancer.getAddress().getHostString());
 								currentActive = remoteLoadBalancer;
@@ -302,7 +304,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					backupCount++;
 				}
 			}
-			if (!emergencyElectionInProgress && activeCount > 1) {
+			if (!emergencyElectionInProgress && !inResolutionState && activeCount > 1) {
 				initiateEmergencyElection();
 			}
 			if (!preElectionInProgress && backupCount > 1) {
@@ -621,7 +623,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
 			int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);
 			int rlb2CandidacyValue = Integer.parseInt(rlb2.getAddress().getAddress().getHostAddress().split("\\.")[3]);
-			return rlb1CandidacyValue - rlb2CandidacyValue;
+			return rlb2CandidacyValue - rlb1CandidacyValue;
 		});
 		
 		for (int i = 0; i < activeList.size(); i++) {
