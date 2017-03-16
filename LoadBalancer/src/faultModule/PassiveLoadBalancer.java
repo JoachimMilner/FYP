@@ -190,7 +190,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 		// Initialise heartbeat monitors & start average server latency
 		// calculator scheduler
-		startActiveHeartbeatTimer();
+		if (!inResolutionState) {
+			startActiveHeartbeatTimer();
+		}
 		startServerLatencyProcessorTimer();
 		startBackupHeartbeatTimer();
 
@@ -251,19 +253,20 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						case ACTIVE_ALIVE_CONFIRM:
 							if (!inResolutionState) {
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
-							}
-							if (currentActive == null) {
-								System.out.println("Identified active at:" + remoteLoadBalancer.getAddress().getHostString());
-								currentActive = remoteLoadBalancer;
-							}
-							if (remoteLoadBalancer.equals(currentActive)) {
-								resetActiveHeartbeatTimer();
-							}
-							if (expectingAliveConfirmation) {
-								if (remoteLoadBalancer.equals(currentActive)) {
-									receivedAliveConfirmation = true;
+							
+								if (currentActive == null) {
+									System.out.println("Identified active at:" + remoteLoadBalancer.getAddress().getHostString());
+									currentActive = remoteLoadBalancer;
 								}
-								expectingAliveConfirmation = false;
+								if (remoteLoadBalancer.equals(currentActive)) {
+									resetActiveHeartbeatTimer();
+								}
+								if (expectingAliveConfirmation) {
+									if (remoteLoadBalancer.equals(currentActive)) {
+										receivedAliveConfirmation = true;
+									}
+									expectingAliveConfirmation = false;
+								}
 							}
 							break;
 						case BACKUP_ALIVE_CONFIRM:
@@ -334,7 +337,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 				// Suspected failure - attempt to contact active
 				ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ACTIVE_FAILURE_DETECTED);
-				System.out.println("Active load balancer failure detected.");
+				System.out.println("Active load balancer failure detected - attempting to contact");
 				Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 				boolean isConnected = false;
@@ -350,6 +353,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					}
 				}
 				if (!isConnected) {
+					System.out.println("Could not connect");
 					// activeFailureDetected = true;
 					currentActive.setState(LoadBalancerState.PASSIVE);
 					currentActive.setSocketChannel(null);
@@ -362,6 +366,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						resetActiveHeartbeatTimer();
 					}
 				} else {
+					System.out.println("Connected - requesting live-state");
 					ByteBuffer buffer = ByteBuffer.allocate(1);
 					buffer.put((byte) MessageType.ALIVE_REQUEST.getValue());
 					buffer.flip();
@@ -405,7 +410,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * a heartbeat is received from the active load balancer.
 	 */
 	private void resetActiveHeartbeatTimer() {
-		activeHeartbeatTimer.cancel();
+		if (activeHeartbeatTimer != null) {
+			activeHeartbeatTimer.cancel();
+		}
 		startActiveHeartbeatTimer();
 	}
 
