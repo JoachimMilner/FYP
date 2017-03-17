@@ -621,7 +621,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
 			int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);
 			int rlb2CandidacyValue = Integer.parseInt(rlb2.getAddress().getAddress().getHostAddress().split("\\.")[3]);
-			return rlb1CandidacyValue - rlb2CandidacyValue;
+			return rlb2CandidacyValue - rlb1CandidacyValue;
 		});
 		
 		for (int i = 0; i < activeList.size(); i++) {
