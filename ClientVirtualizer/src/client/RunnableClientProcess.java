@@ -193,7 +193,7 @@ public class RunnableClientProcess implements Runnable {
 		try (SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(nameServiceAddress);
 				Selector readSelector = Selector.open();) {
 			socketChannel.register(readSelector, SelectionKey.OP_READ);
-			ByteBuffer buffer = ByteBuffer.allocate(17);
+			ByteBuffer buffer = ByteBuffer.allocate(50);
 			while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
 				// Request load balancer address
 				buffer.put((byte) MessageType.HOST_ADDR_REQUEST.getValue());
@@ -246,7 +246,7 @@ public class RunnableClientProcess implements Runnable {
 		int retryCount = 0;
 		
 		
-		ByteBuffer buffer = ByteBuffer.allocate(28);
+		ByteBuffer buffer = ByteBuffer.allocate(50);
 		while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
 			try (Selector readSelector = Selector.open();
 					SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress, 5);) {
@@ -293,13 +293,13 @@ public class RunnableClientProcess implements Runnable {
 				}
 				
 				if (!receivedResponse) {
-					System.out.println("Failed to contact load balancer, retrying...");
+					//System.out.println("Failed to contact load balancer, retrying...");
 					clientManager.incrementClientConnectFailures();
 					// failed to contact LB
 					retryCount++;
 					if (retryCount % 3 == 0) {
-						System.out
-								.println("Failed to connect to load balancer 3 times, retrying address resolution...");
+						//System.out
+						//		.println("Failed to connect to load balancer 3 times, retrying address resolution...");
 						requestHostNameResolution();
 					}
 					buffer.clear();
