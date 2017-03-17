@@ -427,17 +427,17 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			public void run() {
 				double totalLatency = 0;
 				for (Server server : servers) {
-					long pingStart = System.currentTimeMillis();
+					long pingStart = System.nanoTime();
 					try {
 						InetAddress.getByName(server.getAddress().getHostName()).isReachable(defaultTimeoutMillis);
 					} catch (IOException e) {
 					}
-					long pingTime = System.currentTimeMillis() - pingStart;
+					long pingTime = System.nanoTime() - pingStart;
 					totalLatency += pingTime;
 				}
 				// Add small value to average server latency in case two passives calculate the same average.
-				averageServerLatency = (totalLatency / servers.size()) + ThreadLocalRandom.current().nextDouble(0.001);
-				System.out.println("Average server latency: " + averageServerLatency + "ms");
+				averageServerLatency = (averageServerLatency + (totalLatency / servers.size()) + ThreadLocalRandom.current().nextDouble(0.001)) / 2;
+				//System.out.println("Average server latency: " + averageServerLatency + "ns");
 			}
 		};
 		serverLatencyProcessorTimer = new Timer();
