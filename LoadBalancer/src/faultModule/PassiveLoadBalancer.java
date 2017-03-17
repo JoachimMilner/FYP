@@ -7,6 +7,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -355,8 +356,12 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 						terminateThread.set(true);
 					} else {
-						currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup()).findFirst().get();
 						currentActive.setIsElectedBackup(false);
+						try {
+						currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup()).findFirst().get();
+						} catch (NoSuchElementException e) {
+							currentActive = null;
+						}
 						resetActiveHeartbeatTimer();
 					}
 				} else {
@@ -381,9 +386,12 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 									new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 									terminateThread.set(true);
 								} else {
-									currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup())
-											.findFirst().get();
 									currentActive.setIsElectedBackup(false);
+									try {
+									currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup()).findFirst().get();
+									} catch (NoSuchElementException e) {
+										currentActive = null;
+									}
 									resetActiveHeartbeatTimer();
 								}
 							}
