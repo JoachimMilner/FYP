@@ -79,7 +79,7 @@ public class RunnableRequestProcessor implements Runnable {
 
 					switch (messageType) {
 					case HOST_ADDR_NOTIFY:
-						String hostAddress = socketChannel.socket().getInetAddress().getHostName();
+						String hostAddress = socketChannel.socket().getInetAddress().getHostAddress();
 						int hostPort = buffer.getInt();
 						addressResolutionService.setHostAddress(hostAddress);
 						addressResolutionService.setHostPort(hostPort);
