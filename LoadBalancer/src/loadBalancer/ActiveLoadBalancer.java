@@ -106,7 +106,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		
 		//broadcastActiveDeclaration();
 		
-		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis);
+		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis / 10);
 		
 		ServerManager serverManager = new ServerManager(servers);
 		new Thread(serverManager).start();
@@ -120,10 +120,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		
 		listenForLoadBalancerMessages();
 
-		System.out.println("Active load balancer terminating...");
-
-		serverManager.cancel();
 		heartbeatBroadcaster.cancel();
+		serverManager.cancel();
+		
+		System.out.println("Active load balancer terminating...");
 	}
 
 	/**
@@ -185,16 +185,19 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 						case ACTIVE_DECLARATION:
 							// Received an active declaration from another node - immediately 
 							// move to passive state
-							System.out.println("Received active declaration - demoting to passive state");
-							terminateThread.set(true);
-							remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
-							new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+							if (!terminateThread.get()) {
+								System.out.println("Received active declaration - demoting to passive state");
+								terminateThread.set(true);
+								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
+								new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+							}
 							break;
 						case ACTIVE_ALIVE_CONFIRM:
 							// Detected another active node - broadcast active declaration after random timeout
 							// prompting any other active to demote
 							System.out.println("Detected another active - broadcasting active declaration");
 							broadcastActiveDeclaration();
+							notifyNameService();
 							break;
 /*						case MULTIPLE_ACTIVES_WARNING:
 							if (!inResolutionState) {
@@ -269,7 +272,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			}
 			if (!terminateThread.get()) {
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(randomBroadcastTimoutMillis / 10);
 				} catch (InterruptedException e) {
 	
 				}
