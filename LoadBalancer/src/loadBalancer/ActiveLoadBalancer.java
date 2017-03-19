@@ -1,20 +1,13 @@
 package loadBalancer;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ThreadLocalRandom;
 
 import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
@@ -49,6 +42,13 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 * be passed to the {@link HeartbeatBroadcaster}
 	 */
 	private int heartbeatIntervalMillis;
+	
+	/**
+	 * Randomly generated timeout that this node will wait before broadcasting
+	 * an <code>ACTIVE_DECLARATION</code> message. Used to avoid concurrency
+	 * issues.
+	 */
+	private int randomBroadcastTimoutMillis;
 
 	/**
 	 * Flag indicating whether this active load balancer is in a resolution
@@ -103,6 +103,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	public void run() {
 		System.out.println("Initialising active load balancer service...");
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_ACTIVE);
+		
+		broadcastActiveDeclaration();
+		
+		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis);
 		
 		ServerManager serverManager = new ServerManager(servers);
 		new Thread(serverManager).start();
@@ -163,7 +167,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 						case STATE_REQUEST:
 							System.out.println("Received state request");
 							buffer.clear();
-							buffer.put((byte) MessageType.ACTIVE_NOTIFY.getValue());
+							buffer.put((byte) MessageType.ACTIVE_DECLARATION.getValue());
 							buffer.flip();
 							while (buffer.hasRemaining()) {
 								socketChannel.write(buffer);
@@ -178,7 +182,21 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 								socketChannel.write(buffer);
 							}
 							break;
-						case MULTIPLE_ACTIVES_WARNING:
+						case ACTIVE_DECLARATION:
+							// Received an active declaration from another node - immediately 
+							// move to passive state
+							System.out.println("Received active declaration - demoting to passive state");
+							terminateThread.set(true);
+							remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
+							new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
+							break;
+						case ACTIVE_ALIVE_CONFIRM:
+							// Detected another active node - broadcast active declaration after random timeout
+							// prompting any other active to demote
+							System.out.println("Detected another active - broadcasting active declaration");
+							broadcastActiveDeclaration();
+							break;
+/*						case MULTIPLE_ACTIVES_WARNING:
 							if (!inResolutionState) {
 								inResolutionState = true;
 								CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
@@ -215,10 +233,10 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 
 								}).start();
 							}
-							break;
+							break;*/
 						case EMERGENCY_ELECTION_MESSAGE:
-/*							double candidacyValue = buffer.getDouble();
-							remoteLoadBalancer.setCandidacyValue(candidacyValue);*/
+							double candidacyValue = buffer.getDouble();
+							remoteLoadBalancer.setCandidacyValue(candidacyValue);
 							if (!inResolutionState) {
 								inResolutionState = true;
 								boolean remainAsActive = buffer.get() != 0;
@@ -258,6 +276,36 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			}
 		}
 	}
+	
+	/**
+	 * Sends an <code>ACTIVE_DECLARATION</code> message to all other known
+	 * load balancer declaring that this node is the only active and any other
+	 * nodes in the active state should immediately move to the passive state. 
+	 */
+	private void broadcastActiveDeclaration() {
+		new Timer().schedule(new TimerTask() {
+			@Override
+			public void run() {
+				ByteBuffer buffer = ByteBuffer.allocate(1);
+				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+					if (remoteLoadBalancer.isConnected()) {
+						buffer.clear();
+						buffer.put((byte) MessageType.ACTIVE_DECLARATION.getValue());
+						buffer.flip();
+						try {
+							while (buffer.hasRemaining()) {
+								remoteLoadBalancer.getSocketChannel().write(buffer);
+							}
+						} catch (IOException e) {
+							if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+								remoteLoadBalancer.setSocketChannel(null);
+							}
+						}
+					}
+				}
+			}
+		}, randomBroadcastTimoutMillis);
+	}
 
 	/**
 	 * Attempts to resolve a multiple-active system state by performing an
@@ -267,7 +315,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 *         should demote itself to the passive state.
 	 * @throws IOException
 	 */
-	private boolean performEmergencyElection(List<RemoteLoadBalancer> otherActives) throws IOException {
+/*	private boolean performEmergencyElection(List<RemoteLoadBalancer> otherActives) throws IOException {
 		long electionStartTime = System.currentTimeMillis();
 
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -340,5 +388,5 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		}, 1000);
 
 		return isStillActive;
-	}
+	}*/
 }

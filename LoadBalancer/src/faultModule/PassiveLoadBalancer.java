@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Timer;
@@ -87,7 +84,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * Flag indicating that an emergency election has been initiated due to
 	 * multiple active load balancers being detected in the system.
 	 */
-	private boolean emergencyElectionInProgress = false;
+	//private boolean emergencyElectionInProgress = false;
 
 	/**
 	 * The remote node currently acting as the primary load balancer. Reference
@@ -182,6 +179,16 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_PASSIVE);
 
 		connectionHandler.setPassive();
+		
+		// Check if a remote load balancer has been set to the active state in the case
+		// that this node has just transitioned to the passive state after receiving an
+		// active declaration message from another node.
+		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
+				currentActive = remoteLoadBalancer;
+				break;
+			}
+		}
 
 		// Add a random time period between 0 and defaultTimeoutMillis to the
 		// current value to address concurrency issues.
@@ -226,7 +233,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	@Override
 	public void listenForLoadBalancerMessages() {
 		while (!terminateThread.get()) {
-			int activeCount = 0;
+			//int activeCount = 0;
 			int backupCount = 0;
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
@@ -249,9 +256,17 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 								socketChannel.write(buffer);
 							}
 							break;
+						case ACTIVE_DECLARATION:
+							if (!remoteLoadBalancer.equals(currentActive)) {
+								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
+								currentActive.setState(LoadBalancerState.ACTIVE);
+								System.out.println("Load Balancer at: " + remoteLoadBalancer.getAddress().getHostString() + " declared active status");
+								currentActive = remoteLoadBalancer;
+							}
+							break;
 						case ACTIVE_ALIVE_CONFIRM:
-							remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 							if (currentActive == null) {
+								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 								System.out.println("Identified active at:" + remoteLoadBalancer.getAddress().getHostString());
 								currentActive = remoteLoadBalancer;
 							}
@@ -274,12 +289,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 								resetBackupHeartbeatTimer();
 							}
 							break;
-						case ACTIVE_HAS_FAILED:
-
-							break;
-						case ACTIVE_IS_ALIVE:
-
-							break;
 						case ELECTION_MESSAGE:
 							remoteLoadBalancer.setCandidacyValue(buffer.getDouble());
 							if (!preElectionInProgress) {
@@ -297,15 +306,15 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						remoteLoadBalancer.setSocketChannel(null);
 					}
 				}
-				if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
+/*				if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
 					activeCount++;
-				} else if (remoteLoadBalancer.isElectedBackup()) {
+				} else*/ if (remoteLoadBalancer.isElectedBackup()) {
 					backupCount++;
 				}
 			}
-			if (!emergencyElectionInProgress && activeCount > 1) {
+/*			if (!emergencyElectionInProgress && activeCount > 1) {
 				initiateEmergencyElection();
-			}
+			}*/
 			if (!preElectionInProgress && backupCount > 1) {
 				System.out.println("Detected multiple backups - Initiated pre-election");
 				initiatePreElection();
@@ -587,11 +596,11 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * possible. A timer is started in which the actives (should) decide which
 	 * node will remain as the active.
 	 */
-	private void initiateEmergencyElection() {
+/*	private void initiateEmergencyElection() {
 		emergencyElectionInProgress = true;
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED);
 		System.out.println("Detected multiple actives - initiating emergency election.");
-/*		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
 				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
 				ByteBuffer buffer = ByteBuffer.allocate(15 * remoteLoadBalancers.size() + 1);
@@ -618,7 +627,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				} catch (IOException e) {
 				}
 			}
-		}*/
+		}
 		List<RemoteLoadBalancer> activeList = new ArrayList<>();
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
@@ -663,5 +672,5 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				emergencyElectionInProgress = false;
 			}
 		}, defaultTimeoutMillis);
-	}
+	}*/
 }
