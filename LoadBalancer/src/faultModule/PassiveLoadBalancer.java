@@ -358,20 +358,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 
 				if (!currentActive.connect(activeTimeoutMillis / 100)) {
 					// activeFailureDetected = true;
-					currentActive.setState(LoadBalancerState.PASSIVE);
-					currentActive.setSocketChannel(null);
-					if (isElectedBackup) {
-						terminateThread.set(true);
-						new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
-					} else {
-						currentActive.setIsElectedBackup(false);
-						try {
-						currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup()).findFirst().get();
-						} catch (NoSuchElementException e) {
-							currentActive = null;
-						}
-						resetActiveHeartbeatTimer();
-					}
+					handleActiveFailure();
 				} else {
 					ByteBuffer buffer = ByteBuffer.allocate(1);
 					buffer.put((byte) MessageType.ALIVE_REQUEST.getValue());
@@ -388,20 +375,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						@Override
 						public void run() {
 							if (!receivedAliveConfirmation) {
-								currentActive.setState(LoadBalancerState.PASSIVE);
-								currentActive.setSocketChannel(null);
-								if (isElectedBackup) {
-									terminateThread.set(true);
-									new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
-								} else {
-									currentActive.setIsElectedBackup(false);
-									try {
-									currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup()).findFirst().get();
-									} catch (NoSuchElementException e) {
-										currentActive = null;
-									}
-									resetActiveHeartbeatTimer();
-								}
+								handleActiveFailure();
+							} else {
+								resetActiveHeartbeatTimer();
 							}
 							expectingAliveConfirmation = false;
 						}
@@ -414,6 +390,31 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		activeHeartbeatTimer.schedule(timerTask, activeTimeoutMillis);
 	}
 
+	/**
+	 * Commences the protocol for handling a confirmed failure of the active load balancer.
+	 * Outcome depends on whether this node is the elected backup.
+	 */
+	private void handleActiveFailure() {
+		currentActive.setSocketChannel(null);
+		if (isElectedBackup) {
+			terminateThread.set(true);
+			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+				remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
+				remoteLoadBalancer.setIsElectedBackup(false);
+			}
+			new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
+		} else {
+			currentActive.setState(LoadBalancerState.PASSIVE);
+			currentActive.setIsElectedBackup(false);
+			try {
+			currentActive = remoteLoadBalancers.stream().filter(x -> x.isElectedBackup()).findFirst().get();
+			} catch (NoSuchElementException e) {
+				currentActive = null;
+			}
+			resetActiveHeartbeatTimer();
+		}
+	}
+	
 	/**
 	 * Resets the heartbeat timer for the active load balancer - called whenever
 	 * a heartbeat is received from the active load balancer.
