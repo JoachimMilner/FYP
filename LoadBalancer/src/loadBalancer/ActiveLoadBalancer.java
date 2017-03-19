@@ -104,7 +104,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		System.out.println("Initialising active load balancer service...");
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_ACTIVE);
 		
-		broadcastActiveDeclaration();
+		//broadcastActiveDeclaration();
 		
 		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis);
 		

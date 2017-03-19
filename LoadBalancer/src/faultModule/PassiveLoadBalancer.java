@@ -259,7 +259,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						case ACTIVE_DECLARATION:
 							if (!remoteLoadBalancer.equals(currentActive)) {
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
-								currentActive.setState(LoadBalancerState.ACTIVE);
+								if (currentActive != null) {
+									currentActive.setState(LoadBalancerState.ACTIVE);
+								}
 								System.out.println("Load Balancer at: " + remoteLoadBalancer.getAddress().getHostString() + " declared active status");
 								currentActive = remoteLoadBalancer;
 							}
@@ -362,8 +364,8 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					currentActive.setState(LoadBalancerState.PASSIVE);
 					currentActive.setSocketChannel(null);
 					if (isElectedBackup) {
-						new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 						terminateThread.set(true);
+						new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 					} else {
 						currentActive.setIsElectedBackup(false);
 						try {
@@ -392,8 +394,8 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 								currentActive.setState(LoadBalancerState.PASSIVE);
 								currentActive.setSocketChannel(null);
 								if (isElectedBackup) {
-									new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 									terminateThread.set(true);
+									new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 								} else {
 									currentActive.setIsElectedBackup(false);
 									try {
