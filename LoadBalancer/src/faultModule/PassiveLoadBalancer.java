@@ -114,6 +114,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private Timer reElectionTimer;
 
 	/**
+	 * Timer used to schedule calculating the result of a pre-election. 
+	 */
+	private Timer preElectionTimeoutTimer;
+	/**
 	 * The most recently calculated value for this node's average latency to the
 	 * servers. Used as the election ID for this load balancer.
 	 */
@@ -228,6 +232,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		if (reElectionTimer != null) {
 			reElectionTimer.cancel();
 		}
+		if (preElectionTimeoutTimer != null) {
+			preElectionTimeoutTimer.cancel();
+		}
 	}
 
 	@Override
@@ -260,10 +267,11 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 							if (!remoteLoadBalancer.equals(currentActive)) {
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 								if (currentActive != null) {
-									currentActive.setState(LoadBalancerState.ACTIVE);
+									currentActive.setState(LoadBalancerState.PASSIVE);
 								}
 								System.out.println("Load Balancer at: " + remoteLoadBalancer.getAddress().getHostString() + " declared active status");
 								currentActive = remoteLoadBalancer;
+								currentActive.setIsElectedBackup(false);
 							}
 							break;
 						case ACTIVE_ALIVE_CONFIRM:
@@ -271,6 +279,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 								System.out.println("Identified active at:" + remoteLoadBalancer.getAddress().getHostString());
 								currentActive = remoteLoadBalancer;
+								currentActive.setIsElectedBackup(false);
 							}
 							if (remoteLoadBalancer.equals(currentActive)) {
 								resetActiveHeartbeatTimer();
@@ -347,19 +356,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				System.out.println("Active load balancer failure detected.");
 				Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
-				boolean isConnected = false;
-				for (int i = 0; i < 10; i++) {
-					if (currentActive.connect(0)) {
-						isConnected = true;
-						break;
-					}
-					try {
-						Thread.sleep(activeTimeoutMillis / 100);
-					} catch (InterruptedException e) {
-
-					}
-				}
-				if (!isConnected) {
+				if (!currentActive.connect(activeTimeoutMillis / 100)) {
 					// activeFailureDetected = true;
 					currentActive.setState(LoadBalancerState.PASSIVE);
 					currentActive.setSocketChannel(null);
@@ -587,7 +584,8 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 			}
 		};
 
-		new Timer().schedule(timerTask, defaultTimeoutMillis);
+		preElectionTimeoutTimer = new Timer();
+		preElectionTimeoutTimer.schedule(timerTask, defaultTimeoutMillis);
 	}
 
 	/**
