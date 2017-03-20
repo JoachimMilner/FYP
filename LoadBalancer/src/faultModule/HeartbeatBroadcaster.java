@@ -111,7 +111,7 @@ public class HeartbeatBroadcaster implements Runnable {
 				remoteLoadBalancer.getSocketChannel().write(buffer);
 			}
 		} catch (IOException e) {
-			if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+			if (e.getMessage() != null && e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
 				try {
 					remoteLoadBalancer.getSocketChannel().close();
 				} catch (IOException e1) {
