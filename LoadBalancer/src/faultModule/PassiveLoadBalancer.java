@@ -314,7 +314,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				} catch (IOException e) {
 					if (e != null
 							& e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
-						remoteLoadBalancer.setSocketChannel(null);
+						try {
+							remoteLoadBalancer.getSocketChannel().close();
+						} catch (IOException e1) {
+						}
 					}
 				}
 /*				if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
@@ -398,7 +401,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * Outcome depends on whether this node is the elected backup.
 	 */
 	private void handleActiveFailure() {
-		currentActive.setSocketChannel(null);
+		try {
+			currentActive.getSocketChannel().close();
+		} catch (IOException e) {
+		}
 		if (isElectedBackup) {
 			terminateThread.set(true);
 			new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
