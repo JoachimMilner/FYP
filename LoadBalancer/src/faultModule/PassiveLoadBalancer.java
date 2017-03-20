@@ -346,8 +346,11 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					// No active was present - elevate own state.
 					ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_NO_ACTIVE_DETECTED);
 					System.out.println("Detected absence of an active node.");
-					new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
 					terminateThread.set(true);
+					new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
+					for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+						remoteLoadBalancer.resetState();
+					}
 					return;
 				}
 
@@ -398,11 +401,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		currentActive.setSocketChannel(null);
 		if (isElectedBackup) {
 			terminateThread.set(true);
-			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-				remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
-				remoteLoadBalancer.setIsElectedBackup(false);
-			}
 			new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
+			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+				remoteLoadBalancer.resetState();
+			}
 		} else {
 			currentActive.setState(LoadBalancerState.PASSIVE);
 			currentActive.setIsElectedBackup(false);

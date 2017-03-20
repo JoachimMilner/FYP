@@ -98,4 +98,13 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	public void setCandidacyValue(Double candidacyValue) {
 		this.candidacyValue = candidacyValue;
 	}
+	
+	/**
+	 * Convenience method: sets this RemoteLoadBalancer's state to passive
+	 * and its isElectedBackup flag to false.
+	 */
+	public void resetState() {
+		state = LoadBalancerState.PASSIVE;
+		isElectedBackup = false;
+	}
 }
