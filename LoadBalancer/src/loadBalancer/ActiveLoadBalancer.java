@@ -196,7 +196,15 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 							// Detected another active node - broadcast active declaration after random timeout
 							// prompting any other active to demote
 							System.out.println("Detected another active - broadcasting active declaration");
-							broadcastActiveDeclaration();
+							new Timer().schedule(new TimerTask() {
+								@Override
+								public void run() {
+									if (!terminateThread.get()) {
+										broadcastActiveDeclaration();
+									}
+								}
+							}, randomBroadcastTimoutMillis);
+							
 							notifyNameService();
 							break;
 /*						case MULTIPLE_ACTIVES_WARNING:
@@ -289,31 +297,26 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	 * nodes in the active state should immediately move to the passive state. 
 	 */
 	private void broadcastActiveDeclaration() {
-		new Timer().schedule(new TimerTask() {
-			@Override
-			public void run() {
-				ByteBuffer buffer = ByteBuffer.allocate(1);
-				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-					if (remoteLoadBalancer.isConnected()) {
-						buffer.clear();
-						buffer.put((byte) MessageType.ACTIVE_DECLARATION.getValue());
-						buffer.flip();
+		ByteBuffer buffer = ByteBuffer.allocate(1);
+		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
+			if (remoteLoadBalancer.isConnected()) {
+				buffer.clear();
+				buffer.put((byte) MessageType.ACTIVE_DECLARATION.getValue());
+				buffer.flip();
+				try {
+					while (buffer.hasRemaining()) {
+						remoteLoadBalancer.getSocketChannel().write(buffer);
+					}
+				} catch (IOException e) {
+					if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
 						try {
-							while (buffer.hasRemaining()) {
-								remoteLoadBalancer.getSocketChannel().write(buffer);
-							}
-						} catch (IOException e) {
-							if (e != null & e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
-								try {
-									remoteLoadBalancer.getSocketChannel().close();
-								} catch (IOException e1) {
-								}
-							}
+							remoteLoadBalancer.getSocketChannel().close();
+						} catch (IOException e1) {
 						}
 					}
 				}
 			}
-		}, randomBroadcastTimoutMillis);
+		}
 	}
 
 	/**
