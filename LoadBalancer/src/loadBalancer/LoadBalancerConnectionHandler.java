@@ -1,6 +1,8 @@
 package loadBalancer;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
@@ -49,6 +51,11 @@ public class LoadBalancerConnectionHandler implements Runnable {
 	public void run() {
 		System.out.println("Accepting connections on port: " + acceptPort);
 		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(acceptPort);
+		int connectionPrecedence = 0;
+		try {
+			connectionPrecedence = Integer.parseInt(InetAddress.getLocalHost().getHostAddress().split("\\.")[3]);
+		} catch (NumberFormatException | UnknownHostException e1) {
+		}
 		
 		// Initially attempt to form a connection to all load balancers
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
@@ -74,7 +81,12 @@ public class LoadBalancerConnectionHandler implements Runnable {
 				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 					if (remoteLoadBalancer.getAddress().getAddress().getHostAddress().equals(connectingIP)) {
 						isLoadBalancerNode = true;
-						if (!remoteLoadBalancer.isConnected()) {
+						int remotePrecedence = 0;
+						try {
+							remotePrecedence = Integer.parseInt(connectingIP.split("\\.")[3]);
+						} catch (NumberFormatException e) {
+						}
+						if (!remoteLoadBalancer.isConnected() || remotePrecedence > connectionPrecedence) {
 							try {
 								connectRequestSocket.configureBlocking(false);
 							} catch (IOException e) {							
