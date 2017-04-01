@@ -5,6 +5,7 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import comms.ExponentialMovingAverage;
 import javafx.scene.chart.XYChart;
 
 /**
@@ -33,6 +34,11 @@ public class Server extends AbstractRemoteSystemComponent {
 	 */
 	private XYChart.Series<Number, Number> series = new XYChart.Series<>();
 
+	/**
+	 * The ExponentialMovingAverage class used to determine smoothed averages for server CPU load readings. 
+	 */
+	private ExponentialMovingAverage exponentialMovingAverage = new ExponentialMovingAverage(0.5);
+	
 	/**
 	 * Constructs a new Server object with the given componentID and
 	 * remoteAddress that will be used primarily for storing CPU load values.
@@ -88,5 +94,14 @@ public class Server extends AbstractRemoteSystemComponent {
 	public void pushCPULoadValue(CPULoadReading cpuLoadReading) {
 		cpuLoadValues.add(cpuLoadReading);
 		newCPULoadValueCount.incrementAndGet();
+	}
+	
+	/**
+	 * Uses this object's ExponentialMovingAverage instance to calculate the moving average
+	 * for the CPU load readings. 
+	 * @return
+	 */
+	public double getSmoothedAverage(double value) {
+		return exponentialMovingAverage.average(value);
 	}
 }

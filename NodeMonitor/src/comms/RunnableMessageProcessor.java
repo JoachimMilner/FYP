@@ -10,12 +10,12 @@ import java.nio.charset.Charset;
 import controller.GUIController;
 import log.LoggerUtility;
 import logging.LogMessageType;
+import model.CPULoadReading;
 import model.ClientVirtualizer;
 import model.LoadBalancer;
 import model.LoadBalancer.LoadBalancerState;
 import model.NameService;
 import model.Server;
-import model.CPULoadReading;
 import model.SystemModel;
 
 /**
@@ -211,13 +211,15 @@ public class RunnableMessageProcessor implements Runnable {
 					case SERVER_CPU_LOAD:
 						componentID = buffer.getInt();
 						double cpuLoadReading = buffer.getDouble();
-						if (cpuLoadReading != 0) {
-							Server sendingServer = systemModel.getServerByID(componentID);
-							CPULoadReading reading = new CPULoadReading(cpuLoadReading, messageReceivedTime,
-									controller.getApplicationStartTime());
-							sendingServer.pushCPULoadValue(reading);
-							LoggerUtility.logServerLoadReading(reading.getTimestampAsSecondsElapsed(), componentID, cpuLoadReading);
-						}
+						//if (cpuLoadReading != 0) {
+						Server sendingServer = systemModel.getServerByID(componentID);
+						double smoothedCPULoadReading = sendingServer.getSmoothedAverage(cpuLoadReading);
+						System.out.println(cpuLoadReading + " : " + smoothedCPULoadReading);
+						CPULoadReading reading = new CPULoadReading(smoothedCPULoadReading, messageReceivedTime,
+								controller.getApplicationStartTime());
+						sendingServer.pushCPULoadValue(reading);
+						LoggerUtility.logServerLoadReading(reading.getTimestampAsSecondsElapsed(), componentID, smoothedCPULoadReading);
+						//}
 						break;
 					case LOAD_BALANCER_ENTERED_ACTIVE:
 						componentID = buffer.getInt();
