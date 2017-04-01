@@ -385,10 +385,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * Outcome depends on whether this node is the elected backup.
 	 */
 	private void handleActiveFailure() {
-		try {
+/*		try {
 			currentActive.getSocketChannel().close();
 		} catch (IOException e) {
-		}
+		}*/
 		if (isElectedBackup) {
 			terminateThread.set(true);
 			new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
