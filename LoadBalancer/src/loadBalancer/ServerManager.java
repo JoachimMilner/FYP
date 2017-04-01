@@ -112,7 +112,9 @@ public class ServerManager implements Runnable {
 	private void disconnectServers() {
 		for (Server server : servers) {
 			try {
-				server.getSocketChannel().close();
+				if (server.getSocketChannel() != null) {
+					server.getSocketChannel().close();
+				}
 			} catch (IOException e) {
 				
 			}

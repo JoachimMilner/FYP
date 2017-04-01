@@ -1,5 +1,6 @@
 package commsModel;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
@@ -61,9 +62,14 @@ public abstract class AbstractRemote {
 	 */
 	public boolean connect(int timeoutMillis) {
 		if (socketChannel == null || !socketChannel.isConnected()) {
-			socketChannel = ConnectNIO.getNonBlockingSocketChannel(address, timeoutMillis);
-			if (socketChannel != null && socketChannel.isConnected()) {
+			SocketChannel newSocketChannel = ConnectNIO.getNonBlockingSocketChannel(address, timeoutMillis);
+			if (newSocketChannel != null && newSocketChannel.isConnected()) {
+				socketChannel = newSocketChannel;
 				return true;
+			} else if (newSocketChannel != null) {
+				try {
+					newSocketChannel.close();
+				} catch (IOException e) {}
 			}
 			return false;
 		}

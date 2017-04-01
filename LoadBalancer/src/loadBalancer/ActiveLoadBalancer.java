@@ -281,13 +281,13 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 					}
 				}
 			}
-			if (!terminateThread.get()) {
+/*			if (!terminateThread.get()) {
 				try {
 					Thread.sleep(randomBroadcastTimoutMillis / 10);
 				} catch (InterruptedException e) {
 	
 				}
-			}
+			}*/
 		}
 	}
 	
