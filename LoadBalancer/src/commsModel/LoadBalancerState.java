@@ -10,6 +10,6 @@ package commsModel;
  */
 public enum LoadBalancerState {
 
-	ACTIVE, PASSIVE, ELECTION_IN_PROGRESS
+	ACTIVE, PASSIVE
 
 }

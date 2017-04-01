@@ -320,15 +320,10 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						}
 					}
 				}
-/*				if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
-					activeCount++;
-				} else*/ if (remoteLoadBalancer.isElectedBackup()) {
+				if (remoteLoadBalancer.isElectedBackup()) {
 					backupCount++;
 				}
 			}
-/*			if (!emergencyElectionInProgress && activeCount > 1) {
-				initiateEmergencyElection();
-			}*/
 			if (!preElectionInProgress && backupCount > 1) {
 				System.out.println("Detected multiple backups - Initiated pre-election");
 				initiatePreElection();
@@ -596,90 +591,4 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		preElectionTimeoutTimer = new Timer();
 		preElectionTimeoutTimer.schedule(timerTask, defaultTimeoutMillis);
 	}
-
-	/**
-	 * Initiates an emergency election prompted by a scenario in which multiple
-	 * load balancers have elevated themselves to the active state. Sends
-	 * <code>MULTIPLE_ACTIVES_WARNING</code> messages to all active nodes,
-	 * forcing them to immediately re-elect a single active as quickly as
-	 * possible. A timer is started in which the actives (should) decide which
-	 * node will remain as the active.
-	 */
-/*	private void initiateEmergencyElection() {
-		emergencyElectionInProgress = true;
-		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED);
-		System.out.println("Detected multiple actives - initiating emergency election.");
-		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
-				CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
-				ByteBuffer buffer = ByteBuffer.allocate(15 * remoteLoadBalancers.size() + 1);
-				buffer.put((byte) MessageType.MULTIPLE_ACTIVES_WARNING.getValue());
-				// Send addresses of other actives
-				String otherActiveAddresses = "";
-				int iteration = 0;
-				for (RemoteLoadBalancer rlb : remoteLoadBalancers) {
-					if (rlb.getState().equals(LoadBalancerState.ACTIVE) && !rlb.equals(remoteLoadBalancer)) {
-						if (iteration > 0) {
-							otherActiveAddresses += "|";
-						}
-						otherActiveAddresses += rlb.getAddress().getAddress().getHostAddress();
-						iteration++;
-					}
-				}
-				try {
-					buffer.put(encoder.encode(CharBuffer.wrap(otherActiveAddresses)));
-				} catch (CharacterCodingException e) {
-				}
-				buffer.flip();
-				try {
-					remoteLoadBalancer.getSocketChannel().write(buffer);
-				} catch (IOException e) {
-				}
-			}
-		}
-		List<RemoteLoadBalancer> activeList = new ArrayList<>();
-		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-			if (remoteLoadBalancer.getState().equals(LoadBalancerState.ACTIVE)) {
-				activeList.add(remoteLoadBalancer);
-			}
-		}
-		
-		Collections.sort(activeList, (RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) -> {
-			int rlb1CandidacyValue = Integer.parseInt(rlb1.getAddress().getAddress().getHostAddress().split("\\.")[3]);
-			int rlb2CandidacyValue = Integer.parseInt(rlb2.getAddress().getAddress().getHostAddress().split("\\.")[3]);
-			return rlb2CandidacyValue - rlb1CandidacyValue;
-		});
-		
-		for (int i = 0; i < activeList.size(); i++) {
-			ByteBuffer buffer = ByteBuffer.allocate(2);
-			buffer.put((byte) MessageType.EMERGENCY_ELECTION_MESSAGE.getValue());
-			if (i == 0) {
-				buffer.put((byte) 1);
-			} else {
-				buffer.put((byte) 0);
-			}
-			buffer.flip();
-			try {
-				while(buffer.hasRemaining()) {
-					activeList.get(i).getSocketChannel().write(buffer);
-				}
-			} catch (IOException e) {
-			}
-		}
-
-		new Timer().schedule(new TimerTask() {
-			@Override
-			public void run() {
-				// Clear remote load balancer states so we don't initiate
-				// another election
-				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
-					remoteLoadBalancer.setState(LoadBalancerState.PASSIVE);
-				}
-				currentActive = null;
-
-				// End emergency election period
-				emergencyElectionInProgress = false;
-			}
-		}, defaultTimeoutMillis);
-	}*/
 }

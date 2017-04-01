@@ -98,7 +98,7 @@ public class LoadBalancerConnectionHandler implements Runnable {
 				}
 				if (state.equals(LoadBalancerState.ACTIVE) && !isLoadBalancerNode) {
 					threadPoolExecutor
-							.execute(new RunnableActiveRequestProcessor(connectRequestSocket, serverManager));
+							.execute(new RunnableClientRequestProcessor(connectRequestSocket, serverManager));
 				}
 			}
 		}

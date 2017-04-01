@@ -19,7 +19,13 @@ import connectionUtils.MessageType;
  *         the message contents and send a response where appropriate.
  *         </p>
  */
-public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
+public class RunnableClientRequestProcessor implements Runnable {
+	
+	/**
+	 * The socket channel that this request processor will read messages from
+	 * and respond to.
+	 */
+	private SocketChannel socketChannel;
 
 	/**
 	 * The server manager that this object will use to get available server
@@ -34,7 +40,7 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 	 * @param activeLoadBalancer
 	 * @param serverManager
 	 */
-	public RunnableActiveRequestProcessor(SocketChannel socketChannel, ServerManager serverManager) {
+	public RunnableClientRequestProcessor(SocketChannel socketChannel, ServerManager serverManager) {
 		if (socketChannel == null || !socketChannel.isConnected())
 			throw new IllegalArgumentException("Null or disconnected SocketChannel.");
 		if (serverManager == null)
@@ -69,8 +75,11 @@ public class RunnableActiveRequestProcessor extends AbstractRequestProcessor {
 
 	}
 
-	@Override
-	protected void processMessage(MessageType messageType) {
+	/**
+	 * Handles incoming client messages requesting a server token.
+	 * @param messageType the message type that has been received
+	 */
+	private void processMessage(MessageType messageType) {
 		try {
 			ByteBuffer buffer;
 			switch (messageType) {

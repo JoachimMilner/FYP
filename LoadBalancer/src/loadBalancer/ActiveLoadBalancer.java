@@ -207,44 +207,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 							
 							notifyNameService();
 							break;
-/*						case MULTIPLE_ACTIVES_WARNING:
-							if (!inResolutionState) {
-								inResolutionState = true;
-								CharBuffer charBuffer = Charset.forName("UTF-8").decode(buffer);
-								String hostAddressesUnparsed = charBuffer.toString();
-								// Pipe delimiter used as it is illegal in
-								// hostnames
-								// and IP addresses.
-								String[] hostAddresses = hostAddressesUnparsed.split("|");
-
-								List<RemoteLoadBalancer> otherActives = new ArrayList<>();
-								for (int i = 0; i < hostAddresses.length; i++) {
-									for (RemoteLoadBalancer remoteLB : remoteLoadBalancers) {
-										if (remoteLB.getAddress().getAddress().getHostAddress()
-												.equals(hostAddresses[i])) {
-											otherActives.add(remoteLB);
-										}
-									}
-								}
-								new Thread(new Runnable() {
-
-									@Override
-									public void run() {
-										try {
-											boolean isStillActive = performEmergencyElection(otherActives);
-											if (isStillActive) {
-												notifyNameService();
-											} else {
-												new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
-												terminateThread.set(true);
-											}
-										} catch (IOException e) {
-										}
-									}
-
-								}).start();
-							}
-							break;*/
 						case EMERGENCY_ELECTION_MESSAGE:
 							double candidacyValue = buffer.getDouble();
 							remoteLoadBalancer.setCandidacyValue(candidacyValue);
@@ -281,13 +243,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 					}
 				}
 			}
-/*			if (!terminateThread.get()) {
-				try {
-					Thread.sleep(randomBroadcastTimoutMillis / 10);
-				} catch (InterruptedException e) {
-	
-				}
-			}*/
 		}
 	}
 	
@@ -318,87 +273,4 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 			}
 		}
 	}
-
-	/**
-	 * Attempts to resolve a multiple-active system state by performing an
-	 * emergency election with any other active nodes in the system.
-	 * 
-	 * @return true if this node is still the active load balancer, false if it
-	 *         should demote itself to the passive state.
-	 * @throws IOException
-	 */
-/*	private boolean performEmergencyElection(List<RemoteLoadBalancer> otherActives) throws IOException {
-		long electionStartTime = System.currentTimeMillis();
-
-		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-
-		// Use last octet of IP address for election message value
-		int ownCandidacyValue = Integer.parseInt(InetAddress.getLocalHost().getHostAddress().split("\\.")[3]);
-		for (RemoteLoadBalancer remoteLoadBalancer : otherActives) {
-			ByteBuffer buffer = ByteBuffer.allocate(9);
-			SocketChannel socketChannel = remoteLoadBalancer.getSocketChannel();
-			Selector writeSelector = Selector.open();
-			socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
-			if (writeSelector.select() == 0) {
-				buffer.put((byte) MessageType.EMERGENCY_ELECTION_MESSAGE.getValue());
-				buffer.putDouble(ownCandidacyValue);
-				buffer.flip();
-				while (buffer.hasRemaining()) {
-					socketChannel.write(buffer);
-				}
-			}
-			writeSelector.close();
-		}
-
-		boolean isStillActive = true;
-		boolean isResolved = false;
-
-		while (!isResolved) {
-			int electionMessagesReceived = 0;
-			for (RemoteLoadBalancer remoteLoadBalancer : otherActives) {
-				if (remoteLoadBalancer.getCandidacyValue() != null) {
-					electionMessagesReceived++;
-				}
-			}
-			// Received election messages from all other actives or timed out
-			if (electionMessagesReceived == otherActives.size()
-					|| System.currentTimeMillis() - electionStartTime > 5000) {
-				// Create a fake RemoteLoadbalancer object representing self so
-				// we can sort the nodes.
-				RemoteLoadBalancer self = new RemoteLoadBalancer(new InetSocketAddress(0));
-				self.setCandidacyValue((double) ownCandidacyValue);
-				otherActives.add(self);
-				Collections.sort(otherActives, new Comparator<RemoteLoadBalancer>() {
-					@Override
-					public int compare(RemoteLoadBalancer rlb1, RemoteLoadBalancer rlb2) {
-						return Double.compare(rlb1.getCandidacyValue(), rlb2.getCandidacyValue());
-					}
-				});
-				if (!otherActives.get(0).equals(self)) {
-					isStillActive = false;
-				} else {
-					otherActives.get(0).setState(LoadBalancerState.ACTIVE);
-				}
-				for (int i = 1; i < otherActives.size(); i++) {
-					otherActives.get(i).setState(LoadBalancerState.PASSIVE);
-
-				}
-				isResolved = true;
-			}
-		}
-		// Clear candidacy values until next election
-		for (RemoteLoadBalancer remoteLoadBalancer : otherActives) {
-			remoteLoadBalancer.setCandidacyValue(null);
-		}
-		// Wait a second before resetting the resolutuon state flag in case any
-		// MULTIPLE_ACTIVES_WARNING messages arrive late.
-		new Timer().schedule(new java.util.TimerTask() {
-			@Override
-			public void run() {
-				inResolutionState = false;
-			}
-		}, 1000);
-
-		return isStillActive;
-	}*/
 }

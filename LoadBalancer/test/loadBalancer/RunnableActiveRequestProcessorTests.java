@@ -27,7 +27,7 @@ import testUtils.TestUtils;
 /**
  * @author Joachim
  *         <p>
- *         Tests for the {@link RunnableActiveRequestProcessor} class and its
+ *         Tests for the {@link RunnableClientRequestProcessor} class and its
  *         instance methods.
  *         </p>
  *
@@ -36,13 +36,13 @@ public class RunnableActiveRequestProcessorTests {
 
 	/**
 	 * Mocked ServerSocketChannel to be used for testing
-	 * {@link RunnableActiveRequestProcessor} instances.
+	 * {@link RunnableClientRequestProcessor} instances.
 	 */
 	private ServerSocketChannel mockServerSocketChannel;
 
 	/**
 	 * Mocked SocketChannel to be used for creating
-	 * {@link RunnableActiveRequestProcessor} instances.
+	 * {@link RunnableClientRequestProcessor} instances.
 	 */
 	private SocketChannel mockClientSocketChannel;
 
@@ -52,7 +52,7 @@ public class RunnableActiveRequestProcessorTests {
 	private SocketChannel acceptedSocketChannel;
 
 	/**
-	 * As the {@link RunnableActiveRequestProcessor} requires a SocketChannel to
+	 * As the {@link RunnableClientRequestProcessor} requires a SocketChannel to
 	 * be instantiated, we create a fake one here.
 	 * 
 	 * @throws IOException
@@ -81,7 +81,7 @@ public class RunnableActiveRequestProcessorTests {
 	/**
 	 * Utility method for getting a {@link SocketChannel} that has been accepted
 	 * by the mocked {@link ServerSocketChannel}. This way, we can test the
-	 * {@link RunnableActiveRequestProcessor} in isolation without an
+	 * {@link RunnableClientRequestProcessor} in isolation without an
 	 * {@link AbstractLoadBalancer} instance.
 	 * 
 	 * @return a <code>SocketChannel</code> that has been accepted by the mock
@@ -96,7 +96,7 @@ public class RunnableActiveRequestProcessorTests {
 	}
 
 	/**
-	 * Tests successful creation of a new {@link RunnableActiveRequestProcessor}
+	 * Tests successful creation of a new {@link RunnableClientRequestProcessor}
 	 * instance.
 	 * 
 	 * @throws IOException
@@ -105,34 +105,34 @@ public class RunnableActiveRequestProcessorTests {
 	public void testCreateActiveRequestProcessor_successful() throws IOException {
 		createAcceptedSocketChannel();
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
+		RunnableClientRequestProcessor activeRequestProcessor = new RunnableClientRequestProcessor(
 				acceptedSocketChannel, serverManager);
 		assertNotNull(activeRequestProcessor);
 	}
 
 	/**
-	 * Test instantiation of a {@link RunnableActiveRequestProcessor} with a
+	 * Test instantiation of a {@link RunnableClientRequestProcessor} with a
 	 * null socket. Should throw an <code>IllegalArgumentException</code>.
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_nullSocket() {
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		new RunnableActiveRequestProcessor(null, serverManager);
+		new RunnableClientRequestProcessor(null, serverManager);
 	}
 
 	/**
-	 * Test instantiation of a {@link RunnableActiveRequestProcessor} with a
+	 * Test instantiation of a {@link RunnableClientRequestProcessor} with a
 	 * socket that has not been connected. Should throw an
 	 * <code>IllegalArgumentException</code>.
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_disconnectedSocket() {
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		new RunnableActiveRequestProcessor(mockClientSocketChannel, serverManager);
+		new RunnableClientRequestProcessor(mockClientSocketChannel, serverManager);
 	}
 
 	/**
-	 * Test instantiation of a {@link RunnableActiveRequestProcessor} with a
+	 * Test instantiation of a {@link RunnableClientRequestProcessor} with a
 	 * null {@link ServerManager}. Should throw an
 	 * <code>IllegalArgumentException</code>.
 	 * 
@@ -141,12 +141,12 @@ public class RunnableActiveRequestProcessorTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateActiveRequestProcessor_nullServerManager() throws IOException {
 		createAcceptedSocketChannel();
-		new RunnableActiveRequestProcessor(acceptedSocketChannel, null);
+		new RunnableClientRequestProcessor(acceptedSocketChannel, null);
 	}
 
 	/**
 	 * Tests that the <code>socketChannel</code> property of the
-	 * {@link RunnableActiveRequestProcessor} is set correctly in the class
+	 * {@link RunnableClientRequestProcessor} is set correctly in the class
 	 * constructor. Use reflection to check the value after the constructor is
 	 * called.
 	 * 
@@ -157,7 +157,7 @@ public class RunnableActiveRequestProcessorTests {
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
+		RunnableClientRequestProcessor activeRequestProcessor = new RunnableClientRequestProcessor(
 				acceptedSocketChannel, serverManager);
 
 		Field socketChannelField = activeRequestProcessor.getClass().getSuperclass().getDeclaredField("socketChannel");
@@ -167,7 +167,7 @@ public class RunnableActiveRequestProcessorTests {
 
 	/**
 	 * Tests that the <code>serverManager</code> property of the
-	 * {@link RunnableActiveRequestProcessor} is set correctly in the class
+	 * {@link RunnableClientRequestProcessor} is set correctly in the class
 	 * constructor. Use reflection to check the value after the constructor is
 	 * called.
 	 * 
@@ -178,7 +178,7 @@ public class RunnableActiveRequestProcessorTests {
 			SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		createAcceptedSocketChannel();
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
+		RunnableClientRequestProcessor activeRequestProcessor = new RunnableClientRequestProcessor(
 				acceptedSocketChannel, serverManager);
 
 		Field serverManagerField = activeRequestProcessor.getClass().getDeclaredField("serverManager");
@@ -187,7 +187,7 @@ public class RunnableActiveRequestProcessorTests {
 	}
 
 	/**
-	 * Test that the {@link RunnableActiveRequestProcessor} correctly processes
+	 * Test that the {@link RunnableClientRequestProcessor} correctly processes
 	 * and responds to a mock client requesting the details of an available
 	 * server.
 	 * 
@@ -203,7 +203,7 @@ public class RunnableActiveRequestProcessorTests {
 		createAcceptedSocketChannel();
 		Set<Server> servers = TestUtils.getServerSet(1);
 		ServerManager serverManager = new ServerManager(servers);
-		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
+		RunnableClientRequestProcessor activeRequestProcessor = new RunnableClientRequestProcessor(
 				acceptedSocketChannel, serverManager);
 
 		// Set CPU load
@@ -263,7 +263,7 @@ public class RunnableActiveRequestProcessorTests {
 	}
 
 	/**
-	 * Test that the {@link RunnableActiveRequestProcessor} responds to an
+	 * Test that the {@link RunnableClientRequestProcessor} responds to an
 	 * <code>ALIVE_REQUEST</code> message. This is to confirm that the active
 	 * load balancer can verify its status in the case that the connection from
 	 * the {@link HeartbeatBroadcaster} drops but the process is still running.
@@ -273,7 +273,7 @@ public class RunnableActiveRequestProcessorTests {
 	public void testActiveRequestProcessor_respondToAliveRequest() throws IOException {
 		createAcceptedSocketChannel();
 		ServerManager serverManager = new ServerManager(TestUtils.getServerSet(1));
-		RunnableActiveRequestProcessor activeRequestProcessor = new RunnableActiveRequestProcessor(
+		RunnableClientRequestProcessor activeRequestProcessor = new RunnableClientRequestProcessor(
 				acceptedSocketChannel, serverManager);
 		
 		Thread requestProcessorThread = new Thread(activeRequestProcessor);
