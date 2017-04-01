@@ -124,12 +124,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	private double averageServerLatency;
 
 	/**
-	 * Flag indicating that failure of the active load balancer has been
-	 * detected.
-	 */
-	//private boolean activeFailureDetected = false;
-
-	/**
 	 * Flag indicating that this passive node is expecting an
 	 * <code>ACTIVE_ALIVE_CONFIRM</code> message from the active load balancer.
 	 */
@@ -385,10 +379,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * Outcome depends on whether this node is the elected backup.
 	 */
 	private void handleActiveFailure() {
-/*		try {
-			currentActive.getSocketChannel().close();
-		} catch (IOException e) {
-		}*/
 		if (isElectedBackup) {
 			terminateThread.set(true);
 			new Thread(LoadBalancer.getNewActiveLoadBalancer()).start();
@@ -512,7 +502,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		if (backupHeartbeatBroadcaster != null) {
 			backupHeartbeatBroadcaster.cancel();
 		}
-		// Broadcast election ordinality a reset isElectedFlag for all nodes
+		// Broadcast election ordinality and reset isElectedFlag for all nodes
 		for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 			if (remoteLoadBalancer.isConnected() && remoteLoadBalancer.getState().equals(LoadBalancerState.PASSIVE)) {
 				ByteBuffer buffer = ByteBuffer.allocate(9);
