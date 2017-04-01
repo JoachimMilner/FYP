@@ -84,12 +84,6 @@ public enum MessageType {
 	BACKUP_ALIVE_CONFIRM(11),
 
 	/**
-	 * A request to the recipient node for it's current load balancer state
-	 * (active/passive).
-	 */
-	STATE_REQUEST(12),
-
-	/**
 	 * A message notifying that the sending node is the active load balancer.
 	 * When a node transitions to the active state, it broadcasts this message.
 	 * Similarly if an active receives a heartbeat from another active node it
@@ -97,60 +91,19 @@ public enum MessageType {
 	 * active nodes to move to the passive state. Any passive node that receives
 	 * this message marks the sending node as the active.
 	 */
-	ACTIVE_DECLARATION(13),
+	ACTIVE_DECLARATION(12),
 
 	/**
 	 * A message notifying that the sending node is a passive load balancer, to
 	 * be accompanied by it's current election ordinality.
 	 */
-	PASSIVE_NOTIFY(14),
-
-	/**
-	 * A message notifying the recipient that an election is currently in
-	 * progress, indicating that the recipient node should wait for the election
-	 * to finish.
-	 */
-	ELECTION_IN_PROGRESS_NOTIFY(15),
-
-	/**
-	 * A message notifying that the sending node has detected multiple active
-	 * load balancers in the network, and prompts an emergency election.
-	 */
-	MULTIPLE_ACTIVES_WARNING(16),
+	PASSIVE_NOTIFY(13),
 
 	/**
 	 * An election prompt either initialising an election or transporting the
 	 * sending node's election candidacy message.
 	 */
-	ELECTION_MESSAGE(17),
-
-	/**
-	 * A message to all other nodes that the sending node has detected a
-	 * failure.
-	 */
-	ACTIVE_HAS_FAILED(18),
-
-	/**
-	 * A message in response to an <code>ACTIVE_HAS_FAILED</code> message
-	 * indicating that the sending node has detected that the active is still
-	 * alive.
-	 */
-	ACTIVE_IS_ALIVE(19),
-
-	/**
-	 * Used for emergency elections.
-	 * <p>
-	 * In the case of there being multiple actives present in the system, this
-	 * election will be used to carry the sending node's IP address (last octet)
-	 * to use as it's candidacy suitability.
-	 * </p>
-	 * <p>
-	 * In the case that both the active and the passive backup have failed, the
-	 * remaining passive nodes will send their last stored average server
-	 * latency value immediately.
-	 * </p>
-	 */
-	EMERGENCY_ELECTION_MESSAGE(20);
+	ELECTION_MESSAGE(14);
 
 	/**
 	 * Numerical value attributed to each enum that will be set as the first

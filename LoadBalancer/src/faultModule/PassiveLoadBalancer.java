@@ -240,7 +240,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	@Override
 	public void listenForLoadBalancerMessages() {
 		while (!terminateThread.get()) {
-			//int activeCount = 0;
 			int backupCount = 0;
 			for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 				ByteBuffer buffer = ByteBuffer.allocate(100);
@@ -253,16 +252,6 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						buffer.flip();
 						MessageType messageType = MessageType.values()[buffer.get()];
 						switch (messageType) {
-						case STATE_REQUEST:
-							System.out.println("Received state request");
-							buffer.clear();
-							buffer.put((byte) MessageType.PASSIVE_NOTIFY.getValue());
-							buffer.put((byte) (isElectedBackup ? 1 : 0));
-							buffer.flip();
-							while (buffer.hasRemaining()) {
-								socketChannel.write(buffer);
-							}
-							break;
 						case ACTIVE_DECLARATION:
 							if (!remoteLoadBalancer.equals(currentActive)) {
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);

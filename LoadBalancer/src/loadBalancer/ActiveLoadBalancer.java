@@ -51,15 +51,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	private int randomBroadcastTimoutMillis;
 
 	/**
-	 * Flag indicating whether this active load balancer is in a resolution
-	 * state. That is, the node has been alerted that the system is in a
-	 * multiple-active state and is attempting to resolve this with the other
-	 * actives. When this flag is set, any other multiple-active messages are
-	 * ignored.
-	 */
-	private boolean inResolutionState = false;
-
-	/**
 	 * Creates a new ActiveLoadBalancer object that acts as the primary load
 	 * balancer process in the system. The <code>run</code> method prompts this
 	 * object to start listening to requests and responding accordingly.
@@ -103,9 +94,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 	public void run() {
 		System.out.println("Initialising active load balancer service...");
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_ACTIVE);
-		
-		//broadcastActiveDeclaration();
-		
+
 		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis / 10);
 		
 		ServerManager serverManager = new ServerManager(servers);
@@ -164,15 +153,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 						buffer.flip();
 						MessageType messageType = MessageType.values()[buffer.get()];
 						switch (messageType) {
-						case STATE_REQUEST:
-							System.out.println("Received state request");
-							buffer.clear();
-							buffer.put((byte) MessageType.ACTIVE_DECLARATION.getValue());
-							buffer.flip();
-							while (buffer.hasRemaining()) {
-								socketChannel.write(buffer);
-							}
-							break;
 						case ALIVE_REQUEST:
 							System.out.println("Received alive request");
 							buffer.clear();
@@ -206,29 +186,6 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 							}, randomBroadcastTimoutMillis);
 							
 							notifyNameService();
-							break;
-						case EMERGENCY_ELECTION_MESSAGE:
-							double candidacyValue = buffer.getDouble();
-							remoteLoadBalancer.setCandidacyValue(candidacyValue);
-							if (!inResolutionState) {
-								inResolutionState = true;
-								boolean remainAsActive = buffer.get() != 0;
-								if (remainAsActive) {
-									notifyNameService();
-									
-									// Maintain resolution state for a second so we don't keep receiving 
-									// emergency election messages and notifying name service.
-									new Timer().schedule(new java.util.TimerTask() {
-										@Override
-										public void run() {
-											inResolutionState = false;
-										}
-									}, 1000);
-								} else {
-									new Thread(LoadBalancer.getNewPassiveLoadBalancer()).start();
-									terminateThread.set(true);
-								}
-							}
 							break;
 						default:
 							break;
