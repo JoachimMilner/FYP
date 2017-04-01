@@ -132,7 +132,12 @@ public enum LogMessageType {
 	 * Message indicating that the sending node has detected the absence of an active
 	 * load balancer and subsequently promoted itself. 
 	 */
-	LOAD_BALANCER_NO_ACTIVE_DETECTED(20);
+	LOAD_BALANCER_NO_ACTIVE_DETECTED(20),
+	
+	/**
+	 * Message telling a load balancer that is force-started as active to begin program execution (used to multiple-active testing).
+	 */
+	ACTIVE_RELEASE_NOTIFY(21);
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of a backup

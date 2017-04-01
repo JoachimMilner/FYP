@@ -1,6 +1,10 @@
 package loadBalancer;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -88,15 +92,25 @@ public class LoadBalancer {
 		Server.setDefaultTokenExpiration(defaultServerTokenExpiry);
 
 		ComponentLogger.setMonitorAddress(new InetSocketAddress(nodeMonitorIP, nodeMonitorPort));
-		ComponentLogger.getInstance().registerWithNodeMonitor(LogMessageType.LOAD_BALANCER_REGISTER);
+		SocketChannel loggerSocketChannel = ComponentLogger.getInstance().registerWithNodeMonitor(LogMessageType.LOAD_BALANCER_REGISTER);
 		
 		connectionHandler = new LoadBalancerConnectionHandler(acceptPort, remoteLoadBalancers);
-		new Thread(connectionHandler).start();
+		
 
 		Thread loadBalancerThread;
 		if (forceStartAsActive) {
 			loadBalancerThread = new Thread(getNewActiveLoadBalancer());
+			try {
+				Selector readSelector = Selector.open();
+				loggerSocketChannel.register(readSelector, SelectionKey.OP_READ);
+				System.out.println("Waiting to be released");
+				if (readSelector.select(1000 * 60 * 5) != 0) {
+					new Thread(connectionHandler).start();
+				}
+			} catch (IOException e) {
+			}
 		} else {
+			new Thread(connectionHandler).start();
 			loadBalancerThread = new Thread(getNewPassiveLoadBalancer());
 		}
 		loadBalancerThread.start();

@@ -20,6 +20,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import log.LoggerUtility;
 import model.CPULoadReading;
+import model.LoadBalancer;
 import model.Server;
 import model.SystemModel;
 
@@ -80,6 +81,9 @@ public class GUIController implements Initializable {
 	@FXML
 	private Label connectionFailuresLabel;
 
+    @FXML
+    private Button releaseActiveButton;
+    
 	/**
 	 * The time in milliseconds that this process was started, used for
 	 * timestamping.
@@ -316,6 +320,16 @@ public class GUIController implements Initializable {
 		currentClientConfigValues[4] = maxClientRequests;
 
 		initializeClientConfigListeners();
+	}
+	
+	/**
+	 * Informs all load balancers that have been force-started in the active state to begin program execution.
+	 */
+	@FXML
+	private void releaseForceStartedActives() {
+		for (LoadBalancer loadBalancer : systemModel.getLoadBalancers()) {
+			loadBalancer.sendActiveReleaseMessage();
+		}
 	}
 
 	/**

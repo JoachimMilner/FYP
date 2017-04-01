@@ -1,6 +1,10 @@
 package model;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+
+import logging.LogMessageType;
 
 /**
  * @author Joachim
@@ -44,6 +48,23 @@ public class LoadBalancer extends AbstractRemoteSystemComponent {
 	public void setState(LoadBalancerState state) {
 		this.state = state;
 	}
+	
+	/**
+	 * Used to synchronously start multiple active force-started load balancers from the node monitor.
+	 */
+	public void sendActiveReleaseMessage() {
+		ByteBuffer buffer = ByteBuffer.allocate(1);
+		buffer.put((byte) LogMessageType.ACTIVE_RELEASE_NOTIFY.getValue());
+		buffer.flip();
+		try {
+			while (buffer.hasRemaining()) {
+				socketChannel.write(buffer);
+			}	
+		} catch (IOException e) {
+			
+		}
+	}
+		
 
 
 	/**
