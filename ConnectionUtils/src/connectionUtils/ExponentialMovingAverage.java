@@ -1,4 +1,4 @@
-package comms;
+package connectionUtils;
 
 /**
  * This code is taken from: http://stackoverflow.com/a/9201081

@@ -5,7 +5,7 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import comms.ExponentialMovingAverage;
+import connectionUtils.ExponentialMovingAverage;
 import javafx.scene.chart.XYChart;
 
 /**

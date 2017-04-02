@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import commsModel.LoadBalancerState;
 import commsModel.RemoteLoadBalancer;
 import commsModel.Server;
+import connectionUtils.ExponentialMovingAverage;
 import connectionUtils.MessageType;
 import loadBalancer.AbstractLoadBalancer;
 import loadBalancer.LoadBalancer;
@@ -134,6 +135,11 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 	 * is alive, in the case that a failure has been suspected.
 	 */
 	private boolean receivedAliveConfirmation = false;
+	
+	/**
+	 * The ExponentialMovingAverage class used to determine smoothed averages for server latency values. 
+	 */
+	private ExponentialMovingAverage serverLatencyAverage = new ExponentialMovingAverage(0.5);
 
 	/**
 	 * Creates a new PassiveLoadBalancer object that acts as a backup load
@@ -431,7 +437,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 					totalLatency += pingTime;
 				}
 				// Add small value to average server latency in case two passives calculate the same average.
-				averageServerLatency = (averageServerLatency + (totalLatency / servers.size()) + ThreadLocalRandom.current().nextDouble(0.001)) / 2;
+				averageServerLatency = serverLatencyAverage.average((totalLatency / servers.size()) + ThreadLocalRandom.current().nextDouble(0.001));
 				//System.out.println("Average server latency: " + averageServerLatency + "ns");
 			}
 		};
