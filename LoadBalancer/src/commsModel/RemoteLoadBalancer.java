@@ -34,6 +34,12 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	 * multiple-active conflict in the system.
 	 */
 	private Double candidacyValue;
+	
+	/**
+	 * The last octet of this remote load balancer's IP address. Used to
+	 * determine connection precedence when this load balancer and the remote attempt to connect to each other at the same time. 
+	 */
+	private int connectionPrecedence;
 
 	/**
 	 * Creates a new RemoteLoadBalancer object instance that hold relevant
@@ -106,5 +112,19 @@ public class RemoteLoadBalancer extends AbstractRemote {
 	public void resetState() {
 		state = LoadBalancerState.PASSIVE;
 		isElectedBackup = false;
+	}
+
+	/**
+	 * @return the connection precedence of this remote load balancer.
+	 */
+	public int getConnectionPrecedence() {
+		return connectionPrecedence;
+	}
+
+	/**
+	 * @param connectionPrecedence the connection precedence of this remote load balancer. 
+	 */
+	public void setConnectionPrecedence(int connectionPrecedence) {
+		this.connectionPrecedence = connectionPrecedence;
 	}
 }

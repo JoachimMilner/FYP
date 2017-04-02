@@ -81,12 +81,7 @@ public class LoadBalancerConnectionHandler implements Runnable {
 				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {
 					if (remoteLoadBalancer.getAddress().getAddress().getHostAddress().equals(connectingIP)) {
 						isLoadBalancerNode = true;
-						int remotePrecedence = 0;
-						try {
-							remotePrecedence = Integer.parseInt(connectingIP.split("\\.")[3]);
-						} catch (NumberFormatException e) {
-						}
-						if (!remoteLoadBalancer.isConnected() || remotePrecedence > connectionPrecedence) {
+						if (!remoteLoadBalancer.isConnected() || remoteLoadBalancer.getConnectionPrecedence() > connectionPrecedence) {
 							try {
 								connectRequestSocket.configureBlocking(false);
 							} catch (IOException e) {							

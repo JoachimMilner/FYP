@@ -60,10 +60,15 @@ public class LoadBalancer {
 			// List of other load balancer nodes in the system
 			List<HierarchicalConfiguration<ImmutableNode>> remoteLBNodes = config
 					.configurationsAt("remoteLoadBalancers.remoteNode");
-			for (HierarchicalConfiguration<ImmutableNode> remoteLoadBalancer : remoteLBNodes) {
-				String ipAddress = remoteLoadBalancer.getString("ipAddress");
-				int port = remoteLoadBalancer.getInt("port");
-				remoteLoadBalancers.add(new RemoteLoadBalancer(new InetSocketAddress(ipAddress, port)));
+			for (HierarchicalConfiguration<ImmutableNode> remoteLoadBalancerNode : remoteLBNodes) {
+				String ipAddress = remoteLoadBalancerNode.getString("ipAddress");
+				int port = remoteLoadBalancerNode.getInt("port");
+				RemoteLoadBalancer remoteLoadBalancer = new RemoteLoadBalancer(new InetSocketAddress(ipAddress, port));
+				try {
+					remoteLoadBalancer.setConnectionPrecedence(Integer.parseInt(ipAddress.split("\\.")[3]));
+				} catch (NumberFormatException e) {
+				}
+				remoteLoadBalancers.add(remoteLoadBalancer);
 			}
 
 			// Name service address
