@@ -76,7 +76,7 @@ public class LoggerUtility {
 	 * Writes the specified message to the log file for this session. 
 	 * @param info the message to be logged
 	 */
-	public static void logInfo(String info) {
+	public static synchronized void logInfo(String info) {
 		if (logWriter == null) {
 			try {
 				logWriter = new BufferedWriter(new OutputStreamWriter(
@@ -100,7 +100,7 @@ public class LoggerUtility {
 	 * @param serverID the ID of the server
 	 * @param cpuLoadReading the CPU load reading
 	 */
-	public static void logServerLoadReading(double timestamp, int serverID, double cpuLoadReading) {
+	public static synchronized void logServerLoadReading(double timestamp, int serverID, double cpuLoadReading) {
 		if (csvWriter == null) {
 			try {
 				csvWriter = new BufferedWriter(new OutputStreamWriter(

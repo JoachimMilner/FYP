@@ -148,7 +148,7 @@ public class ComponentLogger {
 	 * @param params
 	 *            any additional parameters that are used for this log message
 	 */
-	public void log(LogMessageType logMessageType, Object... params) {
+	public synchronized void log(LogMessageType logMessageType, Object... params) {
 		ByteBuffer buffer = ByteBuffer.allocate(50);
 		buffer.put((byte) logMessageType.getValue());
 		buffer.putInt(componentID);

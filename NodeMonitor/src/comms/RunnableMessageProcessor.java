@@ -93,6 +93,8 @@ public class RunnableMessageProcessor implements Runnable {
 								minClientRequests, maxClientRequests);
 						controller.appendMainFeed("ClientVirtualizer at "
 								+ socketChannel.socket().getRemoteSocketAddress().toString() + " registered.");
+						LoggerUtility.logInfo("ClientVirtualizer at "
+								+ socketChannel.socket().getRemoteSocketAddress().toString() + " registered.");
 						systemModel.setClientVirtualizer(clientVirtualizer);
 						break;
 					case NAME_SERVICE_REGISTER:
@@ -108,6 +110,8 @@ public class RunnableMessageProcessor implements Runnable {
 							socketChannel.write(buffer);
 						}
 						controller.appendMainFeed("NameService at "
+								+ socketChannel.socket().getRemoteSocketAddress().toString() + " registered.");
+						LoggerUtility.logInfo("NameService at "
 								+ socketChannel.socket().getRemoteSocketAddress().toString() + " registered.");
 						systemModel.setNameService(nameService);
 						break;
@@ -147,6 +151,7 @@ public class RunnableMessageProcessor implements Runnable {
 						}
 						
 						controller.appendMainFeed("Server " + serverOutputInfoString);  
+						LoggerUtility.logInfo("Server " + serverOutputInfoString);
 						componentID = server.getComponentID();
 						break;
 					case LOAD_BALANCER_REGISTER:
@@ -183,6 +188,7 @@ public class RunnableMessageProcessor implements Runnable {
 						}
 						
 						controller.appendMainFeed("LoadBalancer " + loadBalancerOutputInfoString);
+						LoggerUtility.logInfo("LoadBalancer " + loadBalancerOutputInfoString);
 						componentID = loadBalancer.getComponentID();
 						break;
 
@@ -207,6 +213,8 @@ public class RunnableMessageProcessor implements Runnable {
 						systemModel.getNameService().setCurrentHostAddress(registeredHostPort, registeredHostAddress);
 						controller.appendNameServiceFeed("LoadBalancer at " + registeredHostAddress + ":"
 								+ registeredHostPort + " registered.");
+						LoggerUtility.logInfo("LoadBalancer at " + registeredHostAddress + ":"
+								+ registeredHostPort + " registered with name service.");
 						break;
 					case SERVER_CPU_LOAD:
 						componentID = buffer.getInt();
@@ -236,6 +244,7 @@ public class RunnableMessageProcessor implements Runnable {
 							}
 						}
 						controller.appendMainFeed("LoadBalancer " + componentID + activeInfoString + "active state.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + activeInfoString + "active state.");
 						break;
 					case LOAD_BALANCER_ENTERED_PASSIVE:
 						componentID = buffer.getInt();
@@ -252,34 +261,37 @@ public class RunnableMessageProcessor implements Runnable {
 							}
 						}
 						controller.appendMainFeed("LoadBalancer " + componentID +  passiveInfoString + "passive state.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID +  passiveInfoString + "passive state.");
 						break;
 					case LOAD_BALANCER_ACTIVE_FAILURE_DETECTED:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected failure of the active.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " detected failure of the active.");
 						break;
 					case LOAD_BALANCER_BACKUP_FAILURE_DETECTED:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected failure or absence of a backup.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " detected failure or absence of a backup.");
 						break;
 					case LOAD_BALANCER_NO_ACTIVE_DETECTED:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected absence of an active node.");
-						break;
-					case LOAD_BALANCER_FAILURE_DETECTION_DISMISSED:
-						break;
-					case LOAD_BALANCER_FAILURE_CONFIRMED:
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " detected absence of an active node.");
 						break;
 					case LOAD_BALANCER_ELECTED_AS_BACKUP:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " elected as backup.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " elected as backup.");
 						break;
 					case LOAD_BALANCER_PROMPTED_RE_ELECTION:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " called for a re-election.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " called for a re-election.");
 						break;
 					case LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED:
 						componentID = buffer.getInt();
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected multiple actives and initiated an emergency election.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " detected multiple actives and initiated an emergency election.");
 						break;
 					default:
 						// Received a bad request

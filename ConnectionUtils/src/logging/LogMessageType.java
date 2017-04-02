@@ -100,44 +100,32 @@ public enum LogMessageType {
 	LOAD_BALANCER_BACKUP_FAILURE_DETECTED(14),
 	
 	/**
-	 * Notification that a previous failure detection of the active load balancer
-	 * has been dismissed by another passive node.
-	 */
-	LOAD_BALANCER_FAILURE_DETECTION_DISMISSED(15),
-	
-	/**
-	 * Notification that the sending node has confirmed failure of the active
-	 * load balancer.
-	 */
-	LOAD_BALANCER_FAILURE_CONFIRMED(16),
-
-	/**
 	 * Sent after an election has been performed to indicate that the sending node
 	 * is now the elected backup. 
 	 */
-	LOAD_BALANCER_ELECTED_AS_BACKUP(17),
+	LOAD_BALANCER_ELECTED_AS_BACKUP(15),
 	
 	/**
 	 * Message indicating that the current passive backup has initiated a re-election.
 	 */
-	LOAD_BALANCER_PROMPTED_RE_ELECTION(18),
+	LOAD_BALANCER_PROMPTED_RE_ELECTION(16),
 
 	/**
 	 * Message indicating that the sending node has detected multiple active
 	 * load balancers in the system.
 	 */
-	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(19),
+	LOAD_BALANCER_MULTIPLE_ACTIVES_DETECTED(17),
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of an active
 	 * load balancer and subsequently promoted itself. 
 	 */
-	LOAD_BALANCER_NO_ACTIVE_DETECTED(20),
+	LOAD_BALANCER_NO_ACTIVE_DETECTED(18),
 	
 	/**
 	 * Message telling a load balancer that is force-started as active to begin program execution (used to multiple-active testing).
 	 */
-	ACTIVE_RELEASE_NOTIFY(21);
+	ACTIVE_RELEASE_NOTIFY(19);
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of a backup
