@@ -95,7 +95,7 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 		System.out.println("Initialising active load balancer service...");
 		ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_ENTERED_ACTIVE);
 
-		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis / 10);
+		randomBroadcastTimoutMillis = ThreadLocalRandom.current().nextInt(heartbeatIntervalMillis);
 		
 		ServerManager serverManager = new ServerManager(servers);
 		new Thread(serverManager).start();
@@ -174,18 +174,17 @@ public class ActiveLoadBalancer extends AbstractLoadBalancer {
 							break;
 						case ACTIVE_ALIVE_CONFIRM:
 							// Detected another active node - broadcast active declaration after random timeout
-							// prompting any other active to demote
-							System.out.println("Detected another active - broadcasting active declaration");
+							// prompting any other active to demote							
 							new Timer().schedule(new TimerTask() {
 								@Override
 								public void run() {
 									if (!terminateThread.get()) {
+										System.out.println("Detected another active - broadcasting active declaration");
 										broadcastActiveDeclaration();
+										notifyNameService();
 									}
 								}
 							}, randomBroadcastTimoutMillis);
-							
-							notifyNameService();
 							break;
 						default:
 							break;
