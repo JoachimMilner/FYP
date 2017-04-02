@@ -248,6 +248,7 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 						switch (messageType) {
 						case ACTIVE_DECLARATION:
 							if (!remoteLoadBalancer.equals(currentActive)) {
+								resetActiveHeartbeatTimer();
 								remoteLoadBalancer.setState(LoadBalancerState.ACTIVE);
 								if (currentActive != null) {
 									currentActive.setState(LoadBalancerState.PASSIVE);
@@ -306,6 +307,9 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 				if (remoteLoadBalancer.isElectedBackup()) {
 					backupCount++;
 				}
+			}
+			if (isElectedBackup) {
+				backupCount++;
 			}
 			if (!preElectionInProgress && backupCount > 1) {
 				System.out.println("Detected multiple backups - Initiated pre-election");
@@ -477,9 +481,12 @@ public class PassiveLoadBalancer extends AbstractLoadBalancer implements Runnabl
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMPTED_RE_ELECTION);
-				System.out.println("Prompting for a re-election");
-				initiatePreElection();
+				// Additional check just in timing is bad and the re-election timer expires while the thread is terminating
+				if (!terminateThread.get()) {
+					ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_PROMPTED_RE_ELECTION);
+					System.out.println("Prompting for a re-election");
+					initiatePreElection();
+				}
 			}
 		};
 		

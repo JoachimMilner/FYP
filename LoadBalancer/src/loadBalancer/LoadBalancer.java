@@ -103,7 +103,7 @@ public class LoadBalancer {
 			try {
 				Selector readSelector = Selector.open();
 				loggerSocketChannel.register(readSelector, SelectionKey.OP_READ);
-				System.out.println("Waiting to be released");
+				System.out.println("Force-started in active state...Waiting to be released");
 				if (readSelector.select(1000 * 60 * 5) != 0) {
 					new Thread(connectionHandler).start();
 				}
