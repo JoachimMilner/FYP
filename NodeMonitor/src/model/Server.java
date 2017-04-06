@@ -37,7 +37,7 @@ public class Server extends AbstractRemoteSystemComponent {
 	/**
 	 * The ExponentialMovingAverage class used to determine smoothed averages for server CPU load readings. 
 	 */
-	private ExponentialMovingAverage exponentialMovingAverage = new ExponentialMovingAverage(0.5);
+	private ExponentialMovingAverage exponentialMovingAverage = new ExponentialMovingAverage(0.2);
 	
 	/**
 	 * Constructs a new Server object with the given componentID and

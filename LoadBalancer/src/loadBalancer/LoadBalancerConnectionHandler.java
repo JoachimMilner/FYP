@@ -75,7 +75,7 @@ public class LoadBalancerConnectionHandler implements Runnable {
 				e.printStackTrace();
 			}
 			if (connectRequestSocket != null) {
-				System.out.println("Received connection request.");
+				//System.out.println("Received connection request.");
 				boolean isLoadBalancerNode = false;
 				String connectingIP = connectRequestSocket.socket().getInetAddress().getHostAddress();
 				for (RemoteLoadBalancer remoteLoadBalancer : remoteLoadBalancers) {

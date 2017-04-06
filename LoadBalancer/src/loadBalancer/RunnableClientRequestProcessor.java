@@ -71,7 +71,7 @@ public class RunnableClientRequestProcessor implements Runnable {
 				break;
 			}
 		}
-		System.out.println("Client disconected.");
+		//System.out.println("Client disconected.");
 
 	}
 

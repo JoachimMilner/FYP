@@ -222,7 +222,7 @@ public class RunnableMessageProcessor implements Runnable {
 						//if (cpuLoadReading != 0) {
 						Server sendingServer = systemModel.getServerByID(componentID);
 						double smoothedCPULoadReading = sendingServer.getSmoothedAverage(cpuLoadReading);
-						System.out.println(cpuLoadReading + " : " + smoothedCPULoadReading);
+						//System.out.println(cpuLoadReading + " : " + smoothedCPULoadReading);
 						CPULoadReading reading = new CPULoadReading(smoothedCPULoadReading, messageReceivedTime,
 								controller.getApplicationStartTime());
 						sendingServer.pushCPULoadValue(reading);
