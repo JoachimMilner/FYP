@@ -105,7 +105,9 @@ public class LoggerUtility {
 			try {
 				csvWriter = new BufferedWriter(new OutputStreamWriter(
 				          new FileOutputStream("logs/serverCPULoadData" + programStartTimestamp + ".csv"), "utf-8"));
-			} catch (UnsupportedEncodingException | FileNotFoundException e) {
+				csvWriter.write("Server ID,Time (seconds),CPU Load (%)");
+				csvWriter.newLine();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
