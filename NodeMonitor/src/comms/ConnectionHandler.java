@@ -47,7 +47,7 @@ public class ConnectionHandler implements Runnable {
 
 	@Override
 	public void run() {
-		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(8000);
+		ServerSocketChannel serverSocketChannel = ConnectNIO.getServerSocketChannel(8001);
 		LoggerUtility.logInfo("Initialised server socket");
 		controller.appendMainFeed("Initialised server socket");
 		ExecutorService threadPoolExecutor = Executors.newCachedThreadPool();
