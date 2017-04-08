@@ -224,9 +224,9 @@ public class VirtualClientManager {
 			public void run() {
 				int i = 0;
 				while (!clientMonitorThreadStopped) {
-					//if (numberOfLiveClients.get() < maxClients.get()) {
+					if (numberOfLiveClients.get() < maxClients.get()) {
 						createNewClientThread();
-					//}
+					}
 					//System.out.println(numberOfLiveClients.get());
 					try {
 						Thread.sleep(10);

@@ -158,6 +158,8 @@ public class RunnableClientProcess implements Runnable {
 				}
 			}
 		}
+		
+		clientManager.notifyThreadFinished();
 
 		// Keep client alive until all responses have been received.
 		while (messagesReceived < requestsSent) {
@@ -168,8 +170,6 @@ public class RunnableClientProcess implements Runnable {
 				Thread.currentThread().interrupt();
 			}
 		}
-
-		clientManager.notifyThreadFinished();
 
 		try {
 			for (SocketChannel socketChannel : socketChannels) {
