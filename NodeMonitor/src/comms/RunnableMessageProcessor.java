@@ -319,6 +319,7 @@ public class RunnableMessageProcessor implements Runnable {
 			String typeString = componentName.equals("ClientVirtualizer") || componentName.equals("NameService") ? ""
 					: " with ID " + componentID;
 			controller.appendMainFeed(componentName + typeString + " disconnected.");
+			LoggerUtility.logInfo(componentName + typeString + " disconnected.");
 		}
 	}
 }
