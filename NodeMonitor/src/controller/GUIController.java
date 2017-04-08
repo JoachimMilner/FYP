@@ -83,6 +83,9 @@ public class GUIController implements Initializable {
 
     @FXML
     private Button releaseActiveButton;
+
+    @FXML
+    private Button addLogSeparatorButton;
     
 	/**
 	 * The time in milliseconds that this process was started, used for
@@ -330,6 +333,15 @@ public class GUIController implements Initializable {
 		for (LoadBalancer loadBalancer : systemModel.getLoadBalancers()) {
 			loadBalancer.sendActiveReleaseMessage();
 		}
+	}
+	
+	/**
+	 * Event for the addLogSeparatorButton, inserts a separator line to assist in testing & debugging
+	 */
+	@FXML
+	private void addLogSeparator() {
+		mainFeedTextArea.appendText("--------------------------------------------------------------------------\n");
+		LoggerUtility.logInfo("--------------------------------------------------------------------------");
 	}
 
 	/**
