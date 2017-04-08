@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import logging.ComponentLogger;
@@ -223,20 +222,26 @@ public class VirtualClientManager {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
+				int i = 0;
 				while (!clientMonitorThreadStopped) {
-					if (numberOfLiveClients.get() < maxClients.get()) {
+					//if (numberOfLiveClients.get() < maxClients.get()) {
 						createNewClientThread();
-					}
+					//}
 					//System.out.println(numberOfLiveClients.get());
 					try {
-						Thread.sleep(minSendFrequencyMs.get() / 2);
+						Thread.sleep(10);
 					} catch (InterruptedException e) {
 						if (clientMonitorThreadStopped) {
 							break;
 						}
 						startClientMonitor();
 					}
-					ComponentLogger.getInstance().log(LogMessageType.CLIENT_MESSAGE_COUNT, totalRequestsSent, totalResponsesReceived, totalClientConnectFailures);
+					
+					i++;
+					if (i == 100) {
+						ComponentLogger.getInstance().log(LogMessageType.CLIENT_MESSAGE_COUNT, totalRequestsSent, totalResponsesReceived, totalClientConnectFailures);
+						i = 0;
+					}
 					/*
 					 * for (int i = 0; i < 20; i++) { System.out.println(" "); }
 					 * System.out.println("Total Live Virtual Clients: " +
@@ -257,8 +262,8 @@ public class VirtualClientManager {
 	 * {@link RunnableClientProcess}.
 	 */
 	private void createNewClientThread() {
-		int messageSendFrequencyMs = ThreadLocalRandom.current().nextInt(minSendFrequencyMs.get(), maxSendFrequencyMs.get() + 1);
-		int totalRequestsToSend = ThreadLocalRandom.current().nextInt(minClientRequests.get(), maxClientRequests.get() + 1);
+		int messageSendFrequencyMs = 0;//ThreadLocalRandom.current().nextInt(minSendFrequencyMs.get(), maxSendFrequencyMs.get() + 1);
+		int totalRequestsToSend = 1;//ThreadLocalRandom.current().nextInt(minClientRequests.get(), maxClientRequests.get() + 1);
 		RunnableClientProcess newClient = new RunnableClientProcess(nameServiceAddress, this, messageSendFrequencyMs,
 				totalRequestsToSend);
 		clientThreadExecutor.execute(newClient);
