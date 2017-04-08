@@ -293,6 +293,16 @@ public class RunnableMessageProcessor implements Runnable {
 						controller.appendMainFeed("LoadBalancer " + componentID + " detected multiple actives and initiated an emergency election.");
 						LoggerUtility.logInfo("LoadBalancer " + componentID + " detected multiple actives and initiated an emergency election.");
 						break;
+					case CLIENT_CANNOT_CONNECT_TO_SERVICE:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("A client failed to connect to the service.");
+						LoggerUtility.logInfo("A client failed to connect to the service. ");
+						break;
+					case CLIENT_RECONNECTED_TO_SERVICE:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("Client regained ability to connect to service.");
+						LoggerUtility.logInfo("Client regained ability to connect to service.");
+						break;
 					default:
 						// Received a bad request
 						throw new IOException("Bad MessageType received");

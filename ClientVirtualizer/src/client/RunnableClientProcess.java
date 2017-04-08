@@ -249,10 +249,11 @@ public class RunnableClientProcess implements Runnable {
 		ByteBuffer buffer = ByteBuffer.allocate(50);
 		while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
 			try (Selector readSelector = Selector.open();
-					SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress, 5);) {
+					SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress, 0);) {
 				boolean connected = socketChannel != null && socketChannel.isConnected();
 				
 				if (connected) {
+					clientManager.notifyConnectionSuccess();
 					socketChannel.register(readSelector, SelectionKey.OP_READ);
 					// Request available server details
 					buffer.put((byte) MessageType.AVAILABLE_SERVER_REQUEST.getValue());
@@ -286,8 +287,9 @@ public class RunnableClientProcess implements Runnable {
 						}
 					}
 				} else {
+					clientManager.notifyConnectionFailure();
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {
 					}
 				}

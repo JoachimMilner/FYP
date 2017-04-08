@@ -86,6 +86,11 @@ public class VirtualClientManager {
 	 * ExecutorService for starting the pool of client threads.
 	 */
 	private ExecutorService clientThreadExecutor;
+	
+	/**
+	 * Flag used to indicate that the service is currently available so downtime can be measured.
+	 */
+	private boolean serviceUnavailable = false;
 
 	/**
 	 * Creates a VirtualClientManager with encapsulated functionality for
@@ -312,5 +317,27 @@ public class VirtualClientManager {
 			}
 
 		}).start();
+	}
+	
+	/**
+	 * Allows a client thread to notify that it has failed to connect to a load balancer, 
+	 * so that this VirtualClientManager can send a log message to the NodeMonitor. 
+	 */
+	public synchronized void notifyConnectionFailure() {
+		if (!serviceUnavailable) {
+			serviceUnavailable = true;
+			ComponentLogger.getInstance().log(LogMessageType.CLIENT_CANNOT_CONNECT_TO_SERVICE);
+		}
+	}
+	
+	/**
+	 * Called by a client thread each time it successfully connects to a load balancer,
+	 * so downtime from a connection failure can be measured. 
+	 */
+	public synchronized void notifyConnectionSuccess() {
+		if (serviceUnavailable) {
+			serviceUnavailable = false;
+			ComponentLogger.getInstance().log(LogMessageType.CLIENT_RECONNECTED_TO_SERVICE);
+		}
 	}
 }
