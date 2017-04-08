@@ -317,7 +317,7 @@ public class RunnableMessageProcessor implements Runnable {
 		// System.out.println("test");
 		if (systemModel.removeComponentBySocketChannel(socketChannel)) {
 			String typeString = componentName.equals("ClientVirtualizer") || componentName.equals("NameService") ? ""
-					: " with ID " + componentID;
+					: " " + componentID;
 			controller.appendMainFeed(componentName + typeString + " disconnected.");
 			LoggerUtility.logInfo(componentName + typeString + " disconnected.");
 		}
