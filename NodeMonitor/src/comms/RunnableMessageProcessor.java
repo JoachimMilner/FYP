@@ -294,14 +294,17 @@ public class RunnableMessageProcessor implements Runnable {
 						LoggerUtility.logInfo("LoadBalancer " + componentID + " detected multiple actives and initiated an emergency election.");
 						break;
 					case CLIENT_CANNOT_CONNECT_TO_SERVICE:
-						componentID = buffer.getInt();
 						controller.appendMainFeed("A client failed to connect to the service.");
 						LoggerUtility.logInfo("A client failed to connect to the service. ");
 						break;
 					case CLIENT_RECONNECTED_TO_SERVICE:
-						componentID = buffer.getInt();
 						controller.appendMainFeed("Client regained ability to connect to service.");
 						LoggerUtility.logInfo("Client regained ability to connect to service.");
+						break;
+					case LOAD_BALANCER_TERMINATED:
+						componentID = buffer.getInt();
+						controller.appendMainFeed("LoadBalancer " + componentID + " disconnected.");
+						LoggerUtility.logInfo("LoadBalancer " + componentID + " disconnected.");
 						break;
 					default:
 						// Received a bad request
@@ -314,12 +317,11 @@ public class RunnableMessageProcessor implements Runnable {
 			}
 
 		}
-		// System.out.println("test");
-		if (systemModel.removeComponentBySocketChannel(socketChannel)) {
+		
+		if (systemModel.removeComponentBySocketChannel(socketChannel) && !componentName.equals("LoadBalancer")) {
 			String typeString = componentName.equals("ClientVirtualizer") || componentName.equals("NameService") ? ""
 					: " " + componentID;
 			controller.appendMainFeed(componentName + typeString + " disconnected.");
-			LoggerUtility.logInfo(componentName + typeString + " disconnected.");
 		}
 	}
 }

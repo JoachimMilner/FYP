@@ -125,7 +125,12 @@ public enum LogMessageType {
 	/**
 	 * Message telling a load balancer that is force-started as active to begin program execution (used to multiple-active testing).
 	 */
-	ACTIVE_RELEASE_NOTIFY(19);
+	ACTIVE_RELEASE_NOTIFY(19),
+	
+	/**
+	 * Indicates that the sending load balancer has been terminated/killed.
+	 */
+	LOAD_BALANCER_TERMINATED(20);
 	
 	/**
 	 * Message indicating that the sending node has detected the absence of a backup

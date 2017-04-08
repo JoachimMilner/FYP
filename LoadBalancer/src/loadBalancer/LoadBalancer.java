@@ -99,6 +99,31 @@ public class LoadBalancer {
 		ComponentLogger.setMonitorAddress(new InetSocketAddress(nodeMonitorIP, nodeMonitorPort));
 		SocketChannel loggerSocketChannel = ComponentLogger.getInstance().registerWithNodeMonitor(LogMessageType.LOAD_BALANCER_REGISTER);
 		
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				ComponentLogger.getInstance().log(LogMessageType.LOAD_BALANCER_TERMINATED);
+			}
+			
+		}));
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					char a = (char) System.in.read();
+					if (a == 'c') {
+						System.exit(0);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}).start();
+		
 		connectionHandler = new LoadBalancerConnectionHandler(acceptPort, remoteLoadBalancers);
 		
 
