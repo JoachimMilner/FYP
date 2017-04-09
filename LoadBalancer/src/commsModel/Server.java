@@ -123,6 +123,10 @@ public class Server extends AbstractRemote {
 		}
 
 		buffer.flip();
+		if (!buffer.hasRemaining()) {
+			return;
+		}
+		
 		MessageType messageType = MessageType.values()[buffer.get()];
 		if (!messageType.equals(MessageType.SERVER_CPU_NOTIFY)) {
 			System.out.println("Error retrieving CPU load for Server at: " + address.getHostName());
