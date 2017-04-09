@@ -126,7 +126,13 @@ public class RunnableClientProcess implements Runnable {
 	 */
 	@Override
 	public void run() {
-		requestHostNameResolution();
+		while (loadBalancerAddress == null && !Thread.currentThread().isInterrupted()) {
+			requestHostNameResolution();
+		}
+		if (Thread.currentThread().isInterrupted()) {
+			clientManager.notifyThreadFinished();
+			return;
+		}
 		requestServerToken();
 		currentSocketChannel = ConnectNIO.getNonBlockingSocketChannel(currentServerToken.getServerAddress());
 		socketChannels.add(currentSocketChannel);
@@ -165,7 +171,7 @@ public class RunnableClientProcess implements Runnable {
 		while (messagesReceived < requestsSent) {
 			checkForMessages();
 			try {
-				Thread.sleep(50);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}
@@ -221,14 +227,13 @@ public class RunnableClientProcess implements Runnable {
 					if (messageType.equals(MessageType.HOST_ADDR_RESPONSE) && loadBalancerPort != 0
 							&& !loadBalancerIP.equals("")) {
 						loadBalancerAddress = new InetSocketAddress(loadBalancerIP, loadBalancerPort);
-						receivedResponse = true;
 					}
 				} else {
 					System.out.println("Failed to contact name service, retrying...");
 				}
 			}
 		} catch (IOException e) {
-			// e.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
 	}
 
@@ -249,7 +254,7 @@ public class RunnableClientProcess implements Runnable {
 		ByteBuffer buffer = ByteBuffer.allocate(50);
 		while (!receivedResponse && !Thread.currentThread().isInterrupted()) {
 			try (Selector readSelector = Selector.open();
-					SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress, 0);) {
+					SocketChannel socketChannel = ConnectNIO.getNonBlockingSocketChannel(loadBalancerAddress, 50);) {
 				boolean connected = socketChannel != null && socketChannel.isConnected();
 				
 				if (connected) {
