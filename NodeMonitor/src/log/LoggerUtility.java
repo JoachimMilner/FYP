@@ -76,7 +76,7 @@ public class LoggerUtility {
 	 * Writes the specified message to the log file for this session. 
 	 * @param info the message to be logged
 	 */
-	public static synchronized void logInfo(String info) {
+	public static synchronized void logInfo(String timestamp, String info) {
 		if (logWriter == null) {
 			try {
 				logWriter = new BufferedWriter(new OutputStreamWriter(
@@ -86,7 +86,7 @@ public class LoggerUtility {
 			}
 		}
 		try {
-			logWriter.write(getFormattedTimestamp() + " " + info);
+			logWriter.write(timestamp + " " + info);
 			logWriter.newLine();
 			logWriter.flush();
 		} catch (IOException e) {

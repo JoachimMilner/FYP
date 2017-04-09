@@ -114,7 +114,7 @@ public class GUIController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		applicationStartTime = System.currentTimeMillis();
 		updateClientOptionsButton.setDisable(true);
-		appendMainFeed("Waiting for components to register...");
+		appendMainFeed(LoggerUtility.getFormattedTimestamp(), "Waiting for components to register...");
 		systemModel = new SystemModel();
 		connectionHandlerThread = new Thread(new ConnectionHandler(systemModel, this));
 		connectionHandlerThread.start();
@@ -249,7 +249,7 @@ public class GUIController implements Initializable {
 		boolean updateSuccessful = systemModel.getClientVirtualizer().sendClientConfigurationUpdate(maxClients,
 				minSendFrequency, maxSendFrequency, minClientRequests, maxClientRequests);
 		if (updateSuccessful) {
-			appendMainFeed("Successfully updated client configuration settings.");
+			appendMainFeed(LoggerUtility.getFormattedTimestamp(), "Successfully updated client configuration settings.");
 			currentClientConfigValues[0] = maxClients;
 			currentClientConfigValues[1] = minSendFrequency;
 			currentClientConfigValues[2] = maxSendFrequency;
@@ -257,7 +257,7 @@ public class GUIController implements Initializable {
 			currentClientConfigValues[4] = maxClientRequests;
 			updateClientOptionsButton.setDisable(true);
 		} else {
-			appendMainFeed("Updating client configuration settings was not successful, values have not been changed.");
+			appendMainFeed(LoggerUtility.getFormattedTimestamp(), "Updating client configuration settings was not successful, values have not been changed.");
 		}
 	}
 
@@ -267,11 +267,11 @@ public class GUIController implements Initializable {
 	 * @param message
 	 *            the message to be appended
 	 */
-	public void appendMainFeed(String message) {
+	public void appendMainFeed(String timestamp, String message) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				mainFeedTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
+				mainFeedTextArea.appendText(timestamp + " " + message + "\n");
 			}
 		});
 	}
@@ -281,11 +281,11 @@ public class GUIController implements Initializable {
 	 * 
 	 * @param message
 	 */
-	public void appendNameServiceFeed(String message) {
+	public void appendNameServiceFeed(String timestamp, String message) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				nameServiceTextArea.appendText(LoggerUtility.getFormattedTimestamp() + " " + message + "\n");
+				nameServiceTextArea.appendText(timestamp + " " + message + "\n");
 				}
 		});
 	}
@@ -341,7 +341,7 @@ public class GUIController implements Initializable {
 	@FXML
 	private void addLogSeparator() {
 		mainFeedTextArea.appendText("--------------------------------------------------------------------------\n");
-		LoggerUtility.logInfo("--------------------------------------------------------------------------");
+		LoggerUtility.logInfo("", "--------------------------------------------------------------------------");
 	}
 
 	/**
